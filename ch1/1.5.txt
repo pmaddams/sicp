@@ -1,0 +1,17 @@
+With an interpreter that uses applicative-order evaluation, the expression
+
+(test 0 (p))
+
+will continually evaluate to itself, never terminating.
+
+With an interpreter that uses normal-order evaluation, the expression will be
+expanded and finally terminate due to evaluation of the first if clause, as
+follows:
+
+(test 0 (p))
+
+(if (= 0 0) 0 (p))
+
+(if #t 0 (p))
+
+0
