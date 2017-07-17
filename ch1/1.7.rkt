@@ -1,14 +1,16 @@
 #lang sicp
 
-(define (average x y)
-  (/ (+ x y) 2))
-
 (define (improve guess x)
-  (average guess (/ x guess)))
+  (let ((average (lambda (x y)
+                   (/ (+ x y)
+                      2))))
+    (average guess (/ x guess))))
 
 (define (sqrt-old x)
   (letrec ((good-enough? (lambda (guess)
-                           (< (abs (- (expt guess 2) x)) 0.001)))
+                           (< (abs (- (expt guess 2)
+                                      x))
+                              0.001)))
            (sqrt-iter (lambda (guess)
                         (if (good-enough? guess)
                             guess
@@ -17,7 +19,9 @@
 
 (define (sqrt-new x)
   (letrec ((good-enough? (lambda (prev guess)
-                           (< (abs (/ (- prev guess) guess)) 0.001)))
+                           (< (abs (/ (- prev guess)
+                                      guess))
+                              0.001)))
            (sqrt-iter (lambda (prev guess)
                         (if (good-enough? prev guess)
                             guess
