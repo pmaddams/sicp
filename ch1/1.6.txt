@@ -1,0 +1,2 @@
+Because sqrt-iter is evaluated before improve, an infinite chain of cond
+expressions is generated, which never terminates.
