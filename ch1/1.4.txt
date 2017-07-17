@@ -1,0 +1,3 @@
+The first argument of a-plus-abs-b is evaluated based on the value of b. If b is
+positive, the result is the procedure +. Otherwise, the result is the procedure
+-. This procedure is then applied to the arguments a and b.
