@@ -1,4 +1,4 @@
-Assume that the ratio L between adjacent Fibonacci numbers converges for the
+Assume that the ratio L between successive Fibonacci numbers converges for the
 Fibonacci sequence F(n) as n approaches infinity.
 
 F(n) / F(n-1) = L
