@@ -1,0 +1,6 @@
+Alyssa is correct that the simpler procedure should yield a correct result.
+However, she is not taking into account the amount of memory required to
+calculate large exponents of large numbers. In 2017, if you were to attempt a
+calculation like (10^1000)^1000 % 10, a calculation similar in scale to some
+used for cryptography, you might run out of memory using Alyssa's procedure.
+Obviously in this case the answer is 10, but the computer doesn't know that.
