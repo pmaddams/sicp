@@ -13,10 +13,10 @@
                                  (else (find-divisor (next test-divisor))))))
            (smallest-divisor (lambda ()
                                (find-divisor 3))))
-    (if (or (<= n 1)
-            (even? n))
-        #f
-        (= n (smallest-divisor)))))
+    (cond ((<= n 1) #f)
+          ((= n 2) #t)
+          ((even? n) #f)
+          (else (= n (smallest-divisor))))))
 
 (define (timed-prime-test n)
   (let* ((report-prime (lambda (elapsed-time)
@@ -38,24 +38,24 @@
       (newline)))
 
 (search-for-primes 1000 1020)
-;; 1009 *** 29
-;; 1013 *** 30
-;; 1019 *** 30
+;; 1009 *** 31
+;; 1013 *** 33
+;; 1019 *** 32
 
 (search-for-primes 10000 10040)
-;; 10007 *** 65
-;; 10009 *** 68
-;; 10037 *** 74
+;; 10007 *** 68
+;; 10009 *** 69
+;; 10037 *** 67
 
 (search-for-primes 100000 100050)
-;; 100003 *** 190
-;; 100019 *** 179
-;; 100043 *** 179
+;; 100003 *** 182
+;; 100019 *** 183
+;; 100043 *** 182
 
 (search-for-primes 1000000 1000040)
-;; 1000003 *** 540
-;; 1000033 *** 540
-;; 1000037 *** 540
+;; 1000003 *** 546
+;; 1000033 *** 545
+;; 1000037 *** 545
 
 ;; The improved next procedure increases n by 2 each time without checking its
 ;; value, because smallest-divisor now starts at 3, and the prime? procedure

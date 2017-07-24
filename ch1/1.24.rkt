@@ -22,10 +22,10 @@
     (f times)))
 
 (define (prime? n)
-  (if (or (<= n 1)
-            (even? n))
-        #f
-        (fast-prime? n 10)))
+  (cond ((<= n 1) #f)
+        ((= n 2) #t)
+        ((even? n) #f)
+        (else (fast-prime? n 10))))
 
 (define (timed-prime-test n)
   (let* ((report-prime (lambda (elapsed-time)
@@ -47,24 +47,24 @@
       (newline)))
 
 (search-for-primes 1000 1020)
-;; 1009 *** 203
-;; 1013 *** 205
-;; 1019 *** 210
+;; 1009 *** 197
+;; 1013 *** 200
+;; 1019 *** 208
 
 (search-for-primes 10000 10040)
-;; 10007 *** 250
+;; 10007 *** 246
 ;; 10009 *** 240
-;; 10037 *** 246
+;; 10037 *** 244
 
 (search-for-primes 100000 100050)
-;; 100003 *** 280
-;; 100019 *** 284
-;; 100043 *** 285
+;; 100003 *** 281
+;; 100019 *** 285
+;; 100043 *** 289
 
 (search-for-primes 1000000 1000040)
-;; 1000003 *** 321
-;; 1000033 *** 322
-;; 1000037 *** 326
+;; 1000003 *** 322
+;; 1000033 *** 320
+;; 1000037 *** 330
 
 ;; Since the Fermat test has theta of log(n) growth, the runtime should increase
 ;; linearly as n increases by orders of magnitude. The data supports this
