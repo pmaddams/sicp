@@ -37,3 +37,12 @@
 
 (define (sum-of-squared-primes a b)
   (filtered-accumulate prime? + 0 square a inc b))
+
+(define (product-relatively-prime-less-than n)
+  (letrec ((gcd (lambda (a b)
+                  (if (zero? b)
+                      a
+                      (gcd b (remainder a b)))))
+           (test? (lambda (x)
+                    (= 1 (gcd x n)))))
+    (filtered-accumulate test? * 1 identity 2 inc (dec n))))
