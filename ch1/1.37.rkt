@@ -20,7 +20,8 @@
   (letrec ((phi 1.6180)
            (one (lambda (x) 1.0))
            (ok? (lambda (x)
-                  (< (abs (- (/ 1 x) phi)) 0.0001)))
+                  (< (abs (- (/ 1 x) phi))
+                     0.00005)))
            (o (lambda (k)
                 (if (ok? (f one one k))
                     k
