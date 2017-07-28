@@ -15,7 +15,8 @@
     (try guess)))
 
 (define (average . args)
-  (/ (apply + args) (length args)))
+  (/ (apply + args)
+     (length args)))
 
 (let ((f (lambda (x)
            (/ (log 1000)

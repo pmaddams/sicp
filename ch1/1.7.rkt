@@ -1,9 +1,9 @@
 #lang sicp
 
 (define (improve guess x)
-  (let ((average (lambda (x y)
-                   (/ (+ x y)
-                      2))))
+  (let ((average (lambda args
+                   (/ (apply + args)
+                      (length args)))))
     (average guess (/ x guess))))
 
 (define (sqrt-old x)
