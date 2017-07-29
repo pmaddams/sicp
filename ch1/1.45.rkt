@@ -26,4 +26,23 @@
         f
         (repeated (double f) (dec n)))))
 
-;; TODO
+(define (nth-root n)
+  (lambda (x)
+    (fixed-point ((repeated average-damp (ceiling (log n)))
+                  (lambda (y) (/ x (expt y (dec n)))))
+                 1.0)))
+
+(do ((n 2 (inc n))
+     (lim 10))
+  ((> n lim))
+  (begin (display ((nth-root n) (expt n n)))
+         (newline)))
+;; 2.000000000000002
+;; 3.000001464168659
+;; 4.000000000000006
+;; 5.0000017463386754
+;; 6.000002917879925
+;; 6.999996178069843
+;; 8.000006144851259
+;; 9.000006400477798
+;; 10.000003898325836
