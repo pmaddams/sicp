@@ -1,7 +1,5 @@
 #lang sicp
 
-;; note: rectangle may have strange orientation. revise.
-
 (define (make-point x y)
   (cons x y))
 
@@ -19,6 +17,14 @@
          (display ")")
          (newline)))
 
+(define (distance p1 p2)
+  (let* ((x1 (x-point p1))
+         (y1 (y-point p1))
+         (x2 (x-point p2))
+         (y2 (y-point p2)))
+    (sqrt (+ (expt (- x2 x1) 2)
+             (expt (- y2 y1) 2)))))
+
 (define (make-segment start end)
   (cons start end))
 
@@ -29,53 +35,76 @@
   (cdr seg))
 
 (define (length-seg seg)
-  (let* ((start (start-segment seg))
-         (x-start (x-point start))
-         (y-start (y-point start))
-         (end (end-segment seg))
-         (x-end (x-point end))
-         (y-end (y-point end)))
-    (sqrt (+ (expt (- x-end x-start) 2)
-             (expt (- y-end y-start) 2)))))
+  (distance (start-segment seg)
+            (end-segment seg)))
 
-(define (make-rect-a p1 p2)
-  (cons p1 p2))
+(define (make-rect-a bs hs)
+  (cons bs hs))
 
-(define (first-point ra)
+(define (base-seg-rect-a ra)
   (car ra))
 
-(define (second-point ra)
+(define (height-seg-rect-a ra)
   (cdr ra))
 
-(define (x-dimension-a ra)
-  (let* ((x1 (x-point (first-point ra)))
-         (x2 (x-point (second-point ra))))
-    (abs (- x2 x1))))
+(define (base-rect-a ra)
+  (length-seg (base-seg-rect-a ra)))
 
-(define (y-dimension-a ra)
-  (let* ((y1 (y-point (first-point ra)))
-         (y2 (y-point (second-point ra))))
-    (abs (- y2 y1))))
+(define (height-rect-a ra)
+  (length-seg (height-seg-rect-a ra)))
 
-(define (make-rect-b hs vs)
-  (cons hs vs))
+(define (make-rect-b p1 p2 p3 p4)
+  (list p1 p2 p3 p4))
 
-(define (h-seg rb)
-  (car rb))
+(define (base-and-height-rect-b rb)
+  (let* ((p1 (car rb))
+         (p2 (cadr rb))
+         (p3 (caddr rb))
+         (p4 (cadddr rb))
+         (d1 (distance p1 p2))
+         (d2 (distance p1 p3))
+         (d3 (distance p1 p4))
+         (diagonal (max d1 d2 d3)))
+    (cond ((= diagonal d1) (cons d2 d3))
+          ((= diagonal d2) (cons d1 d3))
+          (else (cons d1 d2)))))
 
-(define (v-seg rb)
-  (cdr rb))
+(define (base-rect-b rb)
+  (car (base-and-height-rect-b rb)))
 
-(define (x-dimension-b rb)
-  (length-seg (h-seg rb)))
+(define (height-rect-b rb)
+  (cdr (base-and-height-rect-b rb)))
 
-(define (y-dimension-b rb)
-  (length-seg (v-seg rb)))
+(define (perimeter base-rect height-rect r)
+  (* 2 (+ (base-rect r)
+          (height-rect r))))
 
-(define (perimeter x-dimension y-dimension r)
-  (* 2 (+ (x-dimension r)
-          (y-dimension r))))
+(define (area base-rect height-rect r)
+  (* (base-rect r)
+     (height-rect r)))
 
-(define (area x-dimension y-dimension r)
-  (* (x-dimension r)
-     (y-dimension r)))
+(let* ((r (make-rect-a (make-segment (make-point 0 0)
+                                     (make-point 3 0))
+                       (make-segment (make-point 0 0)
+                                     (make-point 0 2))))
+       (base-rect base-rect-a)
+       (height-rect height-rect-a))
+  (begin (display (perimeter base-rect height-rect r))
+         (newline)
+         (display (area base-rect height-rect r))
+         (newline)))
+;; 10
+;; 6
+
+(let* ((r (make-rect-b (make-point 0 0)
+                       (make-point 3 0)
+                       (make-point 3 2)
+                       (make-point 0 2)))
+       (base-rect base-rect-b)
+       (height-rect height-rect-b))
+  (begin (display (perimeter base-rect height-rect r))
+         (newline)
+         (display (area base-rect height-rect r))
+         (newline)))
+;; 10
+;; 6
