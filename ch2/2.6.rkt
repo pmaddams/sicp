@@ -41,3 +41,8 @@
   (lambda (f)
     (lambda (x)
       (f (f x)))))
+
+(define (add n m)
+  (lambda (f)
+    (lambda (x)
+      ((n f) ((m f) x)))))
