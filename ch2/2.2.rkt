@@ -4,14 +4,11 @@
   (/ (apply + args)
      (length args)))
 
-(define (make-point x y)
-  (cons x y))
+(define make-point cons)
 
-(define (x-point p)
-  (car p))
+(define x-point car)
 
-(define (y-point p)
-  (cdr p))
+(define y-point cdr)
 
 (define (print-point p)
   (begin (display "(")
@@ -21,14 +18,11 @@
          (display ")")
          (newline)))
 
-(define (make-segment start end)
-  (cons start end))
+(define make-segment cons)
 
-(define (start-segment seg)
-  (car seg))
+(define start-segment car)
 
-(define (end-segment seg)
-  (cdr seg))
+(define end-segment cdr)
 
 (define (midpoint-seg seg)
   (let* ((start (start-segment seg))

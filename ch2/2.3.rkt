@@ -1,13 +1,10 @@
 #lang sicp
 
-(define (make-point x y)
-  (cons x y))
+(define make-point cons)
 
-(define (x-point p)
-  (car p))
+(define x-point car)
 
-(define (y-point p)
-  (cdr p))
+(define y-point cdr)
 
 (define (print-point p)
   (begin (display "(")
@@ -25,27 +22,21 @@
     (sqrt (+ (expt (- x2 x1) 2)
              (expt (- y2 y1) 2)))))
 
-(define (make-segment start end)
-  (cons start end))
+(define make-segment cons)
 
-(define (start-segment seg)
-  (car seg))
+(define start-segment car)
 
-(define (end-segment seg)
-  (cdr seg))
+(define end-segment cdr)
 
 (define (length-seg seg)
   (distance (start-segment seg)
             (end-segment seg)))
 
-(define (make-rect-a bs hs)
-  (cons bs hs))
+(define make-rect-a cons)
 
-(define (base-seg-rect-a ra)
-  (car ra))
+(define base-seg-rect-a car)
 
-(define (height-seg-rect-a ra)
-  (cdr ra))
+(define height-seg-rect-a cdr)
 
 (define (base-rect-a ra)
   (length-seg (base-seg-rect-a ra)))

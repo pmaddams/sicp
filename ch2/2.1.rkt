@@ -13,17 +13,15 @@
                (cons (- n) (- d))
                (cons n d)))))
 
-(define (numer x)
-  (car x))
+(define numer car)
 
-(define (denom x)
-  (cdr x))
+(define denom cdr)
 
 (define (print-rat x)
-  (newline)
   (display (numer x))
   (display "/")
-  (display (denom x)))
+  (display (denom x))
+  (newline))
 
 (define (add-rat x y)
   (make-rat (+ (* (numer x) (denom y))
