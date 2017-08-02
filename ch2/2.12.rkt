@@ -59,3 +59,26 @@
       (mul-interval x
                     (make-interval (/ 1.0 (upper-bound y))
                                    (/ 1.0 (lower-bound y))))))
+
+(define (make-center-width c w)
+  (make-interval (- c w) (+ c w)))
+
+(define (center i)
+  (/ (+ (lower-bound i) (upper-bound i)) 2))
+
+(define (width i)
+  (/ (- (upper-bound i) (lower-bound i)) 2))
+
+(define (make-center-percent c p)
+  (let* ((fraction (/ p 100))
+         (lower (- c (* c fraction)))
+         (upper (+ c (* c fraction))))
+    (make-interval lower upper)))
+
+(define (percent i)
+  (* 100 (/ (width i) (center i))))
+
+(let ((i (make-interval -1 2)))
+  (display (make-center-percent (center i)
+                                (percent i))))
+;; (-1 . 2)
