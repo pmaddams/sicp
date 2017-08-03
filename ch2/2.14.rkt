@@ -88,9 +88,27 @@
                   (add-interval (div-interval one r1)
                                 (div-interval one r2)))))
 
-(define (print-center-point i)
+(define (print-center-percent i)
   (begin (display (center i))
          (display " +- ")
          (display (inexact->exact (round (percent i))))
          (display "%")
          (newline)))
+
+(let ((r1 (make-center-percent 1000 30))
+      (r2 (make-center-percent 2000 30)))
+  (begin (print-center-percent (par1 r1 r2))
+         (print-center-percent (par2 r1 r2))))
+;; 930.4029304029305 +- 73%
+;; 666.6666666666667 +- 30%
+
+(let ((a (make-center-percent 3000 1))
+      (b (make-center-percent 3000 20)))
+  (begin (print-center-percent (div-interval a a))
+         (print-center-percent (div-interval a b))
+         (print-center-percent (div-interval b a))
+         (print-center-percent (div-interval b b))))
+;; 1.0002000200020003 +- 2%
+;; 1.0437500000000002 +- 21%
+;; 1.0021002100210021 +- 21%
+;; 1.0833333333333333 +- 38%
