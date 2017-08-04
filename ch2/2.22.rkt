@@ -3,6 +3,10 @@
 (define (square x)
   (expt x 2))
 
+(define (displayln x)
+  (begin (display x)
+         (newline)))
+
 (define (square-list-a items)
   (letrec ((iter (lambda (things answer)
                    (if (null? things)
@@ -12,8 +16,7 @@
                                    answer))))))
     (iter items '())))
 
-(begin (display (square-list-a '(1 2 3 4)))
-       (newline))
+(displayln (square-list-a '(1 2 3 4)))
 ;; (16 9 4 1)
 
 ;; This procedure conses each squared item in the list to the front of the list
@@ -28,8 +31,7 @@
                                    (square (car things))))))))
     (iter items '())))
 
-(begin (display (square-list-b '(1 2 3 4)))
-       (newline))
+(displayln (square-list-b '(1 2 3 4)))
 ;; ((((() . 1) . 4) . 9) . 16)
 
 ;; In this case, we are consing new values to the end of the list so far,
@@ -44,6 +46,5 @@
                                      (list (square (car things)))))))))
     (iter items '())))
 
-(begin (display (square-list-c '(1 2 3 4)))
-       (newline))
+(displayln (square-list-c '(1 2 3 4)))
 ;; (1 4 9 16)

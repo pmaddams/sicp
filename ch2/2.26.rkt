@@ -1,17 +1,18 @@
 #lang sicp
 
+(define (displayln x)
+  (begin (display x)
+         (newline)))
+
 (define x (list 1 2 3))
 
 (define y (list 4 5 6))
 
-(begin (display (append x y))
-       (newline))
+(displayln (append x y))
 ;; (1 2 3 4 5 6)
 
-(begin (display (cons x y))
-       (newline))
+(displayln (cons x y))
 ;; ((1 2 3) 4 5 6)
 
-(begin (display (list x y))
-       (newline))
+(displayln (list x y))
 ;; ((1 2 3) (4 5 6))
