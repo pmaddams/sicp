@@ -7,7 +7,8 @@
 (define (fringe t)
   (letrec ((f (lambda (t l)
                 (cond ((null? t) l)
-                      ((list? (car t)) (append (f (car t) '()) (f (cdr t) l)))
+                      ((list? (car t)) (append (f (car t) '())
+                                               (f (cdr t) l)))
                       (else (cons (car t) (f (cdr t) l)))))))
     (f t '())))
 
