@@ -61,9 +61,9 @@
                                    (/ 1.0 (lower-bound y))))))
 
 (let ((make-and-mul (lambda (a b c d)
-                      (begin (display (mul-interval (make-interval a b)
-                                                    (make-interval c d)))
-                             (newline)))))
+                      (display (mul-interval (make-interval a b)
+                                             (make-interval c d)))
+                      (newline))))
   (make-and-mul 1 2 3 4)
   (make-and-mul 1 2 -4 -3)
   (make-and-mul 1 2 -3 4)

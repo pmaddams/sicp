@@ -13,18 +13,18 @@
 
 (define (fools? n)
   (letrec ((f (lambda (a)
-             (if (= a n)
-                 #t
-                 (and (= a (expmod a n n))
-                      (f (inc a)))))))
+                (if (= a n)
+                    #t
+                    (and (= a (expmod a n n))
+                         (f (inc a)))))))
     (f 1)))
 
 (let ((carmichael '(561 1105 1729 2465 2821 6601)))
   (for-each (lambda (n)
-              (begin (display n)
-                     (display (if (fools? n)
-                                  " fools "
-                                  " doesn't fool "))
-                     (display "the Fermat test.")
-                     (newline)))
+              (display n)
+              (display (if (fools? n)
+                           " fools "
+                           " doesn't fool "))
+              (display "the Fermat test.")
+              (newline))
             carmichael))

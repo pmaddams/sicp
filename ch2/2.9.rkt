@@ -36,18 +36,17 @@
   (+ (width x)
      (width y)))
 
+(define (displayln x)
+  (display x)
+  (newline))
+
 (let ((x (make-interval 1 2))
       (y (make-interval 3 4)))
-  (begin (display (width-add-or-sub x y))
-         (newline)
-         (display (width (add-interval x y)))
-         (newline)
-         (display (width (sub-interval x y)))
-         (newline)
-         (display (width (mul-interval x y)))
-         (newline)
-         (display (width (div-interval x y)))
-         (newline)))
+  (displayln (width-add-or-sub x y))
+  (displayln (width (add-interval x y)))
+  (displayln (width (sub-interval x y)))
+  (displayln (width (mul-interval x y)))
+  (displayln (width (div-interval x y))))
 ;; 1
 ;; 1
 ;; 1

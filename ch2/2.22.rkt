@@ -3,10 +3,6 @@
 (define (square x)
   (expt x 2))
 
-(define (displayln x)
-  (begin (display x)
-         (newline)))
-
 (define (square-list-a items)
   (letrec ((iter (lambda (things answer)
                    (if (null? things)
@@ -15,6 +11,10 @@
                              (cons (square (car things))
                                    answer))))))
     (iter items '())))
+
+(define (displayln x)
+  (display x)
+  (newline))
 
 (displayln (square-list-a '(1 2 3 4)))
 ;; (16 9 4 1)

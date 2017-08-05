@@ -11,12 +11,12 @@
 (define y-point cdr)
 
 (define (print-point p)
-  (begin (display "(")
-         (display (x-point p))
-         (display ",")
-         (display (y-point p))
-         (display ")")
-         (newline)))
+  (display "(")
+  (display (x-point p))
+  (display ",")
+  (display (y-point p))
+  (display ")")
+  (newline))
 
 (define make-segment cons)
 

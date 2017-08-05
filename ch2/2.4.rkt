@@ -9,10 +9,12 @@
 (define (cdr z)
   (z (lambda (p q) q)))
 
+(define (displayln x)
+  (display x)
+  (newline))
+
 (let ((p (cons 'a 'b)))
-  (begin (display (car p))
-         (newline)
-         (display (cdr p))
-         (newline)))
+  (displayln (car p))
+  (displayln (cdr p)))
 ;; a
 ;; b

@@ -35,8 +35,8 @@
 (do ((n 2 (inc n))
      (lim 10))
   ((> n lim))
-  (begin (display ((nth-root n) (expt n n)))
-         (newline)))
+  (display ((nth-root n) (expt n n)))
+  (newline))
 ;; 2.000000000000002
 ;; 3.000001464168659
 ;; 4.000000000000006

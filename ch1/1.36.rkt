@@ -6,12 +6,11 @@
                             (< (abs (- a b)) tolerance)))
            (try (lambda (guess)
                   (let ((next (f guess)))
-                    (begin
-                      (display next)
-                      (newline)
-                      (if (close-enough? guess next)
-                          next
-                          (try next)))))))
+                    (display next)
+                    (newline)
+                    (if (close-enough? guess next)
+                        next
+                        (try next))))))
     (try guess)))
 
 (define (average . args)

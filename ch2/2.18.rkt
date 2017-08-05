@@ -8,6 +8,5 @@
     (r l '())))
 
 (let ((l '(1 4 9 16 25)))
-  (begin (display (reverse l))
-         (newline)))
+  (display (reverse l)))
 ;; (25 16 9 4 1)

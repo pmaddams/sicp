@@ -7,11 +7,11 @@
 
 (define (make-rat n d)
   (let ((g (gcd n d)))
-    (begin (set! n (/ n g))
-           (set! d (/ d g))
-           (if (negative? d)
-               (cons (- n) (- d))
-               (cons n d)))))
+    (set! n (/ n g))
+    (set! d (/ d g))
+    (if (negative? d)
+        (cons (- n) (- d))
+        (cons n d))))
 
 (define numer car)
 

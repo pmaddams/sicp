@@ -100,11 +100,13 @@
               (upper-bound y))))
     (* 100 (/ (- b a) (+ a b)))))
 
+(define (displayln x)
+  (display x)
+  (newline))
+
 (let ((x (make-interval 1 2))
       (y (make-interval 3 4)))
-  (begin (display (percent (mul-interval x y)))
-         (newline)
-         (display (percent-mul x y))
-         (newline)))
+  (displayln (percent (mul-interval x y)))
+  (displayln (percent-mul x y)))
 ;; 500/11
 ;; 500/11

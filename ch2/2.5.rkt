@@ -23,10 +23,12 @@
                     (c (/ z 3) (inc result))))))
     (c z 0)))
 
+(define (displayln x)
+  (display x)
+  (newline))
+
 (let ((p (cons 123 456)))
-  (begin (display (car p))
-         (newline)
-         (display (cdr p))
-         (newline)))
+  (displayln (car p))
+  (displayln (cdr p)))
 ;; 123
 ;; 456

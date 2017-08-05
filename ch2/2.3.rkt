@@ -7,12 +7,12 @@
 (define y-point cdr)
 
 (define (print-point p)
-  (begin (display "(")
-         (display (x-point p))
-         (display ",")
-         (display (y-point p))
-         (display ")")
-         (newline)))
+  (display "(")
+  (display (x-point p))
+  (display ",")
+  (display (y-point p))
+  (display ")")
+  (newline))
 
 (define (distance p1 p2)
   (let* ((x1 (x-point p1))
@@ -74,16 +74,18 @@
   (* (base-rect r)
      (height-rect r)))
 
+(define (displayln x)
+  (display x)
+  (newline))
+
 (let* ((r (make-rect-a (make-segment (make-point 0 0)
                                      (make-point 3 0))
                        (make-segment (make-point 0 0)
                                      (make-point 0 2))))
        (base-rect base-rect-a)
        (height-rect height-rect-a))
-  (begin (display (perimeter base-rect height-rect r))
-         (newline)
-         (display (area base-rect height-rect r))
-         (newline)))
+  (displayln (perimeter base-rect height-rect r))
+  (displayln (area base-rect height-rect r)))
 ;; 10
 ;; 6
 
@@ -93,9 +95,7 @@
                        (make-point 0 2)))
        (base-rect base-rect-b)
        (height-rect height-rect-b))
-  (begin (display (perimeter base-rect height-rect r))
-         (newline)
-         (display (area base-rect height-rect r))
-         (newline)))
+  (displayln (perimeter base-rect height-rect r))
+  (displayln (area base-rect height-rect r)))
 ;; 10
 ;; 6

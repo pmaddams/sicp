@@ -5,11 +5,12 @@
       (begin (p (car l))
              (foreach p (cdr l)))))
 
-(let ((p (lambda (x)
-           (begin (display x)
-                  (newline))))
-      (l '(57 321 88)))
-  (foreach p l))
+(define (displayln x)
+  (display x)
+  (newline))
+
+(let ((l '(57 321 88)))
+  (foreach displayln l))
 ;; 57
 ;; 321
 ;; 88
