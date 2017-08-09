@@ -21,13 +21,14 @@
                     (cons i (e (inc i)))))))
     (e i)))
 
+(define (flatmap p seq)
+  (accumulate append '() (map p seq)))
+
 (define (unique-pairs n)
-  (accumulate append
-              '()
-              (map (lambda (i)
-                     (map (lambda (j) (list i j))
-                          (enumerate-interval 1 (dec i))))
-                   (enumerate-interval 1 n))))
+  (flatmap (lambda (i)
+             (map (lambda (j) (list i j))
+                  (enumerate-interval 1 (dec i))))
+           (enumerate-interval 1 n)))
 
 (define (make-pair-sum pair)
   (list (car pair) (cadr pair) (+ (car pair) (cadr pair))))
