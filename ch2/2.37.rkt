@@ -30,12 +30,10 @@
 
 (define (matrix-*-matrix m1 m2)
   (let* ((rows m1)
-        (cols (transpose m2)))
-    (map (lambda (row)
-           (map (lambda (col)
-                  (dot-product row col))
-                cols))
-         rows)))
+         (cols (transpose m2))
+         (p (lambda (r)
+              (matrix-*-vector cols r))))
+    (map p rows)))
 
 (define (displayln x)
   (display x)
