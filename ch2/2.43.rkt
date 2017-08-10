@@ -24,11 +24,7 @@
 (define (flatmap p seq)
   (accumulate append '() (map p seq)))
 
-(define (displayln x)
-  (display x)
-  (newline))
-
-(define (queens-count-steps board-size)
+(define (queens-compare-steps board-size)
   (letrec ((counter 0)
            (empty-board '())
            (adjoin-position cons)
@@ -78,28 +74,22 @@
                                            (bad-cols (dec k))))
                                     (enumerate-interval 1 board-size)))))))
     (good-cols board-size)
-    (displayln counter)
+    (display counter)
+    (display " ")
     (set! counter 0)
     (bad-cols board-size)
-    (displayln counter)))
+    (display counter)
+    (newline)))
 
-(for-each queens-count-steps (enumerate-interval 1 8))
-;; 2
-;; 2
-;; 3
-;; 7
-;; 4
-;; 40
-;; 5
-;; 341
-;; 6
-;; 3906
-;; 7
-;; 55987
-;; 8
-;; 960800
-;; 9
-;; 19173961
+(for-each queens-compare-steps (enumerate-interval 1 8))
+;; 2 2
+;; 3 7
+;; 4 40
+;; 5 341
+;; 6 3906
+;; 7 55987
+;; 8 960800
+;; 9 19173961
 
 ;; The flatmap operates on the enumerated interval from 1 to board-size. The
 ;; procedure mapped to this interval takes the argument new-row, an integer, and
