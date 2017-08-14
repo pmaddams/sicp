@@ -64,7 +64,7 @@
                             (remaining-l (cdr right-result)))
                        (cons (make-tree this-entry left-tree right-tree)
                              remaining-l))))))
-    (lt l (length l))))
+    (car (lt l (length l)))))
 
 ;; The partial-tree procedure, here locally defined as lt, has a recursive base
 ;; case where n, the number of elements in the subtree, is zero. We descend the
@@ -92,7 +92,7 @@
   (displayln t2))
 ;; (1 () (3 () (5 () (7 () (9 () (11 () ()))))))
 ;; (1 3 5 7 9 11)
-;; ((5 (1 () (3 () ())) (9 (7 () ()) (11 () ()))))
+;; (5 (1 () (3 () ())) (9 (7 () ()) (11 () ())))
 
 ;;  5
 ;;  /\
