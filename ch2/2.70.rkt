@@ -117,5 +117,15 @@
                    SHA NA NA NA NA NA NA NA NA
                    WAH YIP YIP YIP YIP YIP YIP YIP YIP
                    SHA BOOM)))
-  (display (length (encode song alphabet))))
-;; 85
+  (display "song length: ")
+  (display (length song))
+  (newline)
+  (display "number of bits: ")
+  (display (length (encode song alphabet)))
+  (newline))
+;; song length: 35
+;; number of bits: 85
+
+;; For an 8-letter alphabet, only 3 bits are required to encode every symbol in
+;; a fixed-length code. The number of bits is therefore 3 times the number of
+;; symbols in the message, or 3 * 35 = 105.
