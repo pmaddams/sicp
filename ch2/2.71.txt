@@ -13,33 +13,33 @@ Let the symbols and their relative frequencies be:
 
 The tree for the first five symbols is:
 
-{ A B C D E } 31
+{A B C D E} 31
     /\
-E 16  { A B C D } 15
+E 16  {A B C D} 15
       /\
-   D 8  { A B C } 7
+   D 8  {A B C} 7
         /\
-     C 4  { A B } 3
+     C 4  {A B} 3
           /\
        B 2  A 1
 
 The tree for the first ten symbols is:
 
-{ A B C D E F G H I J } 1023
+{A B C D E F G H I J} 1023
      /\
-J 512  { A B C D E F G H I } 511
+J 512  {A B C D E F G H I} 511
        /\
-  I 256  { A B C D E F G H } 255
+  I 256  {A B C D E F G H} 255
          /\
-     H 64  { A B C D E F G } 63
+     H 64  {A B C D E F G} 63
            /\
-       G 32  { A B C D E} 31
+       G 32  {A B C D E} 31
              /\
-         E 16  { A B C D } 15
+         E 16  {A B C D} 15
                /\
-            D 8  { A B C } 7
+            D 8  {A B C} 7
                  /\
-              C 4  { A B } 3
+              C 4  {A B} 3
                    /\
                 B 2  A 1
 
