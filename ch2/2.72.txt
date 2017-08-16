@@ -1,0 +1,12 @@
+The order of growth for encoding a symbol depends on the algorithm used to
+search the tree. If we search for the highest-frequency symbols first, in the
+case where symbol weights are successive powers of two, encoding the most
+frequent symbol is a constant-time operation because we find it immediately. But
+if we search the wrong branch first, encoding the most frequent symbol requires
+traversing the entire tree because the sum of the weights of the other symbols
+is less than the weight of the most frequent symbol.
+
+Encoding the least frequent symbol is a quadratic-time operation, since we have
+to search the entire remaining list of symbols at each successive node in the
+tree, and we have to search a number of nodes equal to the number of symbols in
+the tree.
