@@ -12,3 +12,16 @@
                            (else (inc-count)
                                  (f m))))))
     dispatch))
+
+(define (displayln x)
+  (display x)
+  (newline))
+
+(let ((s (make-monitored sqrt)))
+  (displayln (s 100))
+  (displayln (s 'how-many-calls?))
+  (s 'reset-count)
+  (displayln (s 'how-many-calls?)))
+;; 10
+;; 1
+;; 0
