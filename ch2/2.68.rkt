@@ -43,10 +43,10 @@
 (define (encode-symbol symbol tree)
   (letrec ((e (lambda (tree result)
                 (cond ((leaf? tree) result)
-                      ((symbol-in-tree? symbol (left-branch tree))
-                       (e (left-branch tree) (append result (list 0))))
                       ((symbol-in-tree? symbol (right-branch tree))
                        (e (right-branch tree) (append result (list 1))))
+                      ((symbol-in-tree? symbol (left-branch tree))
+                       (e (left-branch tree) (append result (list 0))))
                       (else (error "encode-symbol: not in tree" symbol))))))
     (e tree '())))
 
