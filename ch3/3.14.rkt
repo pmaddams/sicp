@@ -9,7 +9,8 @@
                          (loop temp x))))))
     (loop x '())))
 
-;; The mystery procedure reverses a list.
+;; The mystery procedure creates a reversed version of the original list x, and
+;; mutates x to (cons (car x) '()).
 
 (define v '(a b c d))
 
