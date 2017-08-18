@@ -1,12 +1,13 @@
 #lang sicp
 
+(define (last-pair l)
+  (if (null? (cdr l))
+      l
+      (last-pair (cdr l))))
+
 (define (append! x y)
-  (letrec ((last-pair (lambda (l)
-                        (if (null? (cdr l))
-                            l
-                            (last-pair (cdr l))))))
-    (set-cdr! (last-pair x) y)
-    x))
+  (set-cdr! (last-pair x) y)
+    x)
 
 (define (displayln x)
   (display x)
