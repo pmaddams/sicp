@@ -10,14 +10,13 @@
 
 ;;             -------------
 ;; global-env->|factorial-a|
-;;             -----|-------
-;;                  V
-;;               ------
-;;           E1->|n: 6|
-;;               ------
-;;           (if (<= n 1)
-;;               1
-;;               (* n (factorial-a (dec n))))
+;;             -^-----------
+;;             -|----
+;;         E1->|n: 6|
+;;             ------
+;;         (if (<= n 1)
+;;             1
+;;             (* n (factorial-a (dec n))))
 
 (define (factorial-b n)
   (letrec ((f (lambda (result counter)
@@ -32,18 +31,16 @@
 
 ;;             -------------
 ;; global-env->|factorial-b|
-;;             -----|-------
-;;                  V
-;;               ------
-;;           E1->|n: 6|
-;;               |f   |
-;;               -|----
-;;                V  (f 1 1)
-;;               ------------
-;;           E2->|result: 1 |
-;;               |counter: 1|
-;;               ------------
-;;           (if (> counter n)
-;;               result
-;;               (f (* result counter)
-;;                  (inc counter)))
+;;             -^-----------
+;;             -|----
+;;         E1->|n: 6| (f 1 1)
+;;             |f   |
+;;             -^----
+;;             -|----------
+;;         E2->|result: 1 |
+;;             |counter: 1|
+;;             ------------
+;;         (if (> counter n)
+;;             result
+;;             (f (* result counter)
+;;                (inc counter)))
