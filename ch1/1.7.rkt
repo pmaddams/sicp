@@ -33,7 +33,7 @@
 ;; two very large squares will never be less than the given epsilon.
 
 ;; (sqrt-old 99999999999999999999999999999)
-;; does not terminate
+;; <does not terminate>
 
 (sqrt-new 99999999999999999999999999999)
 ;; 316227766017107.6
