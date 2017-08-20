@@ -32,7 +32,7 @@
 ;;         E1->|balance: 50|
 ;;             |withdraw   |
 ;;             |deposit    |
-;;             |dispatch   |<----|
+;;             |dispatch   |<-----
 ;;             -^-----------     |
 ;;             -|----------     -|----------
 ;;         E2->|amount: 40| E3->|amount: 60|
