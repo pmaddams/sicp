@@ -33,10 +33,6 @@
       (set-front-ptr! q (cdr (front-ptr q))))
   q)
 
-(define (print-queue q)
-  (display (front-ptr q))
-  (newline))
-
 ;; Our queue representation stores a list of the items in the queue in
 ;; front-ptr, and considers the queue to be empty if front-ptr is the empty
 ;; list. The rear-ptr only exists for the purpose of adding items to the end of
@@ -44,6 +40,10 @@
 ;; time instead of linear-time complexity for the insert-queue! operation. If
 ;; Ben wants to print a list of all items in the queue, he should traverse the
 ;; list at front-ptr and ignore rear-ptr altogether.
+
+(define (print-queue q)
+  (display (front-ptr q))
+  (newline))
 
 (let ((q1 (make-queue)))
   (insert-queue! q1 'a)
