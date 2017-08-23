@@ -77,30 +77,27 @@
               (number? n)) (expt b n))
         (else (list '** b n))))
 
-(let ((deriv-sum (lambda (operands var)
-                   (let ((addend (car operands))
-                         (augend (cadr operands)))
-                     (make-sum (deriv addend var)
-                               (deriv augend var)))))
-      (deriv-product (lambda (operands var)
-                       (let ((multiplier (car operands))
-                             (multiplicand (cadr operands)))
-                         (make-sum (make-product multiplier
-                                                 (deriv multiplicand var))
-                                   (make-product (deriv multiplier var)
-                                                 multiplicand)))))
-      (deriv-exponentiation (lambda (operands var)
-                              (let ((base (car operands))
-                                    (exponent (cadr operands)))
-                                (make-product
-                                 (make-product exponent
-                                               (make-exponentiation
-                                                base
-                                                (make-sum exponent '-1)))
-                                 (deriv base var))))))
-  (put 'deriv '+ deriv-sum)
-  (put 'deriv '* deriv-product)
-  (put 'deriv '** deriv-exponentiation))
+(define (deriv-sum operands var)
+  (let ((addend (car operands))
+        (augend (cadr operands)))
+    (make-sum (deriv addend var)
+              (deriv augend var))))
+
+(define (deriv-product operands var)
+  (let ((multiplier (car operands))
+        (multiplicand (cadr operands)))
+    (make-sum (make-product multiplier
+                            (deriv multiplicand var))
+              (make-product (deriv multiplier var)
+                            multiplicand))))
+
+(define (deriv-exponentiation operands var)
+  (let ((base (car operands))
+        (exponent (cadr operands)))
+    (make-product (make-product exponent
+                                (make-exponentiation base
+                                                     (make-sum exponent '-1)))
+                  (deriv base var))))
 
 (define operator car)
 
@@ -114,6 +111,17 @@
         (else ((get 'deriv (operator exp)) (operands exp)
                                            var))))
 
+;; We have defined sums, products, and exponentiations as types of arithmetic
+;; expressions. We cannot place the predicates number?, variable?, and 
+;; same-variable? in the table, because the it is a lookup table for operands,
+;; not for special cases of derivatives.
+
+(put 'deriv '+ deriv-sum)
+
+(put 'deriv '* deriv-product)
+
+(put 'deriv '** deriv-exponentiation)
+
 (define (displayln x)
   (display x)
   (newline))
@@ -123,3 +131,25 @@
 
 (displayln (deriv '(** (+ (** x 2) 1) 2) 'x))
 ;; (* (* 2 (+ (** x 2) 1)) (* 2 x))
+
+(set! deriv (lambda (exp var)
+              (cond ((number? exp) 0)
+                    ((variable? exp) (if (same-variable? exp var)
+                                         1
+                                         0))
+                    (else ((get (operator exp) 'deriv) (operands exp)
+                                                       var)))))
+
+(put '+ 'deriv deriv-sum)
+
+(put '* 'deriv deriv-product)
+
+(put '** 'deriv deriv-exponentiation)
+
+(displayln (deriv '(+ (** x 3) (* 2 x) 1) 'x))
+;; (+ (* 3 (** x 2)) 2)
+
+(displayln (deriv '(** (+ (** x 2) 1) 2) 'x))
+;; (* (* 2 (+ (** x 2) 1)) (* 2 x))
+
+;; We are only required to install the procedures into a different subtable.
