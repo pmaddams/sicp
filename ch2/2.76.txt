@@ -1,0 +1,9 @@
+With explicit dispatch, we need to add a new procedure with a unique name for
+each type. This name should ideally be composed of a prefix indicating type
+followed by the procedure name, such as foo-print or bar-insert. In the data-
+directed style, we can define procedures locally and insert them into a table in
+visible scope for the caller. Within the body of foo, we would define the
+procedure print and then (put 'foo 'print print) to make the procedure available
+with (get 'foo 'print). In the message-passing style, instead of using a table,
+we issue a dispatch procedure as the result of make-foo or make-bar. To print
+foo, we would (define foo (make-foo)) and call ((foo 'print)).
