@@ -179,7 +179,8 @@
                             (f (cdr personnel-files))))))))
       (f all-personnel-files))))
 
-;; A uniform record API should be implemented that uses a layer of "glue code" to
-;; present records in the same way to the interdepartmental system. This way, the
-;; representation of records is irrelevant. When a new company is acquired, this
-;; API service should be implemented on top of that company's existing database.
+;; A uniform record API should be implemented that uses a layer of "glue code"
+;; to present records in the same way to the interdepartmental system. This way,
+;; the representation of records is irrelevant. When a new company is acquired,
+;; this API service should be implemented on top of that company's existing
+;; database.
