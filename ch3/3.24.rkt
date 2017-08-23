@@ -41,13 +41,13 @@
 
 (define put (table 'insert!))
 
-(put 'row1 'col1 'apple)
-(put 'row1 'col2 'banana)
-(put 'row2 'col1 'orange)
-(get 'row1 'col1)
-(get 'row1 'col2)
-(get 'row2 'col1)
-(get 'row2 'col2)
+(put 'a 'a 'apple)
+(put 'a 'b 'banana)
+(put 'b 'a 'orange)
+(get 'a 'a)
+(get 'a 'b)
+(get 'b 'a)
+(get 'b 'b)
 ;; 'apple
 ;; 'banana
 ;; 'orange
