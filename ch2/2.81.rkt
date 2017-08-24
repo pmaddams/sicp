@@ -348,4 +348,4 @@
      (make-complex-from-real-imag 3 0))
 ;; apply-generic: no method for these types: {exp {complex complex}}
 
-;; Apply-generic works correctly as is.
+;; Apply-generic works correctly.
