@@ -10,7 +10,7 @@ foo, we would (define foo (make-foo)) and call ((foo 'print)).
 
 If we must frequently add new types, the message-passing style might be most
 appropriate, because we can use a "copy and paste" method of programming where
-all operations for the new type have an existing blueprint that can be modified
+all operations for the new type have an existing template that can be modified
 as necessary. If we must frequently add new operations, the data-directed style
 might be most appropriate, because we can define the new operation in one place
 and add it to multiple types. However, there is no paradigm of software design
