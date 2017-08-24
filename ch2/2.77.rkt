@@ -133,8 +133,8 @@
          (lambda (x y)
            (tag (div-rat x y))))
     (put 'make 'rational
-         (lambda (x)
-           (tag x)))
+         (lambda (n d)
+           (tag (make-rat n d))))
     (displayln "done.")))
 
 (install-rational-package)
