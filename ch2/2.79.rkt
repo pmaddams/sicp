@@ -83,7 +83,7 @@
     (put 'div '(scheme-number scheme-number)
          (lambda (x y)
            (tag (/ x y))))
-    (put 'zero? '(scheme-number) zero?)
+    (put 'equ? '(scheme-number scheme-number) =)
     (put 'make 'scheme-number
          (lambda (x)
            (tag x)))
@@ -121,8 +121,11 @@
          (div-rat (lambda (x y)
                     (make-rat (* (numer x) (denom y))
                               (* (denom x) (numer y)))))
-         (zero? (lambda (x)
-                  (zero? (numer x))))
+         (equ? (lambda (x y)
+                 (let* ((x (make-rat (numer x) (denom y)))
+                        (y (make-rat (numer y) (denom y))))
+                   (and (= (numer x) (numer y))
+                        (= (denom x) (denom y))))))
          (tag (lambda (x)
                 (attach-tag 'rational x))))
     (display "install-rational-package...")
@@ -138,7 +141,7 @@
     (put 'div '(rational rational)
          (lambda (x y)
            (tag (div-rat x y))))
-    (put 'zero? '(rational) zero?)
+    (put 'equ? '(rational rational) equ?)
     (put 'make 'rational
          (lambda (n d)
            (tag (make-rat n d))))
@@ -166,9 +169,9 @@
          (make-from-mag-ang (lambda (r a)
                               (cons (* r (cos a))
                                     (* r (sin a)))))
-         (zero? (lambda (z)
-                  (and (zero? (real-part z))
-                       (zero? (imag-part z)))))
+         (equ? (lambda (z1 z2)
+                 (and (= (real-part z1) (real-part z2))
+                      (= (imag-part z1) (imag-part z2)))))
          (tag (lambda (x)
                 (attach-tag 'rectangular x))))
     (display "install-rectangular-package...")
@@ -176,7 +179,7 @@
     (put 'imag-part '(rectangular) imag-part)
     (put 'magnitude '(rectangular) magnitude)
     (put 'angle '(rectangular) angle)
-    (put 'zero? '(rectangular) zero?)
+    (put 'equ? '(rectangular rectangular) equ?)
     (put 'make-from-real-imag 'rectangular
          (lambda (x y)
            (tag (make-from-real-imag x y))))
@@ -199,8 +202,9 @@
                                 (cons (sqrt (+ (square x)
                                                (square y)))
                                       (atan y x))))
-         (zero? (lambda (z)
-                  (zero? (magnitude z))))
+         (equ? (lambda (z1 z2)
+                 (and (= (magnitude z1) (magnitude z2))
+                      (= (angle z1) (angle z2)))))
          (tag (lambda (x)
                 (attach-tag 'polar x))))
     (display "install-polar-package...")
@@ -208,7 +212,7 @@
     (put 'imag-part '(polar) imag-part)
     (put 'magnitude '(polar) magnitude)
     (put 'angle '(polar) angle)
-    (put 'zero? '(polar) zero?)
+    (put 'equ? '(polar polar) equ?)
     (put 'make-from-real-imag 'polar
          (lambda (x y)
            (tag (make-from-real-imag x y))))
@@ -242,8 +246,8 @@
          (div-complex (lambda (z1 z2)
                         (make-from-mag-ang (/ (magnitude z1) (magnitude z2))
                                            (- (angle z1) (angle z2)))))
-         (zero? (lambda (z)
-                  (apply-generic 'zero? z)))
+         (equ? (lambda (z1 z2)
+                   (apply-generic 'equ? z1 z2)))
          (tag (lambda (z)
                 (attach-tag 'complex z))))
     (display "install-complex-package...")
@@ -263,7 +267,7 @@
     (put 'imag-part '(complex) imag-part)
     (put 'magnitude '(complex) magnitude)
     (put 'angle '(complex) angle)
-    (put 'zero? '(complex) zero?)
+    (put 'equ? '(complex complex) equ?)
     (put 'make-from-real-imag 'complex
          (lambda (x y)
            (tag (make-from-real-imag x y))))
@@ -287,26 +291,38 @@
 (define make-complex-from-mag-ang
   (get 'make-from-mag-ang 'complex))
 
-(apply-generic 'zero? 0)
+(apply-generic 'equ? 1 1)
 ;; #t
 
-(apply-generic 'zero? 1)
+(apply-generic 'equ? 1 2)
 ;; #f
 
-(apply-generic 'zero? (make-rational 0 1))
+(apply-generic 'equ?
+               (make-rational 1 2)
+               (make-rational 2 4))
 ;; #t
 
-(apply-generic 'zero? (make-rational 1 0))
+(apply-generic 'equ?
+               (make-rational 1 2)
+               (make-rational 3 4))
 ;; #f
 
-(apply-generic 'zero? (make-complex-from-mag-ang 0 1))
+(apply-generic 'equ?
+               (make-complex-from-mag-ang 1 1)
+               (make-complex-from-mag-ang 1 1))
 ;; #t
 
-(apply-generic 'zero? (make-complex-from-mag-ang 1 0))
+(apply-generic 'equ?
+               (make-complex-from-mag-ang 1 1)
+               (make-complex-from-mag-ang 2 1))
 ;; #f
 
-(apply-generic 'zero? (make-complex-from-real-imag 0 0))
+(apply-generic 'equ?
+               (make-complex-from-real-imag 1 0)
+               (make-complex-from-real-imag 1 0))
 ;; #t
 
-(apply-generic 'zero? (make-complex-from-real-imag 0 1))
+(apply-generic 'equ?
+               (make-complex-from-real-imag 1 0)
+               (make-complex-from-real-imag 0 1))
 ;; #f
