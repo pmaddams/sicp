@@ -84,8 +84,18 @@
                       (h (car rest) (cdr rest))))))
       (h (car types) (cdr types)))))
 
+(define (drop n)
+  (if (integer? n)
+      n
+      (let ((projection ((get 'project (type-tag n)) n)))
+        (if ((get 'equ? (type-tag n)) n
+                                      ((get 'raise (type-tag projection)) projection))
+            (drop projection)
+            n))))
+
 (define (apply-generic op . args)
-  (let* ((t (highest-type (map type-tag args)))
+  (let* ((args (map drop args))
+         (t (highest-type (map type-tag args)))
          (coercion (lambda (x)
                      (let ((c (get-coercion (type-tag x) t)))
                        (if c
@@ -94,7 +104,7 @@
          (coerced-args (map coercion args)))
     (if (memq #f coerced-args)
         (error "apply-generic: no method for these types:"
-                                       (list op (map type-tag args)))
+               (list op (map type-tag args)))
         (apply (get op t) coerced-args))))
 
 (define (displayln x)
@@ -355,7 +365,7 @@
 (put-coercion 'integer 'rational integer->rational)
 
 (define (rational->real n)
-  (/ (numer n) (denom n)))
+  (/ (numerator n) (denominator n)))
 
 (put 'raise 'rational rational->real)
 
@@ -367,18 +377,3 @@
 (put 'raise 'real real->complex)
 
 (put-coercion 'real 'complex real->complex)
-
-(define (can-drop? n)
-  (and (not (integer? n))
-       (apply-generic 'equ? n
-                      (apply-generic 'raise
-                                     (apply-generic 'project n)))))
-
-(define (drop n)
-  (if (integer? n)
-      n
-      (let ((projection (apply-generic 'project n)))
-        (if (apply-generic 'equ? n
-                           (apply-generic 'raise projection))
-            projection
-            n))))
