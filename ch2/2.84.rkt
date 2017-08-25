@@ -87,14 +87,15 @@
 (define (apply-generic op . args)
   (let* ((t (highest-type (map type-tag args)))
          (coercion (lambda (x)
-                     (let ((get-coercion (type-tag x) t))
+                     (let ((c (get-coercion (type-tag x) t)))
                        (if c
                            (c x)
                            #f))))
          (coerced-args (map coercion args)))
     (if (memq #f coerced-args)
-        (apply-coerced (cdr l))
-        (apply (get op this-type) coerced-args))))
+        (error "apply-generic: no method for these types:"
+                                       (list op (map type-tag args)))
+        (apply (get op t) coerced-args))))
 
 (define (displayln x)
   (display x)
