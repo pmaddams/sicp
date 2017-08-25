@@ -47,9 +47,6 @@
 
 (define put-coercion (coercion-table 'insert!))
 
-(define hierarchy
-  '(integer rational real complex))
-
 (define (attach-tag type-tag contents)
   (if (eq? type-tag 'scheme-number)
       contents
@@ -64,6 +61,9 @@
   (cond ((number? datum) datum)
         ((pair? datum) (cdr datum))
         (else (error "contents: bad tagged datum:" datum))))
+
+(define hierarchy
+  '(integer rational real complex))
 
 (define (apply-generic op . args)
   (let* ((type-tags (map type-tag args))
