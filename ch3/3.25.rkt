@@ -19,19 +19,6 @@
                                                 (lo (cdr list-of-keys) result))
                                             #f))))))
                      (lo list-of-keys table))))
-         (insert! (lambda (key1 key2 value)
-                    (let ((subtable (assoc key1 (cdr table))))
-                      (if subtable
-                          (let ((record (assoc key2 (cdr subtable))))
-                            (if record
-                                (set-cdr! record value)
-                                (set-cdr! subtable
-                                          (cons (cons key2 value)
-                                                (cdr subtable)))))
-                          (set-cdr! table
-                                    (cons (list key1
-                                                (cons key2 value))
-                                          (cdr table)))))))
          (insert! (lambda (list-of-keys value)
                     (letrec ((in (lambda (list-of-keys current-table)
                                    (if (null? list-of-keys)
