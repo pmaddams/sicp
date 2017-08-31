@@ -1,16 +1,20 @@
 #lang sicp
 
+(define (square x)
+  (expt x 2))
+
+(define (larger-two x y z)
+  (let ((smallest (min x y z)))
+    (cond ((= x smallest) (cons y z))
+          ((= y smallest) (cons x z))
+          (else (cons x y)))))
+
 (define (sum-of-two-larger-squares x y z)
-  (call-with-values
-   (lambda ()
-     (let* ((smallest (min x y z))
-            (larger-two (lambda (x y z)
-                          (cond ((= x smallest) (values y z))
-                                ((= y smallest) (values x z))
-                                (else (values x y))))))
-       (larger-two x y z)))
-   (lambda (x y)
-     (let ((square (lambda (x)
-                     (expt x 2))))
-       (+ (square x)
-          (square y))))))
+  (let* ((p (larger-two x y z))
+         (a (car p))
+         (b (cdr p)))
+    (+ (square a)
+       (square b))))
+
+(sum-of-two-larger-squares 2 3 4)
+;; 25
