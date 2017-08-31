@@ -1,11 +1,11 @@
-An interpreter using applicative-order evaluation will attempt to evaluate
-the operands whether or not the expression involves only primitive operators.
-As a result, evaluating the expression
+An interpreter using applicative-order evaluation will attempt to evaluate the
+operands whether or not the expression involves only primitive operators. As a
+result, evaluating the expression
 
 (test 0 (p))
 
-will require evaluating (p), which is another call to (p). The interpreter
-will get stuck in an infinite loop at this point.
+will require evaluating (p), which is another call to (p). The interpreter will
+get stuck in an infinite loop at this point.
 
 An interpreter using normal-order evaluation will instead fully expand the
 expression to
