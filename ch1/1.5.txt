@@ -1,17 +1,18 @@
-With an interpreter that uses applicative-order evaluation, the expression
+An interpreter using applicative-order evaluation will attempt to evaluate
+the operands whether or not the expression involves only primitive operators.
+As a result, evaluating the expression
 
 (test 0 (p))
 
-will continually evaluate to itself, never terminating.
+will require evaluating (p), which is another call to (p). The interpreter
+will get stuck in an infinite loop at this point.
 
-With an interpreter that uses normal-order evaluation, the expression will be
-expanded and finally terminate due to evaluation of the first if clause, as
-follows:
+An interpreter using normal-order evaluation will instead fully expand the
+expression to
 
-(test 0 (p))
+(if (zero? 0)
+    0
+    (p))
 
-(if (= 0 0) 0 (p))
-
-(if #t 0 (p))
-
-0
+which is obviously 0 due to the short-circuiting if statement. The evaluation
+will then terminate and return 0.
