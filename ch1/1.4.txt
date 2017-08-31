@@ -1,3 +1,5 @@
-The first argument of a-plus-abs-b is evaluated based on the value of b. If b is
-positive, the result is the procedure +. Otherwise, the result is the procedure
--. This procedure is then applied to the arguments a and b.
+The procedure a-plus-abs-b evaluates a combination where the first element, the
+operator, is itself the result of an if expression. This operator is then
+applied to the arguments a and b. If b is positive, we use the + operator.
+Otherwise, we use the - operator. Therefore, we are evaluating either (+ a b) or
+(- a b) depending on whether b is positive or negative.
