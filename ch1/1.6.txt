@@ -1,2 +1,19 @@
-Because sqrt-iter is evaluated before improve, an infinite chain of cond
-expressions is generated, which never terminates.
+Unfortunately, the new-if procedure does not work like the if special form.
+The if statement is short-circuiting, meaning that if the predicate is true, 
+the else clause is not evaluated.
+
+However, new-if is a procedure and works differently. The else clause must be
+evaluated even if the predicate is true. For this reason, Eva's new-if procedure
+does not work with tail recursion in the else clause, because the recursion
+never terminates.
+
+This would still be the case even if Eva changed the new-if procedure to use
+if instead of cond:
+
+(define (new-if predicate then-clause else-clause)
+  (if predicate
+      then-clause
+      else-clause))
+
+In cases where the else clause is tail recursive, the evaluation will not 
+terminate.
