@@ -1,36 +1,39 @@
 #lang sicp
 
+(define (average . args)
+  (/ (apply + args)
+     (length args)))
+
 (define (improve guess x)
-  (let ((average (lambda args
-                   (/ (apply + args)
-                      (length args)))))
-    (average guess (/ x guess))))
+  (average guess (/ x guess)))
+
+(define (square x)
+  (expt x 2))
 
 (define (sqrt-old x)
-  (letrec ((good-enough? (lambda (guess)
-                           (< (abs (- (expt guess 2)
-                                      x))
-                              0.001)))
-           (sqrt-iter (lambda (guess)
-                        (if (good-enough? guess)
-                            guess
-                            (sqrt-iter (improve guess x))))))
-    (sqrt-iter 1.0)))
+  (let ((good-enough? (lambda (guess)
+                        (< (abs (- (square guess) x))
+                           0.001))))
+    (letrec ((s (lambda (guess)
+                  (if (good-enough? guess)
+                      guess
+                      (s (improve guess x))))))
+      (s 1.0))))
 
 (define (sqrt-new x)
-  (letrec ((good-enough? (lambda (prev guess)
-                           (< (abs (/ (- prev guess)
-                                      guess))
-                              0.001)))
-           (sqrt-iter (lambda (prev guess)
-                        (if (good-enough? prev guess)
-                            guess
-                            (sqrt-iter guess (improve guess x))))))
-    (sqrt-iter 0.0 1.0)))
+  (let ((good-enough? (lambda (prev guess)
+                        (< (abs (/ (- prev guess)
+                                   guess))
+                           0.001))))
+    (letrec ((s (lambda (prev guess)
+                  (if (good-enough? prev guess)
+                      guess
+                      (s guess (improve guess x))))))
+      (s 0.0 1.0))))
 
-;; For very large numbers, the old definition of sqrt never terminates
+;; For very large numbers, the old definition of sqrt does not terminate
 ;; because the limited precision of the machine means the difference of
-;; two very large squares will never be less than the given epsilon.
+;; two very large squares will never be less than the given threshold.
 
 ;; (sqrt-old 99999999999999999999999999999)
 ;; <does not terminate>
