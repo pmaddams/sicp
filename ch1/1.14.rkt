@@ -1,25 +1,28 @@
 #lang sicp
 
 (define (count-change amount)
-  (letrec ((cc (lambda (amount kinds-of-coins)
-                 (cond ((zero? amount) 1)
-                       ((or (negative? amount)
-                            (zero? kinds-of-coins)) 0)
-                       (else (+ (cc amount
-                                    (dec kinds-of-coins))
-                                (cc (- amount
-                                       (first-denomination kinds-of-coins))
-                                    kinds-of-coins))))))
-           (first-denomination (lambda (kinds-of-coins)
-                                 (case kinds-of-coins
-                                   ((1) 1)
-                                   ((2) 5)
-                                   ((3) 10)
-                                   ((4) 25)
-                                   ((5) 50)))))
-    (cc amount 5)))
+  (let ((first-denomination
+         (lambda (kinds-of-coins)
+           (case kinds-of-coins
+             ((1) 1)
+             ((2) 5)
+             ((3) 10)
+             ((4) 25)
+             ((5) 50)))))
+    (letrec ((cc (lambda (amount kinds-of-coins)
+                   (cond ((zero? amount) 1)
+                         ((or (negative? amount)
+                              (zero? kinds-of-coins)) 0)
+                         (else (+ (cc amount
+                                      (dec kinds-of-coins))
+                                  (cc (- amount
+                                         (first-denomination kinds-of-coins))
+                                      kinds-of-coins)))))))
+      (cc amount 5))))
 
-;; (count-change 11)
+(count-change 11)
+;; 4
+
 ;; (cc 11 5)
 ;; (cc 11 4) (cc -39 5)
 ;; (cc 11 3) (cc -14 4) 0
@@ -41,5 +44,5 @@
 ;; Four branches of the tree evaluate to 1 and the rest evaluate to 0.
 ;; Therefore, the answer is 4.
 
-;; The order of growth with respect to space is theta of amount.
-;; The order of growth with respect to time is theta of amount^5.
+;; The order of growth with respect to space is theta(amount).
+;; The order of growth with respect to time is theta(amount ^ kinds-of-coins).
