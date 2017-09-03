@@ -1,10 +1,13 @@
 #lang sicp
 
-(define (fast-* a b)
+(define (* a b)
   (let ((double (lambda (x)
-                  (* x 2)))
+                  (+ x x)))
         (halve (lambda (x)
                  (/ x 2))))
     (cond ((zero? b) 0)
-          ((even? b) (double (fast-* a (halve b))))
-          (else (+ a (fast-* a (dec b)))))))
+          ((even? b) (* (double a) (halve b)))
+          (else (+ a (* a (dec b)))))))
+
+(* 2 3)
+;; 6
