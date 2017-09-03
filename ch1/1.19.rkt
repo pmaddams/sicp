@@ -20,18 +20,27 @@
 ;; Therefore p' = p^2 + q^2 and q' = 2*p*q + q^2.
 
 (define (fib n)
-  (letrec ((f (lambda (a b p q count)
-                (cond ((zero? count) b)
-                      ((even? count) (f a
-                                        b
-                                        (+ (expt p 2)
-                                           (expt q 2))
-                                        (+ (* 2 p q)
-                                           (expt q 2))
-                                        (/ count 2)))
-                      (else (f (+ (* b q) (* a q) (* a p))
-                               (+ (* b p) (* a q))
-                               p
-                               q
-                               (dec count)))))))
-    (f 1 0 0 1 n)))
+  (let* ((square (lambda (x)
+                   (expt x 2)))
+         (next-p (lambda (p q)
+                   (+ (square p)
+                      (square q))))
+         (next-q (lambda (p q)
+                   (+ (* 2 p q)
+                      (square q)))))
+    (letrec ((f (lambda (a b p q count)
+                  (cond ((zero? count) b)
+                        ((even? count) (f a
+                                          b
+                                          (next-p p q)
+                                          (next-q p q)
+                                          (/ count 2)))
+                        (else (f (+ (* b q) (* a q) (* a p))
+                                 (+ (* b p) (* a q))
+                                 p
+                                 q
+                                 (dec count)))))))
+      (f 1 0 0 1 n))))
+
+(fib 10)
+;; 55
