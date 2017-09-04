@@ -1,72 +1,79 @@
 #lang sicp
 
+(define (smallest-divisor n)
+  (let ((square (lambda (x)
+                  (expt x 2)))
+        (divides? (lambda (a b)
+                    (zero? (remainder b a)))))
+    (letrec ((s (lambda (i)
+                  (cond ((> (square i) n) n)
+                        ((divides? i n) i)
+                        (else (s (inc i)))))))
+      (s 2))))
+
 (define (prime? n)
-  (letrec ((square (lambda (x)
-                     (expt x 2)))
-           (divides? (lambda (a b)
-                       (zero? (remainder b a))))
-           (find-divisor (lambda (test-divisor)
-                           (cond ((> (square test-divisor) n) n)
-                                 ((divides? test-divisor n) test-divisor)
-                                 (else (find-divisor (inc test-divisor))))))
-           (smallest-divisor (lambda ()
-                               (find-divisor 2))))
-    (if (<= n 1)
-        #f
-        (= n (smallest-divisor)))))
+  (and (> n 1)
+       (odd? n)
+       (= n (smallest-divisor n))))
+
+(define (displayln x)
+  (display x)
+  (newline))
 
 (define (timed-prime-test n)
-  (let* ((report-prime (lambda (elapsed-time)
-                         (display " *** ")
-                         (display elapsed-time)))
-         (start-prime-test (lambda (start-time)
-                             (if (prime? n)
-                                 (report-prime (- (runtime) start-time))))))
-    (newline)
-    (display n)
-    (start-prime-test (runtime))))
+  (let ((start (runtime)))
+    (if (prime? n)
+        (let ((elapsed (- (runtime) start)))
+          (display n)
+          (display " *** ")
+          (displayln elapsed)
+          elapsed))))
 
-(define (search-for-primes n bound)
-  (if (< n bound)
-      (if (odd? n)
-          (begin (timed-prime-test n)
-                 (search-for-primes (+ n 2) bound))
-          (search-for-primes (inc n) bound))
-      (newline)))
+(define (search-for-primes n lim)
+  (letrec ((s (lambda (n)
+                (if (< n lim)
+                    (begin (timed-prime-test n)
+                           (s (inc n)))))))
+    (s n)))
 
 (search-for-primes 1000 1020)
-;; 1009 *** 51
-;; 1013 *** 50
-;; 1019 *** 50
+;; 1009 *** 37
+;; 1013 *** 38
+;; 1019 *** 39
 
 (search-for-primes 10000 10040)
-;; 10007 *** 119
-;; 10009 *** 119
-;; 10037 *** 118
+;; 10007 *** 116
+;; 10009 *** 126
+;; 10037 *** 117
 
 (search-for-primes 100000 100050)
-;; 100003 *** 350
-;; 100019 *** 354
-;; 100043 *** 349
+;; 100003 *** 346
+;; 100019 *** 345
+;; 100043 *** 346
 
 (search-for-primes 1000000 1000040)
-;; 1000003 *** 1142
-;; 1000033 *** 1142
-;; 1000037 *** 1140
+;; 1000003 *** 1086
+;; 1000033 *** 1086
+;; 1000037 *** 1086
 
-(/ 51. (sqrt 1000))
-;; 1.6127616066858734
+(define (ratios-to-sqrt l)
+  (for-each displayln
+            (map (lambda (a b)
+                   (/ a (sqrt b)))
+                 (map timed-prime-test l)
+                 l)))
 
-(/ 119. (sqrt 10000))
-;; 1.19
-
-(/ 350. (sqrt 100000))
-;; 1.1067971810589328
-
-(/ 1142. (sqrt 1000000))
-;; 1.142
+(ratios-to-sqrt '(1009 10007 100003 1000003))
+;; 1009 *** 55
+;; 10007 *** 140
+;; 100003 *** 414
+;; 1000003 *** 1286
+;; 1.7314785125565362
+;; 1.3995102571000293
+;; 1.3091633140072776
+;; 1.2859980710043402
 
 ;; The timing data supports the idea that runtime is proportional to the number
 ;; of steps required, especially for a large number of steps. Given that the
-;; algorithm has order of growth theta of sqrt(n), the ratio of runtime to
-;; sqrt(n) appears to approach a constant value as n approaches infinity.
+;; algorithm has order of growth theta(sqrt(n)), the ratio of runtime to sqrt(n)
+;; appears to converge as n approaches infinity.
