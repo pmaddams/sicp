@@ -1,65 +1,63 @@
 #lang sicp
 
+(define (smallest-divisor n)
+  (let ((square (lambda (x)
+                  (expt x 2)))
+        (divides? (lambda (a b)
+                    (zero? (remainder b a)))))
+    (letrec ((s (lambda (i)
+                  (cond ((> (square i) n) n)
+                        ((divides? i n) i)
+                        (else (s (+ i 2)))))))
+      (s 3))))
+
 (define (prime? n)
-  (letrec ((square (lambda (x)
-                     (expt x 2)))
-           (divides? (lambda (a b)
-                       (zero? (remainder b a))))
-           (next (lambda (test-divisor)
-                   (+ test-divisor 2)))
-           (find-divisor (lambda (test-divisor)
-                           (cond ((> (square test-divisor) n) n)
-                                 ((divides? test-divisor n) test-divisor)
-                                 (else (find-divisor (next test-divisor))))))
-           (smallest-divisor (lambda ()
-                               (find-divisor 3))))
-    (cond ((<= n 1) #f)
-          ((= n 2) #t)
-          ((even? n) #f)
-          (else (= n (smallest-divisor))))))
+  (and (> n 1)
+       (not (= n 2))
+       (odd? n)
+       (= n (smallest-divisor n))))
 
 (define (timed-prime-test n)
-  (let* ((report-prime (lambda (elapsed-time)
-                         (display " *** ")
-                         (display elapsed-time)))
-         (start-prime-test (lambda (start-time)
-                             (if (prime? n)
-                                 (report-prime (- (runtime) start-time))))))
-    (newline)
-    (display n)
-    (start-prime-test (runtime))))
+  (let ((start (runtime)))
+    (if (prime? n)
+        (let ((elapsed (- (runtime) start)))
+          (display n)
+          (display " *** ")
+          (display elapsed)
+          (newline)
+          elapsed))))
 
-(define (search-for-primes n bound)
-  (if (< n bound)
-      (if (odd? n)
-          (begin (timed-prime-test n)
-                 (search-for-primes (+ n 2) bound))
-          (search-for-primes (inc n) bound))
-      (newline)))
+(define (search-for-primes n lim)
+  (letrec ((s (lambda (n)
+                (if (< n lim)
+                    (begin (timed-prime-test n)
+                           (s (+ n 2)))))))
+    (if (even? n)
+        (set! n (inc n)))
+    (s n)))
 
 (search-for-primes 1000 1020)
-;; 1009 *** 31
-;; 1013 *** 33
-;; 1019 *** 32
+;; 1009 *** 21
+;; 1013 *** 21
+;; 1019 *** 22
 
 (search-for-primes 10000 10040)
-;; 10007 *** 68
-;; 10009 *** 69
-;; 10037 *** 67
+;; 10007 *** 60
+;; 10009 *** 76
+;; 10037 *** 60
 
 (search-for-primes 100000 100050)
-;; 100003 *** 182
-;; 100019 *** 183
-;; 100043 *** 182
+;; 100003 *** 170
+;; 100019 *** 170
+;; 100043 *** 170
 
 (search-for-primes 1000000 1000040)
-;; 1000003 *** 546
-;; 1000033 *** 545
-;; 1000037 *** 545
+;; 1000003 *** 531
+;; 1000033 *** 528
+;; 1000037 *** 529
 
-;; The improved next procedure increases n by 2 each time without checking its
-;; value, because smallest-divisor now starts at 3, and the prime? procedure
-;; first checks if n is even before starting the algorithm. The speed
-;; improvement is about a factor of 2, especially for large numbers. This
-;; supports the previous conclusion that runtime is dependent on order of growth
-;; for large values of n.
+;; The improved smallest-divisor procedure now increases the test variable by 2
+;; each time, starting from 3, and the prime? procedure checks if n is odd
+;; before starting the algorithm. We observe a speed improvement by about a
+;; factor of 2. Additionally, we can improve the search-for-primes? procedure by
+;; similarly ignoring even numbers.
