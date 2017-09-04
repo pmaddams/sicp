@@ -1,20 +1,17 @@
 #lang sicp
 
-(define (expmod base exp m)
-  (letrec ((square (lambda (x)
-                     (expt x 2)))
-           (e (lambda (exp)
-                (cond ((zero? exp) 1)
-                      ((even? exp) (remainder (square (e (/ exp 2)))
-                                              m))
-                      (else (remainder (* base (e (dec exp)))
-                                       m))))))
-    (e exp)))
+(define (expmod a n m)
+  (let ((square (lambda (x)
+                  (expt x 2))))
+    (letrec ((e (lambda (n)
+                  (cond ((zero? n) 1)
+                        ((even? n) (remainder (square (e (/ n 2))) m))
+                        (else (remainder (* a (e (dec n))) m))))))
+      (e n))))
 
 (define (fools? n)
   (letrec ((f (lambda (a)
-                (if (= a n)
-                    #t
+                (or (= a n)
                     (and (= a (expmod a n n))
                          (f (inc a)))))))
     (f 1)))
@@ -28,3 +25,9 @@
               (display "the Fermat test.")
               (newline))
             carmichael))
+;; 561 fools the Fermat test.
+;; 1105 fools the Fermat test.
+;; 1729 fools the Fermat test.
+;; 2465 fools the Fermat test.
+;; 2821 fools the Fermat test.
+;; 6601 fools the Fermat test.
