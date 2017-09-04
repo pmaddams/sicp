@@ -20,4 +20,4 @@
 
 ;; When evaluating (sine 12.15), p is applied 5 times.
 
-;; The order of growth with respect to both space and time is theta of log(a).
+;; The order of growth with respect to both space and time is theta(log(a)).
