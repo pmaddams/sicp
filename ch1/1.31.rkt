@@ -12,16 +12,17 @@
   (letrec ((p (lambda (a result)
                    (if (> a b)
                        result
-                       (p (next a) (* (term a) result))))))
+                       (p (next a)
+                          (* result (term a)))))))
     (p a 1)))
 
+(define product product-iter)
+
 (define (factorial n)
-  (let ((product product-iter))
-    (product identity 1 inc n)))
+  (product identity 1 inc n))
 
 (define (pi-product a b)
-  (let ((product product-iter)
-        (pi-term (lambda (x)
+  (let ((pi-term (lambda (x)
                    (/ (* (dec x) (inc x))
                       (* x x))))
         (pi-next (lambda (x)
