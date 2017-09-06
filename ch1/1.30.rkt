@@ -1,8 +1,12 @@
 #lang sicp
 
 (define (sum term a next b)
-  (letrec ((iter (lambda (a result)
-                   (if (> a b)
-                       result
-                       (iter (next a) (+ (term a) result))))))
-    (iter a 0)))
+  (letrec ((s (lambda (a result)
+                (if (> a b)
+                    result
+                    (s (next a)
+                       (+ result (term a)))))))
+    (s a 0)))
+
+(sum identity 0 inc 10)
+;; 55
