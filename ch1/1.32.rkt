@@ -12,13 +12,20 @@
   (letrec ((p (lambda (a result)
                 (if (> a b)
                     result
-                    (p (next a) (combiner (term a) result))))))
+                    (p (next a)
+                       (combiner result (term a)))))))
     (p a null-value)))
 
+(define accumulate accumulate-iter)
+
 (define (sum term a next b)
-  (let ((accumulate accumulate-iter))
-    (accumulate + 0 term a next b)))
+  (accumulate + 0 term a next b))
+
+(sum identity 1 inc 10)
+;; 55
 
 (define (product term a next b)
-  (let ((accumulate accumulate-iter))
-    (accumulate * 1 term a next b)))
+  (accumulate * 1 term a next b))
+
+(product identity 1 inc 10)
+;; 3628800
