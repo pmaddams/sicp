@@ -1,15 +1,14 @@
 #lang sicp
 
 (define (fixed-point f guess)
-  (letrec ((tolerance 0.00001)
-           (close-enough? (lambda (a b)
-                            (< (abs (- a b)) tolerance)))
-           (try (lambda (guess)
-                  (let ((next (f guess)))
-                    (if (close-enough? guess next)
-                        next
-                        (try next))))))
-    (try guess)))
+  (let ((close-enough? (lambda (a b)
+                         (< (abs (- a b)) 0.00001))))
+    (letrec ((try (lambda (guess)
+                    (let ((next (f guess)))
+                      (if (close-enough? guess next)
+                          next
+                          (try next))))))
+      (try guess))))
 
 ;; x = 1 + 1 / x
 ;; x^2 - x - 1 = 0
