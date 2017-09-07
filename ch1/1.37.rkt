@@ -5,28 +5,30 @@
                 (if (> i k)
                     0
                     (/ (n i)
-                       (+ (d i) (c (inc i))))))))
+                       (+ (c (inc i)) (d i)))))))
     (c 1)))
 
 (define (cont-frac-iter n d k)
   (letrec ((c (lambda (i result)
                 (if (zero? i)
                     result
-                    (c (dec i) (/ (n i)
-                                  (+ (d i) result)))))))
+                    (c (dec i)
+                       (/ (n i)
+                          (+ result (d i))))))))
     (c k 0)))
 
-(define (how-large-must-k-be? f)
-  (letrec ((phi 1.6180)
-           (one (lambda (x) 1.0))
-           (ok? (lambda (x)
-                  (< (abs (- (/ 1 x) phi))
-                     0.00005)))
-           (o (lambda (k)
-                (if (ok? (f one one k))
-                    k
-                    (o (inc k))))))
-    (o 1)))
+(define (how-large-must-k-be? cont-frac)
+  (let* ((one (lambda (x) 1.0))
+         (phi 1.6180)
+         (tolerance 0.00005)
+         (good-enough? (lambda (x)
+                         (< (abs (- (/ 1 x) phi))
+                            tolerance))))
+    (letrec ((h (lambda (k)
+                  (if (good-enough? (cont-frac one one k))
+                      k
+                      (h (inc k))))))
+      (h 1))))
 
 (how-large-must-k-be? cont-frac-rec)
 ;; 11
