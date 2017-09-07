@@ -1,16 +1,16 @@
 #lang sicp
 
-(define (cont-frac-iter n d k)
+(define (cont-frac n d k)
   (letrec ((c (lambda (i result)
                 (if (zero? i)
                     result
-                    (c (dec i) (/ (n i)
-                                  (+ (d i) result)))))))
+                    (c (dec i)
+                       (/ (n i)
+                          (+ result (d i))))))))
     (c k 0)))
 
-(define (e-cf k)
-  (let ((cont-frac cont-frac-iter)
-        (n (lambda (i) 1.0))
+(define (euler k)
+  (let ((n (lambda (i) 1.0))
         (d (lambda (i)
              (let ((j (- i 2)))
                (if (zero? (modulo j 3))
@@ -21,5 +21,5 @@
 (exp 1)
 ;; 2.718281828459045
 
-(e-cf 20)
+(euler 20)
 ;; 2.718281828459045
