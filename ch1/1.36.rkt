@@ -1,17 +1,17 @@
 #lang sicp
 
 (define (fixed-point f guess)
-  (letrec ((tolerance 0.00001)
-           (close-enough? (lambda (a b)
-                            (< (abs (- a b)) tolerance)))
-           (try (lambda (guess)
-                  (let ((next (f guess)))
-                    (display next)
-                    (newline)
-                    (if (close-enough? guess next)
-                        next
-                        (try next))))))
-    (try guess)))
+  (let* ((tolerance 0.00001)
+         (close-enough? (lambda (a b)
+                          (< (abs (- a b)) tolerance))))
+    (letrec ((try (lambda (guess)
+                    (let ((next (f guess)))
+                      (display next)
+                      (newline)
+                      (if (close-enough? guess next)
+                          next
+                          (try next))))))
+      (try guess))))
 
 (define (average . args)
   (/ (apply + args)
@@ -55,7 +55,6 @@
 ;; 4.555527808516254
 ;; 4.555540912917957
 ;; 4.555532270803653
-;; 4.555532270803653
 
 (let ((f (lambda (x)
            (average x
@@ -70,5 +69,4 @@
 ;; 4.555909809045131
 ;; 4.555599411610624
 ;; 4.5555465521473675
-;; 4.555537551999825
 ;; 4.555537551999825
