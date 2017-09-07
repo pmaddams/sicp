@@ -1,8 +1,9 @@
 #lang sicp
 
 (define (fixed-point f guess)
-  (let ((close-enough? (lambda (a b)
-                         (< (abs (- a b)) 0.00001))))
+  (let* ((tolerance 0.00001)
+         (close-enough? (lambda (a b)
+                          (< (abs (- a b)) tolerance))))
     (letrec ((try (lambda (guess)
                     (let ((next (f guess)))
                       (if (close-enough? guess next)
