@@ -1,14 +1,16 @@
 #lang sicp
 
-(define (repeated f n)
-  (let ((double (lambda (f)
-                  (lambda (x)
-                    (f (f x))))))
-    (if (= n 1)
-        f
-        (repeated (double f) (dec n)))))
+(define (double f)
+  (lambda (x)
+    (f (f x))))
 
-(let ((square (lambda (x)
-                (expt x 2))))
-  ((repeated square 2) 5))
+(define (repeated f n)
+  (if (= n 1)
+      f
+      (repeated (double f) (dec n))))
+
+(define (square x)
+  (expt x 2))
+
+((repeated square 2) 5)
 ;; 625
