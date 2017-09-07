@@ -9,7 +9,7 @@
                           (+ result (d i))))))))
     (c k 0)))
 
-(define (euler k)
+(define (e-cf k)
   (let ((n (lambda (i) 1.0))
         (d (lambda (i)
              (let ((j (- i 2)))
@@ -21,5 +21,5 @@
 (exp 1)
 ;; 2.718281828459045
 
-(euler 20)
+(e-cf 20)
 ;; 2.718281828459045
