@@ -4,7 +4,8 @@
   (lambda (x)
     (f (g x))))
 
-(let ((square (lambda (x)
-                (expt x 2))))
-  ((compose square inc) 6))
+(define (square x)
+  (expt x 2))
+
+((compose square inc) 6)
 ;; 49
