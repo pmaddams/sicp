@@ -6,9 +6,9 @@
       (gcd b (remainder a b))))
 
 (define (make-rat n d)
-  (let ((g (gcd n d)))
-    (set! n (/ n g))
-    (set! d (/ d g))
+  (let* ((g (gcd n d))
+         (n (/ n g))
+         (d (/ d g)))
     (if (negative? d)
         (cons (- n) (- d))
         (cons n d))))
@@ -19,8 +19,10 @@
 
 (define (print-rat x)
   (display (numer x))
-  (display "/")
-  (display (denom x))
+  (let ((d (denom x)))
+    (if (not (= d 1))
+        (begin (display "/")
+               (display d))))
   (newline))
 
 (define (add-rat x y)
@@ -40,3 +42,7 @@
 (define (div-rat x y)
   (make-rat (* (numer x) (denom y))
             (* (denom x) (numer x))))
+
+(print-rat (mul-rat (make-rat 2 3)
+                    (make-rat 6 4)))
+;; 1
