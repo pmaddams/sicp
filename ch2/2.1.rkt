@@ -41,8 +41,20 @@
 
 (define (div-rat x y)
   (make-rat (* (numer x) (denom y))
-            (* (denom x) (numer x))))
+            (* (denom x) (numer y))))
 
-(print-rat (mul-rat (make-rat 2 3)
-                    (make-rat 6 4)))
-;; 1
+(print-rat (add-rat (make-rat -1 2)
+                    (make-rat 1 -3)))
+;; -5/6
+
+(print-rat (sub-rat (make-rat -1 2)
+                    (make-rat 1 -3)))
+;; -1/6
+
+(print-rat (mul-rat (make-rat -1 2)
+                    (make-rat 1 -3)))
+;; 1/6
+
+(print-rat (div-rat (make-rat -1 2)
+                    (make-rat 1 -3)))
+;; 3/2
