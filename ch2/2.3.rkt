@@ -1,5 +1,9 @@
 #lang sicp
 
+(define (average . args)
+  (/ (apply + args)
+     (length args)))
+
 (define make-point cons)
 
 (define x-point car)
@@ -9,18 +13,10 @@
 (define (print-point p)
   (display "(")
   (display (x-point p))
-  (display ",")
+  (display ", ")
   (display (y-point p))
   (display ")")
   (newline))
-
-(define (distance p1 p2)
-  (let* ((x1 (x-point p1))
-         (y1 (y-point p1))
-         (x2 (x-point p2))
-         (y2 (y-point p2)))
-    (sqrt (+ (expt (- x2 x1) 2)
-             (expt (- y2 y1) 2)))))
 
 (define make-segment cons)
 
@@ -28,74 +24,86 @@
 
 (define end-segment cdr)
 
-(define (length-seg seg)
-  (distance (start-segment seg)
-            (end-segment seg)))
+(define (midpoint-segment seg)
+  (let* ((start (start-segment seg))
+         (end (end-segment seg)))
+    (make-point (average (x-point start)
+                         (x-point end))
+                (average (y-point start)
+                         (y-point end)))))
 
-(define make-rect-a cons)
+(define (square x)
+  (expt x 2))
 
-(define base-seg-rect-a car)
+(define (length-segment seg)
+  (let* ((start (start-segment seg))
+         (end (end-segment seg)))
+    (sqrt (+ (square (- (x-point start)
+                        (x-point end)))
+             (square (- (y-point start)
+                        (y-point end)))))))
 
-(define height-seg-rect-a cdr)
+(define (base rect)
+  (rect 'base))
 
-(define (base-rect-a ra)
-  (length-seg (base-seg-rect-a ra)))
+(define (height rect)
+  (rect 'height))
 
-(define (height-rect-a ra)
-  (length-seg (height-seg-rect-a ra)))
+(define (perimeter rect)
+  (+ (* 2 (base rect))
+     (* 2 (height rect))))
 
-(define (make-rect-b p1 p2 p3 p4)
-  (list p1 p2 p3 p4))
+(define (area rect)
+  (* (base rect)
+     (height rect)))
 
-(define (base-and-height-rect-b rb)
-  (let* ((p1 (car rb))
-         (p2 (cadr rb))
-         (p3 (caddr rb))
-         (p4 (cadddr rb))
-         (d1 (distance p1 p2))
-         (d2 (distance p1 p3))
-         (d3 (distance p1 p4))
-         (diagonal (max d1 d2 d3)))
-    (cond ((= diagonal d1) (cons d2 d3))
-          ((= diagonal d2) (cons d1 d3))
-          (else (cons d1 d2)))))
+(define (make-rect-a p1 p2 p3 p4)
+  (let* ((base (lambda ()
+                 (length-segment
+                  (make-segment p1 p2))))
+         (height (lambda ()
+                   (let ((l1 (length-segment
+                              (make-segment p2 p3)))
+                         (l2 (length-segment
+                              (make-segment p3 p4))))
+                     (if (< l1 l2)
+                         l1
+                         l2))))
+         (dispatch (lambda (m)
+                     (cond ((eq? m 'base) (base))
+                           ((eq? m 'height) (height))
+                           (else (error "rect-a: unknown op:" m))))))
+    dispatch))
 
-(define (base-rect-b rb)
-  (car (base-and-height-rect-b rb)))
-
-(define (height-rect-b rb)
-  (cdr (base-and-height-rect-b rb)))
-
-(define (perimeter base-rect height-rect r)
-  (* 2 (+ (base-rect r)
-          (height-rect r))))
-
-(define (area base-rect height-rect r)
-  (* (base-rect r)
-     (height-rect r)))
+(define (make-rect-b seg1 seg2)
+  (let* ((base (lambda ()
+                 (length-segment seg1)))
+         (height (lambda ()
+                   (length-segment seg2)))
+         (dispatch (lambda (m)
+                     (cond ((eq? m 'base) (base))
+                           ((eq? m 'height) (height))
+                           (else (error "rect-b: unknown op:" m))))))
+    dispatch))
 
 (define (displayln x)
   (display x)
   (newline))
 
-(let* ((r (make-rect-a (make-segment (make-point 0 0)
-                                     (make-point 3 0))
-                       (make-segment (make-point 0 0)
-                                     (make-point 0 2))))
-       (base-rect base-rect-a)
-       (height-rect height-rect-a))
-  (displayln (perimeter base-rect height-rect r))
-  (displayln (area base-rect height-rect r)))
-;; 10
-;; 6
+(let ((rect (make-rect-a (make-point 0 0)
+                         (make-point 10 0)
+                         (make-point 10 10)
+                         (make-point 0 10))))
+  (displayln (perimeter rect))
+  (displayln (area rect)))
+;; 40
+;; 100
 
-(let* ((r (make-rect-b (make-point 0 0)
-                       (make-point 3 0)
-                       (make-point 3 2)
-                       (make-point 0 2)))
-       (base-rect base-rect-b)
-       (height-rect height-rect-b))
-  (displayln (perimeter base-rect height-rect r))
-  (displayln (area base-rect height-rect r)))
-;; 10
-;; 6
+(let ((rect (make-rect-b (make-segment (make-point 0 0)
+                                       (make-point 10 0))
+                         (make-segment (make-point 0 0)
+                                       (make-point 0 10)))))
+  (displayln (perimeter rect))
+  (displayln (area rect)))
+;; 40
+;; 100
