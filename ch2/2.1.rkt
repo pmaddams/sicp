@@ -43,6 +43,10 @@
   (make-rat (* (numer x) (denom y))
             (* (denom x) (numer y))))
 
+(define (equal-rat? x y)
+  (= (* (numer x) (denom y))
+     (* (numer y) (denom x))))
+
 (print-rat (add-rat (make-rat -1 2)
                     (make-rat 1 -3)))
 ;; -5/6
@@ -58,3 +62,11 @@
 (print-rat (div-rat (make-rat -1 2)
                     (make-rat 1 -3)))
 ;; 3/2
+
+(equal-rat? (make-rat -1 2)
+            (make-rat 1 -2))
+;; #t
+
+(equal-rat? (make-rat -1 2)
+            (make-rat -2 1))
+;; #f
