@@ -1,20 +1,23 @@
 #lang sicp
 
 (define (cons x y)
-  (lambda (m) (m x y)))
+  (lambda (m)
+    (m x y)))
 
 (define (car z)
-  (z (lambda (p q) p)))
+  (z (lambda (x y)
+       x)))
 
 (define (cdr z)
-  (z (lambda (p q) q)))
+  (z (lambda (x y)
+       y)))
 
 (define (displayln x)
   (display x)
   (newline))
 
-(let ((p (cons 'a 'b)))
-  (displayln (car p))
-  (displayln (cdr p)))
-;; a
-;; b
+(let ((z (cons 'x 'y)))
+  (displayln (car z))
+  (displayln (cdr z)))
+;; x
+;; y
