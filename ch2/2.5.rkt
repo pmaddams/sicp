@@ -1,34 +1,33 @@
 #lang sicp
 
+(define (cons a b)
+  (* (expt 2 a)
+     (expt 3 b)))
+
 (define (gcd a b)
   (if (= b 0)
       a
       (gcd b (remainder a b))))
 
-(define (cons a b)
-  (* (expt 2 a)
-     (expt 3 b)))
+(define (count-primes p)
+  (lambda (n)
+    (letrec ((c (lambda (n result)
+                  (if (= 1 (gcd n p))
+                      result
+                      (c (/ n p)
+                         (inc result))))))
+      (c n 0))))
 
-(define (car z)
-  (letrec ((c (lambda (z result)
-                (if (= 1 (gcd z 2))
-                    result
-                    (c (/ z 2) (inc result))))))
-    (c z 0)))
+(define car (count-primes 2))
 
-(define (cdr z)
-  (letrec ((c (lambda (z result)
-                (if (= 1 (gcd z 3))
-                    result
-                    (c (/ z 3) (inc result))))))
-    (c z 0)))
+(define cdr (count-primes 3))
 
 (define (displayln x)
   (display x)
   (newline))
 
-(let ((p (cons 123 456)))
-  (displayln (car p))
-  (displayln (cdr p)))
+(let ((n (cons 123 456)))
+  (displayln (car n))
+  (displayln (cdr n)))
 ;; 123
 ;; 456
