@@ -1,8 +1,8 @@
 #lang sicp
 
 (define (cons x y)
-  (lambda (m)
-    (m x y)))
+  (lambda (op)
+    (op x y)))
 
 (define (car z)
   (z (lambda (x y)
