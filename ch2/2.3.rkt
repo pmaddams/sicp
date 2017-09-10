@@ -72,7 +72,7 @@
          (dispatch (lambda (m)
                      (cond ((eq? m 'base) (base))
                            ((eq? m 'height) (height))
-                           (else (error "rect-a: unknown op:" m))))))
+                           (else (error "rect-a: undefined:" m))))))
     dispatch))
 
 (define (make-rect-b seg1 seg2)
@@ -83,7 +83,7 @@
          (dispatch (lambda (m)
                      (cond ((eq? m 'base) (base))
                            ((eq? m 'height) (height))
-                           (else (error "rect-b: unknown op:" m))))))
+                           (else (error "rect-b: undefined:" m))))))
     dispatch))
 
 (define (displayln x)
