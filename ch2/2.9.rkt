@@ -6,9 +6,9 @@
 
 (define upper-bound cdr)
 
-(define (width in)
-  (/ (- (upper-bound in)
-        (lower-bound in))
+(define (width-interval x)
+  (/ (- (upper-bound x)
+        (lower-bound x))
      2))
 
 (define (add-interval x y)
@@ -32,21 +32,18 @@
                 (make-interval (/ 1.0 (upper-bound y))
                                (/ 1.0 (lower-bound y)))))
 
-(define (width-add-or-sub x y)
-  (+ (width x)
-     (width y)))
-
 (define (displayln x)
   (display x)
   (newline))
 
 (let ((x (make-interval 1 2))
       (y (make-interval 3 4)))
-  (displayln (width-add-or-sub x y))
-  (displayln (width (add-interval x y)))
-  (displayln (width (sub-interval x y)))
-  (displayln (width (mul-interval x y)))
-  (displayln (width (div-interval x y))))
+  (displayln (+ (width-interval x)
+                (width-interval y)))
+  (displayln (width-interval (add-interval x y)))
+  (displayln (width-interval (sub-interval x y)))
+  (displayln (width-interval (mul-interval x y)))
+  (displayln (width-interval (div-interval x y))))
 ;; 1
 ;; 1
 ;; 1
