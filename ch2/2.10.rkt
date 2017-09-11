@@ -24,8 +24,14 @@
 
 (define (div-interval x y)
   (if (or (zero? (lower-bound y))
-          (zero? (upper-bound x)))
-      (error "division by zero")
+          (zero? (upper-bound y))
+          (and (negative? (lower-bound y))
+               (positive? (upper-bound y))))
+      (error "div-interval: division by zero")
       (mul-interval x
                     (make-interval (/ 1.0 (upper-bound y))
                                    (/ 1.0 (lower-bound y))))))
+
+(div-interval (make-interval 0 0)
+              (make-interval -1 1))
+;; div-interval: division by zero
