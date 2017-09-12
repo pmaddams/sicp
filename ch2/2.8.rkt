@@ -1,8 +1,8 @@
 #lang sicp
 
-;; Let z = x - y, where x, y, and z are intervals. The lower bound of z is equal
-;; to the lower bound of x minus the upper bound of y, and the upper bound of z
-;; is equal to the upper bound of x minus the lower bound of y.
+;; Let k = i - j, where i, j, and k are intervals. The lower bound of k is equal
+;; to the lower bound of i minus the upper bound of j, and the upper bound of k
+;; is equal to the upper bound of i minus the lower bound of j.
 
 (define make-interval cons)
 
@@ -10,40 +10,40 @@
 
 (define upper-bound cdr)
 
-(define (add-interval x y)
-  (make-interval (+ (lower-bound x) (lower-bound y))
-                 (+ (upper-bound x) (upper-bound y))))
+(define (add-interval i j)
+  (make-interval (+ (lower-bound i) (lower-bound j))
+                 (+ (upper-bound i) (upper-bound j))))
 
-(define (sub-interval x y)
-  (make-interval (- (lower-bound x) (upper-bound y))
-                 (- (upper-bound x) (lower-bound y))))
+(define (sub-interval i j)
+  (make-interval (- (lower-bound i) (upper-bound j))
+                 (- (upper-bound i) (lower-bound j))))
 
-(define (mul-interval x y)
-  (let ((xl (lower-bound x))
-        (xh (upper-bound x))
-        (yl (lower-bound y))
-        (yh (upper-bound y)))
-    (let ((p1 (* xl yl))
-          (p2 (* xl yh))
-          (p3 (* xh yl))
-          (p4 (* xh yh)))
+(define (mul-interval i j)
+  (let ((il (lower-bound i))
+        (ih (upper-bound i))
+        (jl (lower-bound j))
+        (jh (upper-bound j)))
+    (let ((p1 (* il jl))
+          (p2 (* il jh))
+          (p3 (* ih jl))
+          (p4 (* ih jh)))
       (make-interval (min p1 p2 p3 p4)
                      (max p1 p2 p3 p4)))))
 
-(define (div-interval x y)
-  (mul-interval x 
-                (make-interval (/ 1.0 (upper-bound y))
-                               (/ 1.0 (lower-bound y)))))
+(define (div-interval i j)
+  (mul-interval i
+                (make-interval (/ 1.0 (upper-bound j))
+                               (/ 1.0 (lower-bound j)))))
 
-(define (print-interval x)
+(define (print-interval i)
   (display "[")
-  (display (lower-bound x))
+  (display (lower-bound i))
   (display ", ")
-  (display (upper-bound x))
+  (display (upper-bound i))
   (display "]")
   (newline))
 
-(let ((x (make-interval 1 2))
-      (y (make-interval 3 4)))
-  (print-interval (sub-interval x y)))
+(let ((i (make-interval 1 2))
+      (j (make-interval 3 4)))
+  (print-interval (sub-interval i j)))
 ;; [-3, -1]
