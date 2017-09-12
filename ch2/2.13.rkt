@@ -6,107 +6,117 @@
 
 (define upper-bound cdr)
 
-(define (add-interval x y)
-  (make-interval (+ (lower-bound x) (lower-bound y))
-                 (+ (upper-bound x) (upper-bound y))))
+(define (add-interval i j)
+  (make-interval (+ (lower-bound i) (lower-bound j))
+                 (+ (upper-bound i) (upper-bound j))))
 
-(define (sub-interval x y)
-  (make-interval (- (lower-bound x) (upper-bound y))
-                 (- (upper-bound x) (lower-bound y))))
+(define (sub-interval i j)
+  (make-interval (- (lower-bound i) (upper-bound j))
+                 (- (upper-bound i) (lower-bound j))))
 
-(define (mul-interval x y)
-  (let ((x1 (lower-bound x))
-        (x2 (upper-bound x))
-        (y1 (lower-bound y))
-        (y2 (upper-bound y))
+(define (mul-interval i j)
+  (let ((il (lower-bound i))
+        (ih (upper-bound i))
+        (jl (lower-bound j))
+        (jh (upper-bound j))
         (nonneg? (lambda (n)
                    (or (zero? n)
                        (positive? n)))))
-    (cond ((nonneg? x1)
-           (cond ((nonneg? y1) (make-interval (* x1 y1)
-                                              (* x2 y2)))
-                 ((negative? y2) (make-interval (* x2 y1)
-                                                (* x1 y2)))
-                 (else (make-interval (* x2 y1)
-                                      (* x2 y2)))))
-          ((negative? x2)
-           (cond ((nonneg? y1) (make-interval (* x1 y2)
-                                              (* x2 y1)))
-                 ((negative? y2) (make-interval (* x2 y2)
-                                                (* x1 y1)))
-                 (else (make-interval (* x1 y2)
-                                      (* x1 y1)))))
+    (cond ((nonneg? il)
+           (cond ((nonneg? jl) (make-interval (* il jl)
+                                              (* ih jh)))
+                 ((negative? jh) (make-interval (* ih jl)
+                                                (* il jh)))
+                 (else (make-interval (* ih jl)
+                                      (* ih jh)))))
+          ((negative? ih)
+           (cond ((nonneg? jl) (make-interval (* il jh)
+                                              (* ih jl)))
+                 ((negative? jh) (make-interval (* ih jh)
+                                                (* il jl)))
+                 (else (make-interval (* il jh)
+                                      (* il jl)))))
           (else
-           (cond ((nonneg? y1) (make-interval (* x1 y2)
-                                              (* x2 y2)))
-                 ((negative? y2) (make-interval (* x2 y1)
-                                                (* x1 y1)))
-                 (else (make-interval (let ((a (* x1 y2))
-                                            (b (* x2 y1)))
+           (cond ((nonneg? jl) (make-interval (* il jh)
+                                              (* ih jh)))
+                 ((negative? jh) (make-interval (* ih jl)
+                                                (* il jl)))
+                 (else (make-interval (let ((a (* il jh))
+                                            (b (* ih jl)))
                                         (if (< a b)
                                             a
                                             b))
-                                      (let ((a (* x1 y1))
-                                            (b (* x2 y2)))
+                                      (let ((a (* il jl))
+                                            (b (* ih jh)))
                                         (if (> a b)
                                             a
                                             b)))))))))
 
-(define (div-interval x y)
-  (if (or (zero? (lower-bound y))
-          (zero? (upper-bound x)))
-      (error "division by zero")
-      (mul-interval x
-                    (make-interval (/ 1.0 (upper-bound y))
-                                   (/ 1.0 (lower-bound y))))))
+(define (div-interval i j)
+  (let ((jl (lower-bound j))
+        (jh (upper-bound j)))
+    (if (or (zero? jl)
+            (zero? jh)
+            (and (negative? jl)
+                 (positive? jh)))
+        (error "div-interval: division bj zero")
+        (mul-interval i
+                      (make-interval (/ 1.0 jh)
+                                     (/ 1.0 jl))))))
 
 (define (make-center-width c w)
-  (make-interval (- c w) (+ c w)))
+  (make-interval (- c w)
+                 (+ c w)))
 
 (define (center i)
-  (/ (+ (lower-bound i) (upper-bound i)) 2))
+  (/ (+ (lower-bound i)
+        (upper-bound i))
+     2.0))
 
 (define (width i)
-  (/ (- (upper-bound i) (lower-bound i)) 2))
+  (/ (- (upper-bound i)
+        (lower-bound i))
+     2.0))
 
 (define (make-center-percent c p)
   (let* ((fraction (/ p 100))
-         (lower (- c (* c fraction)))
-         (upper (+ c (* c fraction))))
-    (make-interval lower upper)))
+         (low (- c (* c fraction)))
+         (high (+ c (* c fraction))))
+    (make-interval low high)))
 
 (define (percent i)
-  (* 100 (/ (width i) (center i))))
+  (* 100.0 (/ (width i)
+              (center i))))
 
-;; Let x = [x1, x2] and y = [y1, y2].
+;; Let i = [il, ih] and j = [jl, jh].
 ;;
-;; width(x) = (x2 - x1) / 2
-;; center(x) = (x1 + x2) / 2
-;; percent(x) = 100 * width(x) / center(x) = 100 * (x2 - x1) / (x1 + x2)
+;; width(i) = (ih - il) / 2
+;; center(i) = (il + ih) / 2
+;; percent(i) = 100 * width(i) / center(i) = 100 * (ih - il) / (il + ih)
 ;;
 ;; For intervals containing only nonnegative numbers,
 ;;
-;; x * y = [x1*y1, x2*y2]
-;; percent(x*y) = 100 * (x2*y2 - x1*y1) / (x1*y1 + x2*y2)
+;; i * j = [il*jl, ih*jh]
+;; percent(i*j) = 100 * (ih*jh - il*jl) / (il*jl + ih*jh)
 ;;
-;; Let a = x1 * y1 and b = x2 * y2.
+;; Let a = il * jl and b = ih * jh.
 ;;
-;; percent(x*y) = 100 * (b - a) / (a + b)
+;; percent(i*j) = 100 * (b - a) / (a + b)
 
-(define (percent-mul x y)
-  (let ((a (* (lower-bound x)
-              (lower-bound y)))
-        (b (* (upper-bound x)
-              (upper-bound y))))
-    (* 100 (/ (- b a) (+ a b)))))
+(define (product-percent i j)
+  (let ((a (* (lower-bound i)
+              (lower-bound j)))
+        (b (* (upper-bound i)
+              (upper-bound j))))
+    (* 100.0 (/ (- b a) (+ a b)))))
 
 (define (displayln x)
   (display x)
   (newline))
 
-(let ((x (make-interval 1 2))
-      (y (make-interval 3 4)))
-  (displayln (percent (mul-interval x y)))
-  (displayln (percent-mul x y)))
-;; 500/11
-;; 500/11
+(let ((i (make-interval 0 1))
+      (j (make-interval 2 3)))
+  (displayln (percent (mul-interval i j)))
+  (displayln (product-percent i j)))
+;; 100.0
+;; 100.0
