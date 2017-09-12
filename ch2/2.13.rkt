@@ -94,7 +94,7 @@
 ;; center(i) = (il + ih) / 2
 ;; percent(i) = 100 * width(i) / center(i) = 100 * (ih - il) / (il + ih)
 ;;
-;; For intervals containing only nonnegative numbers,
+;; For intervals with nonnegative lower bounds,
 ;;
 ;; i * j = [il*jl, ih*jh]
 ;; percent(i*j) = 100 * (ih*jh - il*jl) / (il*jl + ih*jh)
