@@ -86,7 +86,7 @@
 
 (define (percent i)
   (* 100.0 (/ (width i)
-            (center i))))
+              (center i))))
 
 (define (print-center-percent i)
   (display (center i))
