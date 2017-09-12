@@ -1,10 +1,11 @@
 #lang sicp
 
 (define (reverse l)
-  (letrec ((r (lambda (l newl)
+  (letrec ((r (lambda (l result)
                 (if (null? l)
-                    newl
-                    (r (cdr l) (cons (car l) newl))))))
+                    result
+                    (r (cdr l)
+                       (cons (car l) result))))))
     (r l '())))
 
 (let ((l '(1 4 9 16 25)))
