@@ -46,12 +46,15 @@
   (balanced? m))
 ;; #t
 
-(begin (set! make-mobile (lambda (left right)
-                           (cons left right)))
-       (set! make-branch (lambda (length structure)
-                           (cons length structure)))
-       (set! right-branch cdr)
-       (set! branch-structure cdr))
+(set! make-mobile (lambda (left right)
+                    (cons left right)))
+
+(set! make-branch (lambda (length structure)
+                    (cons length structure)))
+
+(set! right-branch cdr)
+
+(set! branch-structure cdr)
 
 ;; Only the right-branch and branch-structure accessors need to change.
 
