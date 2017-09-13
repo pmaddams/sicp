@@ -10,11 +10,11 @@
                     (square-tree-a (cdr t))))))
 
 (define (square-tree-b t)
-  (let ((square-st (lambda (st)
-                     (if (not (pair? st))
-                         (square st)
-                         (square-tree-b st)))))
-    (map square-st t)))
+  (map (lambda (st)
+         (if (not (pair? st))
+             (square st)
+             (square-tree-b st)))
+       t))
 
 (define (displayln x)
   (display x)
