@@ -10,7 +10,8 @@
 
 (define (horner x coeff-seq)
   (accumulate (lambda (coeff higher-terms)
-                (+ coeff (* x higher-terms)))
+                (+ coeff
+                   (* x higher-terms)))
               0
               coeff-seq))
 
