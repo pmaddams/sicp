@@ -1,15 +1,16 @@
 #lang sicp
 
-(define (accumulate op init seq)
+(define (accumulate proc init seq)
   (letrec ((a (lambda (seq)
                 (if (null? seq)
                     init
-                    (op (car seq) (a (cdr seq)))))))
+                    (proc (car seq)
+                          (a (cdr seq)))))))
     (a seq)))
 
-(define (map p seq)
+(define (map proc seq)
   (accumulate (lambda (x y)
-                (cons (p x) y))
+                (cons (proc x) y))
               '()
               seq))
 
@@ -22,21 +23,18 @@
               0
               seq))
 
+(define (square x)
+  (expt x 2))
+
 (define (displayln x)
   (display x)
   (newline))
 
-(let ((square (lambda (x)
-                (expt x 2)))
-      (seq '(1 2 3 4 5)))
-  (displayln (map square seq)))
-;; (1 4 9 16 25)
-
-(let ((seq1 '(1 2 3 4 5))
-      (seq2 '(6 7 8 9 10)))
-  (displayln (append seq1 seq2)))
-;; (1 2 3 4 5 6 7 8 9 10)
-
-(let ((seq '(a b c d e)))
-  (displayln (length seq)))
-;; 5
+(let ((seq1 '(1 2 3))
+      (seq2 '(4 5 6 7)))
+  (displayln (map square seq1))
+  (displayln (append seq1 seq2))
+  (displayln (length seq2)))
+;; (1 4 9)
+;; (1 2 3 4 5 6 7)
+;; 4
