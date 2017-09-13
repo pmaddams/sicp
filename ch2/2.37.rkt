@@ -1,20 +1,21 @@
 #lang sicp
 
-(define (accumulate op init seq)
+(define (accumulate proc init seq)
   (letrec ((a (lambda (seq)
                 (if (null? seq)
                     init
-                    (op (car seq) (a (cdr seq)))))))
+                    (proc (car seq)
+                          (a (cdr seq)))))))
     (a seq)))
 
-(define (accumulate-n op init seqs)
+(define (accumulate-n proc init seqs)
   (letrec ((a (lambda (seq)
-                (accumulate op init seq)))
+                (accumulate proc init seq)))
            (an (lambda (seqs)
-                 (if (null? (car seqs))
-                     '()
-                     (cons (a (map car seqs))
-                           (an (map cdr seqs)))))))
+                (if (null? (car seqs))
+                    '()
+                    (cons (a (map car seqs))
+                          (an (map cdr seqs)))))))
     (an seqs)))
 
 (define (dot-product v1 v2)

@@ -1,10 +1,11 @@
 #lang sicp
 
-(define (accumulate op init seq)
+(define (accumulate proc init seq)
   (letrec ((a (lambda (seq)
                 (if (null? seq)
                     init
-                    (op (car seq) (a (cdr seq)))))))
+                    (proc (car seq)
+                          (a (cdr seq)))))))
     (a seq)))
 
 (define (filter pred? seq)
