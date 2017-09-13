@@ -14,12 +14,12 @@
                       (else (f (cdr seq)))))))
     (f seq)))
 
-(define (enumerate-interval i lim)
-  (letrec ((e (lambda (i)
-                (if (> i lim)
-                    '()
-                    (cons i (e (inc i)))))))
-    (e i)))
+(define (enumerate-interval low high)
+  (letrec ((e (lambda (i result)
+                (if (< i low)
+                    result
+                    (e (dec i) (cons i result))))))
+    (e high '())))
 
 (define (flatmap p seq)
   (accumulate append '() (map p seq)))
