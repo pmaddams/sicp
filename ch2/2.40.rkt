@@ -9,11 +9,16 @@
     (f l)))
 
 (define (filter pred? l)
-  (letrec ((f (lambda (l)
-                (cond ((null? l) '())
-                      ((pred? (car l)) (cons (car l) (f (cdr l))))
-                      (else (f (cdr l)))))))
-    (f l)))
+  (letrec ((f (lambda (l result)
+                (cond ((null? l)
+                       result)
+                      ((pred? (car l))
+                       (f (cdr l)
+                          (cons (car l) result)))
+                      (else
+                       (f (cdr l)
+                          result))))))
+    (f l '())))
 
 (define (enumerate-interval low high)
   (letrec ((e (lambda (i result)
