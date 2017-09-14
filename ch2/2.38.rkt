@@ -1,21 +1,21 @@
 #lang sicp
 
-(define (foldr proc init seq)
-  (letrec ((f (lambda (seq)
-                (if (null? seq)
+(define (foldr proc init l)
+  (letrec ((f (lambda (l)
+                (if (null? l)
                     init
-                    (proc (car seq)
-                          (f (cdr seq)))))))
-    (f seq)))
+                    (proc (car l)
+                          (f (cdr l)))))))
+    (f l)))
 
-(define (foldl proc init seq)
-  (letrec ((f (lambda (seq result)
-                (if (null? seq)
+(define (foldl proc init l)
+  (letrec ((f (lambda (l result)
+                (if (null? l)
                     result
-                    (f (cdr seq)
-                       (proc (car seq)
+                    (f (cdr l)
+                       (proc (car l)
                              result))))))
-    (f seq init)))
+    (f l init)))
 
 (define (displayln x)
   (display x)
