@@ -1,25 +1,25 @@
 #lang sicp
 
-(define (accumulate proc init seq)
-  (letrec ((a (lambda (seq)
-                (if (null? seq)
+(define (foldr proc init l)
+  (letrec ((f (lambda (l)
+                (if (null? l)
                     init
-                    (proc (car seq)
-                          (a (cdr seq)))))))
-    (a seq)))
+                    (proc (car l)
+                          (f (cdr l)))))))
+    (f l)))
 
-(define (accumulate-n proc init seqs)
-  (let ((a (lambda (seq)
-             (accumulate proc init seq))))
-    (letrec ((an (lambda (seqs)
-                   (if (null? (car seqs))
+(define (foldr-n proc init ls)
+  (let ((f (lambda (l)
+             (foldr proc init l))))
+    (letrec ((fn (lambda (ls)
+                   (if (null? (car ls))
                        '()
-                       (cons (a (map car seqs))
-                             (an (map cdr seqs)))))))
-      (an seqs))))
+                       (cons (f (map car ls))
+                             (fn (map cdr ls)))))))
+      (fn ls))))
 
 (define (dot-product v1 v2)
-  (accumulate + 0 (map * v1 v2)))
+  (foldr + 0 (map * v1 v2)))
 
 (define (matrix-*-vector m v)
   (map (lambda (r)
@@ -27,7 +27,7 @@
        m))
 
 (define (transpose m)
-  (accumulate-n cons '() m))
+  (foldr-n cons '() m))
 
 (define (matrix-*-matrix m1 m2)
   (let ((rows m1)

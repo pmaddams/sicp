@@ -1,12 +1,12 @@
 #lang sicp
 
-(define (accumulate proc init seq)
-  (letrec ((a (lambda (seq)
-                (if (null? seq)
+(define (foldr proc init l)
+  (letrec ((f (lambda (l)
+                (if (null? l)
                     init
-                    (proc (car seq)
-                          (a (cdr seq)))))))
-    (a seq)))
+                    (proc (car l)
+                          (f (cdr l)))))))
+    (f l)))
 
 (define variable? symbol?)
 
@@ -51,7 +51,7 @@
 (define addend cadr)
 
 (define (augend s)
-  (accumulate make-sum 0 (cddr s)))
+  (foldr make-sum 0 (cddr s)))
 
 (define (product? x)
   (and (pair? x)
@@ -60,7 +60,7 @@
 (define multiplier cadr)
 
 (define (multiplicand p)
-  (accumulate make-product 1 (cddr p)))
+  (foldr make-product 1 (cddr p)))
 
 (define (exponentiation? x)
   (and (pair? x)

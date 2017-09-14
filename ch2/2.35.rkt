@@ -1,21 +1,21 @@
 #lang sicp
 
-(define (accumulate proc init seq)
-  (letrec ((a (lambda (seq)
-                (if (null? seq)
+(define (foldr proc init l)
+  (letrec ((f (lambda (l)
+                (if (null? l)
                     init
-                    (proc (car seq)
-                          (a (cdr seq)))))))
-    (a seq)))
+                    (proc (car l)
+                          (f (cdr l)))))))
+    (f l)))
 
 (define (count-leaves t)
-  (accumulate +
-              0
-              (map (lambda (st)
-                     (if (not (pair? st))
-                         1
-                         (count-leaves st)))
-                   t)))
+  (foldr +
+         0
+         (map (lambda (st)
+                (if (not (pair? st))
+                    1
+                    (count-leaves st)))
+              t)))
 
 (define (displayln x)
   (display x)

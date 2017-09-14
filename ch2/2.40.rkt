@@ -1,19 +1,19 @@
 #lang sicp
 
-(define (accumulate proc init seq)
-  (letrec ((a (lambda (seq)
-                (if (null? seq)
+(define (foldr proc init l)
+  (letrec ((f (lambda (l)
+                (if (null? l)
                     init
-                    (proc (car seq)
-                          (a (cdr seq)))))))
-    (a seq)))
+                    (proc (car l)
+                          (f (cdr l)))))))
+    (f l)))
 
-(define (filter pred? seq)
-  (letrec ((f (lambda (seq)
-                (cond ((null? seq) '())
-                      ((pred? (car seq)) (cons (car seq) (f (cdr seq))))
-                      (else (f (cdr seq)))))))
-    (f seq)))
+(define (filter pred? l)
+  (letrec ((f (lambda (l)
+                (cond ((null? l) '())
+                      ((pred? (car l)) (cons (car l) (f (cdr l))))
+                      (else (f (cdr l)))))))
+    (f l)))
 
 (define (enumerate-interval low high)
   (letrec ((e (lambda (i result)
@@ -22,8 +22,8 @@
                     (e (dec i) (cons i result))))))
     (e high '())))
 
-(define (flatmap p seq)
-  (accumulate append '() (map p seq)))
+(define (flatmap p l)
+  (foldr append '() (map p l)))
 
 (define (unique-pairs n)
   (flatmap (lambda (i)
