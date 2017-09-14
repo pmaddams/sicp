@@ -1,29 +1,30 @@
 #lang sicp
 
-(define (fold-right op init seq)
+(define (foldr proc init seq)
   (letrec ((f (lambda (seq)
                 (if (null? seq)
                     init
-                    (op (car seq) (f (cdr seq)))))))
+                    (proc (car seq)
+                          (f (cdr seq)))))))
     (f seq)))
 
-(define (fold-left op init seq)
-  (letrec ((f (lambda (result rest)
-                (if (null? rest)
+(define (foldl proc init seq)
+  (letrec ((f (lambda (seq result)
+                (if (null? seq)
                     result
-                    (f (op result (car rest))
-                       (cdr rest))))))
-    (f init seq)))
+                    (f (cdr seq)
+                       (proc (car seq)
+                             result))))))
+    (f seq init)))
 
 (define (reverse-a seq)
-  (let ((p (lambda (x y)
-             (append y (list x)))))
-    (fold-right p '() seq)))
+  (foldr (lambda (x y)
+           (append y (list x)))
+         '()
+         seq))
 
 (define (reverse-b seq)
-  (let ((p (lambda (x y)
-             (cons y x))))
-    (fold-left p '() seq)))
+  (foldl cons '() seq))
 
 (define (displayln x)
   (display x)
