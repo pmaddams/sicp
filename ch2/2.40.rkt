@@ -1,5 +1,35 @@
 #lang sicp
 
+(define (square x)
+  (expt x 2))
+
+(define (expmod-with-composite-test a n m)
+  (letrec ((e (lambda (n)
+                (cond ((zero? n) 1)
+                      ((even? n) (let* ((x (e (/ n 2)))
+                                        (y (remainder (square x) m)))
+                                   (if (and (= y 1)
+                                            (not (= x 1))
+                                            (not (= x (dec m))))
+                                       0
+                                       y)))
+                      (else (remainder (* a (e (dec n))) m))))))
+    (e n)))
+
+(define (miller-rabin n)
+  (let ((a (inc (random (dec n)))))
+    (= 1 (expmod-with-composite-test a (dec n) n))))
+
+(define (prime? n)
+  (letrec ((p (lambda (times)
+                (or (zero? times)
+                    (and (miller-rabin n)
+                         (p (dec times)))))))
+    (and (> n 1)
+         (not (= n 2))
+         (odd? n)
+         (p 10))))
+
 (define (foldr proc init l)
   (letrec ((f (lambda (l)
                 (if (null? l)
@@ -7,6 +37,37 @@
                     (proc (car l)
                           (f (cdr l)))))))
     (f l)))
+
+(define (flatmap proc l)
+  (foldr append '() (map proc l)))
+
+(define (enumerate-interval low high)
+  (letrec ((e (lambda (i result)
+                (if (< i low)
+                    result
+                    (e (dec i) (cons i result))))))
+    (e high '())))
+
+(define (unique-pairs n)
+  (flatmap (lambda (i)
+             (map (lambda (j)
+                    (list i j))
+                  (enumerate-interval 1 (dec i))))
+           (enumerate-interval 1 n)))
+
+(define first car)
+
+(define second cadr)
+
+(define (make-pair-sum p)
+  (list (first p)
+        (second p)
+        (+ (first p)
+           (second p))))
+
+(define (prime-sum? p)
+  (prime? (+ (first p)
+             (second p))))
 
 (define (filter pred? l)
   (letrec ((f (lambda (l result)
@@ -20,68 +81,20 @@
                           result))))))
     (f l '())))
 
-(define (enumerate-interval low high)
-  (letrec ((e (lambda (i result)
-                (if (< i low)
-                    result
-                    (e (dec i) (cons i result))))))
-    (e high '())))
-
-(define (flatmap p l)
-  (foldr append '() (map p l)))
-
-(define (unique-pairs n)
-  (flatmap (lambda (i)
-             (map (lambda (j) (list i j))
-                  (enumerate-interval 1 (dec i))))
-           (enumerate-interval 1 n)))
-
-(define (make-pair-sum pair)
-  (list (car pair) (cadr pair) (+ (car pair) (cadr pair))))
-
-(define (prime? n)
-  (letrec ((square (lambda (x)
-                     (expt x 2)))
-           (miller-rabin (lambda (n)
-                           (letrec ((a (inc (random (dec n))))
-                                    (a-expmod-n (lambda (exp)
-                                                  (cond ((zero? exp) 1)
-                                                        ((even? exp)
-                                                         (let* ((x (a-expmod-n (/ exp 2)))
-                                                                (y (remainder (square x) n)))
-                                                           (if (and (= y 1)
-                                                                    (not (= x 1))
-                                                                    (not (= x (dec n))))
-                                                               0
-                                                               y)))
-                                                        (else (remainder (* a (a-expmod-n (dec exp)))
-                                                                         n))))))
-                             (= 1 (a-expmod-n (dec n))))))
-           (p (lambda (times)
-                (cond ((zero? times) #t)
-                      ((miller-rabin n) (p (dec times)))
-                      (else #f)))))
-    (cond ((<= n 1) #f)
-          ((= n 2) #t)
-          ((even? n) #f)
-          (else (p 10)))))
-
-(define (prime-sum? pair)
-  (prime? (+ (car pair) (cadr pair))))
-
 (define (prime-sum-pairs n)
   (map make-pair-sum
-       (filter prime-sum? (unique-pairs n))))
+       (filter prime-sum?
+               (unique-pairs n))))
 
 (define (displayln x)
   (display x)
   (newline))
 
 (for-each displayln (prime-sum-pairs 6))
-;; (2 1 3)
-;; (3 2 5)
-;; (4 1 5)
-;; (4 3 7)
-;; (5 2 7)
-;; (6 1 7)
 ;; (6 5 11)
+;; (6 1 7)
+;; (5 2 7)
+;; (4 3 7)
+;; (4 1 5)
+;; (3 2 5)
+;; (2 1 3)
