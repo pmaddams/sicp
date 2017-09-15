@@ -8,6 +8,16 @@
                           (f (cdr l)))))))
     (f l)))
 
+(define (flatmap proc l)
+  (foldr append '() (map proc l)))
+
+(define (enumerate-interval low high)
+  (letrec ((e (lambda (i result)
+                (if (< i low)
+                    result
+                    (e (dec i) (cons i result))))))
+    (e high '())))
+
 (define (filter pred? l)
   (letrec ((f (lambda (l result)
                 (cond ((null? l)
@@ -20,82 +30,67 @@
                           result))))))
     (f l '())))
 
-(define (enumerate-interval low high)
-  (letrec ((e (lambda (i result)
-                (if (< i low)
-                    result
-                    (e (dec i) (cons i result))))))
-    (e high '())))
-
-(define (flatmap p l)
-  (foldr append '() (map p l)))
-
 (define (queens-compare-steps board-size)
-  (letrec ((counter 0)
-           (empty-board '())
-           (adjoin-position cons)
-           (safe? (lambda (positions)
-                    (letrec ((new-row (car positions))
-                             (rest-of-queens (cdr positions))
-                             (safe-right? (lambda (rest-of-queens)
-                                            (if (null? rest-of-queens)
-                                                #t
-                                                (and (not (= new-row (car rest-of-queens)))
-                                                     (safe-right? (cdr rest-of-queens))))))
-                             (safe-up? (lambda (check-row rest-of-queens)
-                                         (if (or (null? rest-of-queens)
-                                                 (zero? check-row))
-                                             #t
-                                             (and (not (= check-row (car rest-of-queens)))
-                                                  (safe-up? (dec check-row) (cdr rest-of-queens))))))
-                             (safe-down? (lambda (check-row rest-of-queens)
-                                           (if (or (null? rest-of-queens)
-                                                   (> check-row board-size))
-                                               #t
-                                               (and (not (= check-row (car rest-of-queens)))
-                                                    (safe-down? (inc check-row) (cdr rest-of-queens)))))))
-                      (and (safe-right? rest-of-queens)
-                           (safe-up? (dec new-row) rest-of-queens)
-                           (safe-down? (inc new-row) rest-of-queens)))))
-           (good-cols (lambda (k)
-                        (set! counter (inc counter))
-                        (if (zero? k)
-                            (list empty-board)
-                            (filter safe?
-                                    (flatmap
-                                     (lambda (rest-of-queens)
-                                       (map (lambda (new-row)
-                                              (adjoin-position new-row rest-of-queens))
-                                            (enumerate-interval 1 board-size)))
-                                     (good-cols (dec k)))))))
-           (bad-cols (lambda (k)
-                       (set! counter (inc counter))
-                       (if (zero? k)
-                           (list empty-board)
-                           (filter safe?
-                                   (flatmap
-                                    (lambda (new-row)
-                                      (map (lambda (rest-of-queens)
-                                             (adjoin-position new-row rest-of-queens))
-                                           (bad-cols (dec k))))
-                                    (enumerate-interval 1 board-size)))))))
-    (good-cols board-size)
-    (display counter)
-    (display " ")
-    (set! counter 0)
-    (bad-cols board-size)
-    (display counter)
-    (newline)))
+  (let ((steps 0)
+        (empty-board '())
+        (adjoin-position cons)
+        (safe? (lambda (positions)
+                 (let ((new-row (car positions))
+                       (rest-of-queens (cdr positions)))
+                   (letrec ((safe-right? (lambda (rest-of-queens)
+                                           (or (null? rest-of-queens)
+                                               (and (not (= new-row (car rest-of-queens)))
+                                                    (safe-right? (cdr rest-of-queens))))))
+                            (safe-up? (lambda (check-row rest-of-queens)
+                                        (or (null? rest-of-queens)
+                                            (zero? check-row)
+                                            (and (not (= check-row (car rest-of-queens)))
+                                                 (safe-up? (dec check-row) (cdr rest-of-queens))))))
+                            (safe-down? (lambda (check-row rest-of-queens)
+                                          (or (null? rest-of-queens)
+                                              (> check-row board-size)
+                                              (and (not (= check-row (car rest-of-queens)))
+                                                   (safe-down? (inc check-row) (cdr rest-of-queens)))))))
+                     (and (safe-right? rest-of-queens)
+                          (safe-up? (dec new-row) rest-of-queens)
+                          (safe-down? (inc new-row) rest-of-queens)))))))
+    (letrec ((good-cols (lambda (k)
+                          (set! steps (inc steps))
+                          (if (zero? k)
+                              (list empty-board)
+                              (filter safe?
+                                      (flatmap
+                                       (lambda (rest-of-queens)
+                                         (map (lambda (new-row)
+                                                (adjoin-position new-row rest-of-queens))
+                                              (enumerate-interval 1 board-size)))
+                                       (good-cols (dec k)))))))
+             (bad-cols (lambda (k)
+                         (set! steps (inc steps))
+                         (if (zero? k)
+                             (list empty-board)
+                             (filter safe?
+                                     (flatmap
+                                      (lambda (new-row)
+                                        (map (lambda (rest-of-queens)
+                                               (adjoin-position new-row rest-of-queens))
+                                             (bad-cols (dec k))))
+                                      (enumerate-interval 1 board-size)))))))
+      (good-cols board-size)
+      (display steps)
+      (display " ")
+      (set! steps 0)
+      (bad-cols board-size)
+      (display steps)
+      (newline))))
 
-(for-each queens-compare-steps (enumerate-interval 1 8))
+(for-each queens-compare-steps (enumerate-interval 1 6))
 ;; 2 2
 ;; 3 7
 ;; 4 40
 ;; 5 341
 ;; 6 3906
 ;; 7 55987
-;; 8 960800
-;; 9 19173961
 
 ;; The flatmap operates on the enumerated interval from 1 to board-size. The
 ;; procedure mapped to this interval takes the argument new-row, an integer, and
