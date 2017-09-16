@@ -51,7 +51,9 @@
 (define addend cadr)
 
 (define (augend s)
-  (foldr make-sum 0 (cddr s)))
+  (foldr make-sum
+         0
+         (cddr s)))
 
 (define (product? x)
   (and (pair? x)
@@ -60,7 +62,9 @@
 (define multiplier cadr)
 
 (define (multiplicand p)
-  (foldr make-product 1 (cddr p)))
+  (foldr make-product
+         1
+         (cddr p)))
 
 (define (exponentiation? x)
   (and (pair? x)
@@ -87,13 +91,19 @@
         ((exponentiation? exp)
          (make-product (make-product (exponent exp)
                                      (make-exponentiation (base exp)
-                                                          (make-sum (exponent exp) '-1)))
+                                                          (make-sum (exponent exp)
+                                                                    '-1)))
                        (deriv (base exp) var)))
-        (else (error "deriv: unknown expression type" exp))))
+        (else (error "deriv: unknown type:" exp))))
 
 (define (displayln x)
   (display x)
   (newline))
 
-(displayln (deriv '(+ (* x x x) x x 1) 'x))
-;; (+ (+ (* x (+ x x)) (* x x)) 2)
+(for-each displayln
+          (list (deriv '(* x x x) 'x)
+                (deriv '(* (+ x 2) (+ x 3) (+ x 4)) 'x)
+                (deriv '(** (+ (* 2 3 x) 4 5) 6) 'x)))
+;; (+ (* x (+ x x)) (* x x))
+;; (+ (* (+ x 2) (+ (+ x 3) (+ x 4))) (* (+ x 3) (+ x 4)))
+;; (* (* 6 (** (+ (* 2 3 x) 4 5) 5)) 6)
