@@ -14,10 +14,11 @@
   (newline))
 
 (let ((z (make-from-mag-ang 1 0)))
-  (displayln (z 'real-part))
-  (displayln (z 'imag-part))
-  (displayln (z 'magnitude))
-  (displayln (z 'angle)))
+  (for-each displayln
+            (list (z 'real-part)
+                  (z 'imag-part)
+                  (z 'magnitude)
+                  (z 'angle))))
 ;; 1
 ;; 0
 ;; 1

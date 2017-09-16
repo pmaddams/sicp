@@ -40,10 +40,13 @@
   (display x)
   (newline))
 
-(let ((m '((1 2 3 4) (4 5 6 6) (6 7 8 9))))
-  (displayln (matrix-*-vector m (car m)))
-  (displayln (transpose m))
-  (displayln (matrix-*-matrix m (transpose m))))
+(let ((m '((1 2 3 4)
+           (4 5 6 6)
+           (6 7 8 9))))
+  (for-each displayln
+            (list (matrix-*-vector m (car m))
+                  (transpose m)
+                  (matrix-*-matrix m (transpose m)))))
 ;; (30 56 80)
 ;; ((1 4 6) (2 5 7) (3 6 8) (4 6 9))
 ;; ((30 56 80) (56 113 161) (80 161 230))

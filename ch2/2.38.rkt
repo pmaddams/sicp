@@ -22,10 +22,11 @@
   (newline))
 
 (let ((l '(1 2 3)))
-  (displayln (foldr / 1 l))
-  (displayln (foldl / 1 l))
-  (displayln (foldr list '() l))
-  (displayln (foldl list '() l)))
+  (for-each displayln
+            (list (foldr / 1 l)
+                  (foldl / 1 l)
+                  (foldr list '() l)
+                  (foldl list '() l))))
 ;; 3/2
 ;; 3/2
 ;; (1 (2 (3 ())))

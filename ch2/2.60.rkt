@@ -25,9 +25,10 @@
 
 (let ((set1 '(a b c d e))
       (set2 '(c d e f g)))
-  (displayln (intersection-set set1 set2))
-  (displayln (union-set set1 set2))
-  (displayln (intersection-set set1 (union-set set1 set2))))
+  (for-each displayln
+            (list (intersection-set set1 set2)
+                  (union-set set1 set2)
+                  (intersection-set set1 (union-set set1 set2)))))
 ;; (c d e)
 ;; (a b c d e c d e f g)
 ;; (a b c d e)

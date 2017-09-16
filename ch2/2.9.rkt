@@ -42,12 +42,13 @@
 
 (let ((i (make-interval 1 2))
       (j (make-interval 3 4)))
-  (displayln (+ (width-interval i)
-                (width-interval j)))
-  (displayln (width-interval (add-interval i j)))
-  (displayln (width-interval (sub-interval i j)))
-  (displayln (width-interval (mul-interval i j)))
-  (displayln (width-interval (div-interval i j))))
+  (for-each displayln
+            (list (+ (width-interval i)
+                     (width-interval j))
+                  (width-interval (add-interval i j))
+                  (width-interval (sub-interval i j))
+                  (width-interval (mul-interval i j))
+                  (width-interval (div-interval i j)))))
 ;; 1
 ;; 1
 ;; 1

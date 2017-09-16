@@ -32,9 +32,10 @@
 
 (let ((l1 '(1 2 3))
       (l2 '(4 5 6 7)))
-  (displayln (map square l1))
-  (displayln (append l1 l2))
-  (displayln (length l2)))
+  (for-each displayln
+            (list (map square l1)
+                  (append l1 l2)
+                  (length l2))))
 ;; (1 4 9)
 ;; (1 2 3 4 5 6 7)
 ;; 4

@@ -19,9 +19,10 @@
 (let* ((a '(1))
        (b (cons a a))
        (c (cons b b)))
-  (displayln (count-pairs a))
-  (displayln (count-pairs b))
-  (displayln (count-pairs c)))
+  (for-each displayln
+            (list (count-pairs a)
+                  (count-pairs b)
+                  (count-pairs c))))
 ;; 1
 ;; 2
 ;; 3
