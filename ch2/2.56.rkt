@@ -77,16 +77,19 @@
         ((exponentiation? exp)
          (make-product (make-product (exponent exp)
                                      (make-exponentiation (base exp)
-                                                          (make-sum (exponent exp) '-1)))
+                                                          (make-sum (exponent exp)
+                                                                    '-1)))
                        (deriv (base exp) var)))
-        (else (error "deriv: unknown expression type" exp))))
+        (else (error "deriv: unknown type:" exp))))
 
 (define (displayln x)
   (display x)
   (newline))
 
-(displayln (deriv '(+ (** x 3) (* 2 x) 1) 'x))
-;; (+ (* 3 (** x 2)) 2)
-
-(displayln (deriv '(** (+ (** x 2) 1) 2) 'x))
-;; (* (* 2 (+ (** x 2) 1)) (* 2 x))
+(for-each displayln
+          (list (deriv '(* x x) 'x)
+                (deriv '(* (+ x 2) (+ x 3)) 'x)
+                (deriv '(** (+ (* 3 x) 2) 2) 'x)))
+;; (+ x x)
+;; (+ (+ x 2) (+ x 3))
+;; (* (* 2 (+ (* 3 x) 2)) 3)
