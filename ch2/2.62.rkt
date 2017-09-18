@@ -61,7 +61,10 @@
 
 (let ((set1 '(1 2 3 4 5))
       (set2 '(3 4 5 6 7)))
-  (displayln (intersection-set set1 set2))
-  (displayln (union-set set1 set2)))
+  (for-each displayln
+            (list (intersection-set set1 set2)
+                  (union-set set1 set2)
+                  (intersection-set set1 (union-set set1 set2)))))
 ;; (3 4 5)
 ;; (1 2 3 4 5 6 7)
+;; (1 2 3 4 5)
