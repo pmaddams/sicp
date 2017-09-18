@@ -2,19 +2,22 @@
 
 (define (element-of-set? x set)
   (letrec ((e (lambda (set)
-                (cond ((null? set) #f)
-                      ((equal? x (car set)) #t)
-                      (else (e (cdr set)))))))
+                (and (not (null? set))
+                     (or (equal? x (car set))
+                         (e (cdr set)))))))
     (e set)))
 
 (define adjoin-set cons)
 
 (define (intersection-set set1 set2)
   (letrec ((i (lambda (set1)
-                (cond ((null? set1) '())
+                (cond ((null? set1)
+                       '())
                       ((element-of-set? (car set1) set2)
-                       (cons (car set1) (i (cdr set1))))
-                      (else (i (cdr set1)))))))
+                       (cons (car set1)
+                             (i (cdr set1))))
+                      (else
+                       (i (cdr set1)))))))
     (i set1)))
 
 (define union-set append)
