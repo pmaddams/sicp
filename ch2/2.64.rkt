@@ -36,7 +36,9 @@
   (letrec ((m (lambda (args result)
                 (if (null? args)
                     result
-                    (m (cdr args) (adjoin-set (car args) result))))))
+                    (m (cdr args)
+                       (adjoin-set (car args)
+                                   result))))))
     (m args '())))
 
 (define (tree->list t)
@@ -54,15 +56,19 @@
                  (if (zero? n)
                      (cons '() l)
                      (let* ((left-size (quotient (dec n) 2))
-                            (left-result (lt l left-size))
+                            (right-size (- n (inc left-size)))
+                            (left-result (lt l
+                                             left-size))
                             (left-tree (car left-result))
                             (non-left-l (cdr left-result))
-                            (right-size (- n (inc left-size)))
                             (this-entry (car non-left-l))
-                            (right-result (lt (cdr non-left-l) right-size))
+                            (right-result (lt (cdr non-left-l)
+                                              right-size))
                             (right-tree (car right-result))
                             (remaining-l (cdr right-result)))
-                       (cons (make-tree this-entry left-tree right-tree)
+                       (cons (make-tree this-entry
+                                        left-tree
+                                        right-tree)
                              remaining-l))))))
     (car (lt l (length l)))))
 
