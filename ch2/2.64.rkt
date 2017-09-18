@@ -32,15 +32,6 @@
                       (else set)))))
     (a set)))
 
-(define (make-set . args)
-  (letrec ((m (lambda (args result)
-                (if (null? args)
-                    result
-                    (m (cdr args)
-                       (adjoin-set (car args)
-                                   result))))))
-    (m args '())))
-
 (define (tree->list t)
   (letrec ((tl (lambda (t result)
                  (if (null? t)
@@ -90,10 +81,13 @@
   (display x)
   (newline))
 
-(let* ((t1 (make-set 1 3 5 7 9 11))
-       (l (tree->list t1))
-       (t2 (list->tree l)))
-  (for-each displayln (list t1 l t2)))
+(let ((t '()))
+  (for-each (lambda (x)
+              (set! t (adjoin-set x t)))
+            '(1 3 5 7 9 11))
+  (let ((l (tree->list t)))
+    (for-each displayln
+              (list t l (list->tree l)))))
 ;; (1 () (3 () (5 () (7 () (9 () (11 () ()))))))
 ;; (1 3 5 7 9 11)
 ;; (5 (1 () (3 () ())) (9 (7 () ()) (11 () ())))
