@@ -2,9 +2,9 @@
 
 (define (element-of-set? x set)
   (letrec ((e (lambda (set)
-                (cond ((null? set) #f)
-                      ((equal? x (car set)) #t)
-                      (else (e (cdr set)))))))
+                (and (not (null? set))
+                     (or (equal? x (car set))
+                         (e (cdr set)))))))
     (e set)))
 
 (define (adjoin-set x set)
