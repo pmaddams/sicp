@@ -32,15 +32,6 @@
                       (else set)))))
     (a set)))
 
-(define (make-set . args)
-  (letrec ((m (lambda (args result)
-                (if (null? args)
-                    result
-                    (m (cdr args)
-                       (adjoin-set (car args)
-                                   result))))))
-    (m args '())))
-
 (define (tree->list-a t)
   (if (null? t)
       '()
