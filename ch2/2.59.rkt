@@ -42,6 +42,8 @@
       (set2 '(c d e f g)))
   (for-each displayln
             (list (intersection-set set1 set2)
-                  (union-set set1 set2))))
+                  (union-set set1 set2)
+                  (intersection-set set1 (union-set set1 set2)))))
 ;; (c d e)
 ;; (a b c d e f g)
+;; (a b c d e)
