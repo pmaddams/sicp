@@ -36,7 +36,9 @@
   (letrec ((m (lambda (args result)
                 (if (null? args)
                     result
-                    (m (cdr args) (adjoin-set (car args) result))))))
+                    (m (cdr args)
+                       (adjoin-set (car args)
+                                   result))))))
     (m args '())))
 
 (define (tree->list-a t)
