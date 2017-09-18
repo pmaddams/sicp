@@ -2,11 +2,23 @@
 
 (define (element-of-set? x set)
   (letrec ((e (lambda (set)
-                (cond ((null? set) #f)
-                      ((= x (car set)) #t)
-                      ((< x (car set)) #f)
-                      (else (e (cdr set)))))))
+                (and (not (null? set))
+                     (or (= x (car set))
+                         (and (> x (car set))
+                              (e (cdr set))))))))
     (e set)))
+
+(define (adjoin-set x set)
+  (letrec ((a (lambda (set)
+                (cond ((or (null? set)
+                           (< x (car set)))
+                       (cons x set))
+                      ((= x (car set))
+                       set)
+                      (else
+                       (cons (car set)
+                             (a (cdr set))))))))
+    (a set)))
 
 (define (intersection-set set1 set2)
   (if (or (null? set1)
@@ -14,36 +26,34 @@
       '()
       (let ((x1 (car set1))
             (x2 (car set2)))
-        (cond ((< x1 x2) (intersection-set (cdr set1) set2))
-              ((> x1 x2) (intersection-set set1 (cdr set2)))
-              (else (cons x1 (intersection-set (cdr set1) (cdr set2))))))))
-
-(define (adjoin-set x set)
-  (letrec ((a (lambda (before after)
-                (cond ((or (null? after)
-                           (< x (car after)))
-                       (append before (cons x after)))
-                      ((= x (car after))
-                       (append before after))
-                      (else (a (append before (list (car after))) (cdr after)))))))
-    (a '() set)))
+        (cond ((< x1 x2)
+               (intersection-set (cdr set1)
+                                 set2))
+              ((> x1 x2)
+               (intersection-set set1
+                                 (cdr set2)))
+              (else
+               (cons x1
+                     (intersection-set (cdr set1)
+                                       (cdr set2))))))))
 
 (define (union-set set1 set2)
-  (letrec ((u (lambda (result set1 set2)
-                (cond ((null? set1) (append result set2))
-                      ((null? set2) (append result set1))
-                      (else (let ((x1 (car set1))
-                                  (x2 (car set2)))
-                              (cond ((< x1 x2) (u (append result (list x1))
-                                                  (cdr set1)
-                                                  set2))
-                                    ((> x1 x2) (u (append result (list x2))
-                                                  set1
-                                                  (cdr set2)))
-                                    (else (u (append result (list x1))
-                                             (cdr set1)
-                                             (cdr set2))))))))))
-    (u '() set1 set2)))
+  (cond ((null? set1) set2)
+        ((null? set2) set1)
+        (else (let ((x1 (car set1))
+                    (x2 (car set2)))
+                (cond ((< x1 x2)
+                       (cons x1
+                             (union-set (cdr set1)
+                                        set2)))
+                      ((> x1 x2)
+                       (cons x2
+                             (union-set set1
+                                        (cdr set2))))
+                      (else
+                       (cons x1
+                             (union-set (cdr set1)
+                                        (cdr set2)))))))))
 
 (define (displayln x)
   (display x)
