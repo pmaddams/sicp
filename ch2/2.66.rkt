@@ -35,13 +35,14 @@
            (i (lambda (set-of-records)
                 (if (null? set-of-records)
                     (make-tree given-record '() '())
-                    (let ((this-key (key (record set-of-records))))
+                    (let* ((this-record (record set-of-records))
+                           (this-key (key this-record)))
                       (cond ((< given-key this-key)
-                             (make-tree (record set-of-records)
+                             (make-tree this-record
                                         (i (left-branch set-of-records))
                                         (right-branch set-of-records)))
                             ((> given-key this-key)
-                             (make-tree (record set-of-records)
+                             (make-tree this-record
                                         (left-branch set-of-records)
                                         (i (right-branch set-of-records))))
                             (else
@@ -69,10 +70,10 @@
     (e high '())))
 
 (let ((set-of-records (make-records '(1 "foo")
-                             '(2 "bar")
-                             '(3 "baz")
-                             '(4 "qux")
-                             '(5 "quux"))))
+                                    '(2 "bar")
+                                    '(3 "baz")
+                                    '(4 "qux")
+                                    '(5 "quux"))))
   (for-each (lambda (key)
               (displayln (value (lookup key set-of-records))))
             (enumerate-interval 1 5)))
