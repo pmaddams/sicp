@@ -58,32 +58,30 @@
      (height rect)))
 
 (define (make-rect-a p1 p2 p3 p4)
-  (let* ((base (lambda ()
-                 (length-segment
-                  (make-segment p1 p2))))
-         (height (lambda ()
-                   (let ((l1 (length-segment
-                              (make-segment p2 p3)))
-                         (l2 (length-segment
-                              (make-segment p3 p4))))
-                     (if (< l1 l2)
-                         l1
-                         l2))))
+  (let* ((base (length-segment
+                (make-segment p1 p2)))
+         (height (let ((l1 (length-segment
+                            (make-segment p2 p3)))
+                       (l2 (length-segment
+                            (make-segment p3 p4))))
+                   (if (< l1 l2)
+                       l1
+                       l2)))
          (dispatch (lambda (m)
-                     (cond ((eq? m 'base) (base))
-                           ((eq? m 'height) (height))
-                           (else (error "rect-a: undefined:" m))))))
+                     (case m
+                       ('base base)
+                       ('height height)
+                       (else (error "rect-a: unknown method:" m))))))
     dispatch))
 
 (define (make-rect-b seg1 seg2)
-  (let* ((base (lambda ()
-                 (length-segment seg1)))
-         (height (lambda ()
-                   (length-segment seg2)))
+  (let* ((base (length-segment seg1))
+         (height (length-segment seg2))
          (dispatch (lambda (m)
-                     (cond ((eq? m 'base) (base))
-                           ((eq? m 'height) (height))
-                           (else (error "rect-b: undefined:" m))))))
+                     (case m
+                       ('base base)
+                       ('height height)
+                       (else (error "rect-b: unknown method:" m))))))
     dispatch))
 
 (define (displayln x)
