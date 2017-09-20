@@ -1,45 +1,26 @@
 #lang sicp
 
-(define (make-table same-key?)
-  (let* ((table (list '<table>))
-         (assoc (lambda (key records)
-                  (letrec ((a (lambda (records)
-                                (cond ((null? records) #f)
-                                      ((same-key? key (caar records)) (car records))
-                                      (else (a (cdr records)))))))
-                    (a records))))
-         (lookup (lambda (key1 key2)
-                   (let ((subtable (assoc key1 (cdr table))))
-                     (if subtable
-                         (let ((record (assoc key2 (cdr subtable))))
-                           (if record
-                               (cdr record)
-                               #f))
-                         #f))))
-         (insert! (lambda (key1 key2 value)
-                    (let ((subtable (assoc key1 (cdr table))))
-                      (if subtable
-                          (let ((record (assoc key2 (cdr subtable))))
-                            (if record
-                                (set-cdr! record value)
-                                (set-cdr! subtable
-                                          (cons (cons key2 value)
-                                                (cdr subtable)))))
-                          (set-cdr! table
-                                    (cons (list key1
-                                                (cons key2 value))
-                                          (cdr table)))))))
-         (dispatch (lambda (m)
-                     (cond ((eq? m 'lookup) lookup)
-                           ((eq? m 'insert!) insert!)
-                           (else (error "make-table: undefined operation:" m))))))
-    dispatch))
+(#%require (only racket/base
+                 make-hash
+                 hash-has-key?
+                 hash-ref
+                 hash-set!))
 
-(define table (make-table equal?))
+(define table (make-hash))
 
-(define get (table 'lookup))
+(define (get k1 k2)
+  (if (hash-has-key? table k1)
+      (let ((subtable (hash-ref table k1)))
+        (if (hash-has-key? subtable k2)
+            (hash-ref subtable k2)
+            #f))
+      #f))
 
-(define put (table 'insert!))
+(define (put k1 k2 v)
+  (if (not (hash-has-key? table k1))
+      (hash-set! table k1 (make-hash)))
+  (let ((subtable (hash-ref table k1)))
+    (hash-set! subtable k2 v)))
 
 (define (make-personnel-file-a)
   (let* ((all-records '())
