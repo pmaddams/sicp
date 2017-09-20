@@ -7,10 +7,11 @@
          (reset-count (lambda ()
                         (set! count 0)))
          (dispatch (lambda (m)
-                     (cond ((eq? m 'how-many-calls?) count)
-                           ((eq? m 'reset-count) (reset-count))
-                           (else (inc-count)
-                                 (f m))))))
+                     (case m
+                       ('how-many-calls? count)
+                       ('reset-count (reset-count))
+                       (else (inc-count)
+                             (f m))))))
     dispatch))
 
 (define (displayln x)

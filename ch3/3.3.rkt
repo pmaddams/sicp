@@ -10,12 +10,13 @@
                     (set! balance (+ balance n))))
          (dispatch (lambda (password m)
                      (if (not (eq? password secret))
-                         (error "incorrect password")
-                         (cond ((eq? m 'withdraw) withdraw)
-                               ((eq? m 'deposit) deposit)
-                               (else (error "unknown request")))))))
+                         (error "account: incorrect password:" password)
+                         (case m
+                           ('withdraw withdraw)
+                           ('deposit deposit)
+                           (else (error "account: unknown method:" m)))))))
     (if (not (string? secret))
-        (error "invalid password")
+        (error "account: not a string:" secret)
         dispatch)))
 
 (define (displayln x)
@@ -28,4 +29,4 @@
   (displayln ((acc "54321" 'withdraw) 100)))
 ;; 0
 ;; insufficient funds
-;; incorrect password
+;; account: incorrect password: "54321"
