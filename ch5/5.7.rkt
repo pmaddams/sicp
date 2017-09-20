@@ -3,10 +3,11 @@
 (define (make-register name)
   (let* ((contents '<unassigned>)
          (dispatch (lambda (m)
-                     (cond ((eq? m 'get) contents)
-                           ((eq? m 'set) (lambda (value)
-                                           (set! contents value)))
-                           (else (error "register: undefined operation:" m))))))
+                     (case m
+                       ('get contents)
+                       ('set (lambda (value)
+                               (set! contents value)))
+                       (else (error "register: unknown method:" m))))))
     dispatch))
 
 (define (get-contents register)
@@ -29,10 +30,11 @@
                        (set! s '())
                        'done))
          (dispatch (lambda (m)
-                     (cond ((eq? m 'push) push)
-                           ((eq? m 'pop) (pop))
-                           ((eq? m 'initialize) (initialize))
-                           (else (error "stack: undefined operation:" m))))))
+                     (case m
+                       ('push push)
+                       ('pop (pop))
+                       ('initialize (initialize))
+                       (else (error "stack: unknown method:" m))))))
     dispatch))
 
 (define (make-instruction text)
@@ -73,22 +75,23 @@
                             (begin ((instruction-execution-proc (car insts)))
                                    (execute))))))
            (dispatch (lambda (m)
-                       (cond ((eq? m 'start)
-                              (set-contents! pc the-instruction-sequence)
-                              (execute))
-                             ((eq? m 'install-instruction-sequence)
-                              (lambda (seq)
-                                (set! the-instruction-sequence seq)))
-                             ((eq? m 'allocate-register)
-                              allocate-register)
-                             ((eq? m 'get-register)
-                              lookup-register)
-                             ((eq? m 'install-operations)
-                              (lambda (ops)
-                                (set! the-ops (append the-ops ops))))
-                             ((eq? m 'stack)
-                              stack)
-                             ((eq? m 'operations)
-                              the-ops)
-                             (else (error "machine: unknown request:" m))))))
+                       (case m
+                         ('start
+                          (set-contents! pc the-instruction-sequence)
+                          (execute))
+                         ('install-instruction-sequence
+                          (lambda (seq)
+                            (set! the-instruction-sequence seq)))
+                         ('allocate-register
+                          allocate-register)
+                         ('get-register
+                          lookup-register)
+                         ('install-operations
+                          (lambda (ops)
+                            (set! the-ops (append the-ops ops))))
+                         ('stack
+                          stack)
+                         ('operations
+                          the-ops)
+                         (else (error "machine: unknown method:" m))))))
     dispatch))

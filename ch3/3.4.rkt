@@ -22,9 +22,10 @@
          (dispatch (lambda (password m)
                      (if (not (eq? password secret))
                          log-attempt
-                         (cond ((eq? m 'withdraw) withdraw)
-                               ((eq? m 'deposit) deposit)
-                               (else (error "unknown request")))))))
+                         (case m
+                           ('withdraw withdraw)
+                           ('deposit deposit)
+                           (else (error "account: unknown method:" m)))))))
     (if (not (string? secret))
         (error "invalid password")
         dispatch)))

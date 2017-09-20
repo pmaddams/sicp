@@ -16,9 +16,10 @@
          (reset (lambda (y)
                   (set! x y)))
          (dispatch (lambda (m)
-                     (cond ((eq? m 'generate) (generate))
-                           ((eq? m 'reset) reset)
-                           (error "rand: unknown request:" m)))))
+                     (case m
+                       ('generate (generate))
+                       ('reset reset)
+                       (else (error "rand: unknown method:" m))))))
     dispatch))
 
 (define (displayln x)

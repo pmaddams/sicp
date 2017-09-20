@@ -10,9 +10,10 @@
                     (set! balance (+ balance n))
                     balance))
          (dispatch (lambda (m)
-                     (cond ((eq? m 'withdraw) withdraw)
-                           ((eq? m 'deposit) deposit)
-                           (else (error "make-account: unknown request:" m))))))
+                     (case m
+                       ('withdraw withdraw)
+                       ('deposit deposit)
+                       (else (error "account: unknown method:" m))))))
     dispatch))
 
 (define (displayln x)

@@ -2,44 +2,39 @@
 
 (define (make-table same-key?)
   (let* ((table (list '<table>))
-         (assoc (lambda (key records)
-                  (letrec ((a (lambda (records)
-                                (cond ((null? records) #f)
-                                      ((same-key? key (caar records)) (car records))
-                                      (else (a (cdr records)))))))
-                    (a records))))
-         (lookup (lambda (key1 key2)
-                   (let ((subtable (assoc key1 (cdr table))))
+         (get (lambda (k1 k2)
+                   (let ((subtable (assoc k1 (cdr table))))
                      (if subtable
-                         (let ((record (assoc key2 (cdr subtable))))
+                         (let ((record (assoc k2 (cdr subtable))))
                            (if record
                                (cdr record)
                                #f))
                          #f))))
-         (insert! (lambda (key1 key2 value)
-                   (let ((subtable (assoc key1 (cdr table))))
-                     (if subtable
-                         (let ((record (assoc key2 (cdr subtable))))
-                           (if record
-                               (set-cdr! record value)
-                               (set-cdr! subtable
-                                         (cons (cons key2 value)
-                                               (cdr subtable)))))
-                         (set-cdr! table
-                                   (cons (list key1
-                                               (cons key2 value))
-                                         (cdr table)))))))
+         (put (lambda (k1 k2 v)
+                    (let ((subtable (assoc k1 (cdr table))))
+                      (if subtable
+                          (let ((record (assoc k2 (cdr subtable))))
+                            (if record
+                                (set-cdr! record v)
+                                (set-cdr! subtable
+                                          (cons (cons k2 v)
+                                                (cdr subtable)))))
+                          (set-cdr! table
+                                    (cons (list k1
+                                                (cons k2 v))
+                                          (cdr table)))))))
          (dispatch (lambda (m)
-                     (cond ((eq? m 'lookup) lookup)
-                           ((eq? m 'insert!) insert!)
-                           (else (error "make-table: undefined operation:" m))))))
+                     (case m
+                       ('get get)
+                       ('put put)
+                       (else (error "table: unknown method:" m))))))
     dispatch))
 
 (define table (make-table equal?))
 
-(define get (table 'lookup))
+(define get (table 'get))
 
-(define put (table 'insert!))
+(define put (table 'put))
 
 (put 'a 'a 'apple)
 (put 'a 'b 'banana)

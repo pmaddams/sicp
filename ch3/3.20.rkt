@@ -6,11 +6,12 @@
          (set-y! (lambda (v)
                    (set! y v)))
          (dispatch (lambda (m)
-                     (cond ((eq? m 'car) x)
-                           ((eq? m 'cdr) y)
-                           ((eq? m 'set-car!) set-x!)
-                           ((eq? m 'set-cdr!) set-y!)
-                           (else (error "cons: undefined operation:" m))))))
+                     (case m
+                       ('car x)
+                       ('cdr y)
+                       ('set-car! set-x!)
+                       ('set-cdr! set-y!)
+                       (else (error "cons: unknown method:" m))))))
     dispatch))
 
 (define (car z)

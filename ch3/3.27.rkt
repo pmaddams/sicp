@@ -1,40 +1,37 @@
 #lang sicp
 
-(define (make-table same-key?)
-  (let* ((table (list '<table>))
-         (assoc (lambda (key records)
-                  (letrec ((a (lambda (records)
-                                (cond ((null? records) #f)
-                                      ((same-key? key (caar records)) (car records))
-                                      (else (a (cdr records)))))))
-                    (a records))))
-         (lookup (lambda (key)
-                   (let ((record (assoc key (cdr table))))
-                     (if record
-                         (cdr record)
-                         #f))))
-         (insert! (lambda (key value)
-                    (let ((record (assoc key (cdr table))))
-                      (if record
-                          (set-cdr! record value)
-                          (set-cdr! table
-                                    (cons (cons key value)
-                                          (cdr table)))))))
+(#%require (only racket/base
+                 make-hash
+                 hash-has-key?
+                 hash-ref
+                 hash-set!))
+
+(define (make-table)
+  (let* ((table (make-hash))
+         (get (lambda (k)
+                (and (hash-has-key? table k)
+                     (hash-ref table k))))
+         (put (lambda (k v)
+                (hash-set! table k v)))
          (dispatch (lambda (m)
-                     (cond ((eq? m 'lookup) lookup)
-                           ((eq? m 'insert!) insert!)
-                           (else (error "make-table: undefined operation:" m))))))
+                     (case m
+                       ('get get)
+                       ('put put)
+                       (else (error "table: unknown method:" m))))))
     dispatch))
 
+(define table (make-table))
+
+(define get (table 'get))
+
+(define put (table 'put))
+
 (define (memoize f)
-  (let* ((table (make-table equal?))
-         (get (table 'lookup))
-         (put (table 'insert!)))
-    (lambda (x)
-      (or (get x)
-          (let ((result (f x)))
-            (put x result)
-            result)))))
+  (lambda (x)
+    (or (get x)
+        (let ((result (f x)))
+          (put x result)
+          result))))
 
 (define memo-fib
   (memoize (lambda (n)

@@ -56,7 +56,7 @@
                                      (eq? m 'rear))) (empty))
                            ((eq? m 'front) (front))
                            ((eq? m 'rear) (rear))
-                           (else (error "insert-deque!: unknown operation:" m))))))
+                           (else (error "insert-deque!: unknown method:" m))))))
     dispatch))
 
 (define (delete-deque! dq)
@@ -74,7 +74,7 @@
                      (cond ((empty-deque? dq) (error "delete-deque!: empty deque:" dq))
                            ((eq? m 'front) (front))
                            ((eq? m 'rear) (rear))
-                           (else (error "delete-deque!: unknown operation:" m))))))
+                           (else (error "delete-deque!: unknown method:" m))))))
     dispatch))
 
 (define (front-insert-deque! dq item)
