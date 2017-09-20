@@ -6,33 +6,38 @@
                  hash-ref
                  hash-set!))
 
-(define (make-get table)
-  (lambda (k1 k2)
-    (if (hash-has-key? table k1)
-      (let ((subtable (hash-ref table k1)))
-        (if (hash-has-key? subtable k2)
-            (hash-ref subtable k2)
-            #f))
-      #f)))
+(define (make-table)
+  (let* ((table (make-hash))
+         (get (lambda (k1 k2)
+                (if (hash-has-key? table k1)
+                    (let ((subtable (hash-ref table k1)))
+                      (if (hash-has-key? subtable k2)
+                          (hash-ref subtable k2)
+                          #f))
+                    #f)))
+         (put (lambda (k1 k2 v)
+                (if (not (hash-has-key? table k1))
+                    (hash-set! table k1 (make-hash)))
+                (let ((subtable (hash-ref table k1)))
+                  (hash-set! subtable k2 v))))
+         (dispatch (lambda (m)
+                     (case m
+                       ('get get)
+                       ('put put)
+                       (else (error "table: unknown method:" m))))))
+    dispatch))
 
-(define (make-put table)
-  (lambda (k1 k2 v)
-    (if (not (hash-has-key? table k1))
-      (hash-set! table k1 (make-hash)))
-  (let ((subtable (hash-ref table k1)))
-    (hash-set! subtable k2 v))))
+(define table (make-table))
 
-(define table (make-hash))
+(define get (table 'get))
 
-(define get (make-get table))
+(define put (table 'put))
 
-(define put (make-put table))
+(define coercion-table (make-table))
 
-(define coercion-table (make-hash))
+(define get-coercion (coercion-table 'get))
 
-(define get-coercion (make-get coercion-table))
-
-(define put-coercion (make-put coercion-table))
+(define put-coercion (coercion-table 'put))
 
 (define (attach-tag type-tag contents)
   (if (eq? type-tag 'scheme-number)
