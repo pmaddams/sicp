@@ -36,9 +36,9 @@
         (else
          (list '+ f g))))
 
-(define (sum? x)
-  (and (pair? x)
-       (eq? (op x) '+)))
+(define (sum? exp)
+  (and (pair? exp)
+       (eq? (op exp) '+)))
 
 (define addend cadr)
 
@@ -61,9 +61,9 @@
         (else
          (list '* f g))))
 
-(define (product? x)
-  (and (pair? x)
-       (eq? (op x) '*)))
+(define (product? exp)
+  (and (pair? exp)
+       (eq? (op exp) '*)))
 
 (define multiplier cadr)
 
@@ -87,9 +87,9 @@
         (else
          (list '** f g))))
 
-(define (exponentiation? x)
-  (and (pair? x)
-       (eq? (op x) '**)))
+(define (exponentiation? exp)
+  (and (pair? exp)
+       (eq? (op exp) '**)))
 
 (define base cadr)
 

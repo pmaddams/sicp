@@ -54,8 +54,8 @@
         (else
          (list f '+ g))))
 
-(define (sum? x)
-  (eq? (op x) '+))
+(define (sum? exp)
+  (eq? (op exp) '+))
 
 (define (addend s)
   (before '+ s))
@@ -77,8 +77,8 @@
         (else
          (list f '* g))))
 
-(define (product? x)
-  (eq? (op x) '*))
+(define (product? exp)
+  (eq? (op exp) '*))
 
 (define (multiplier p)
   (before '* p))
@@ -101,8 +101,8 @@
         (else
          (list f '** g))))
 
-(define (exponentiation? x)
-  (eq? (op x) '**))
+(define (exponentiation? exp)
+  (eq? (op exp) '**))
 
 (define (base e)
   (before '** e))
