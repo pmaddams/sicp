@@ -1,41 +1,5 @@
 #lang sicp
 
-(define variable? symbol?)
-
-(define (=number? exp n)
-  (and (number? exp)
-       (= exp n)))
-
-(define (same-variable? v1 v2)
-  (and (variable? v1)
-       (variable? v2)
-       (eq? v1 v2)))
-
-(define (make-sum a1 a2)
-  (cond ((=number? a1 0) a2)
-        ((=number? a2 0) a1)
-        ((and (number? a1)
-              (number? a2)) (+ a1 a2))
-        (else (list a1 '+ a2))))
-
-(define (make-product m1 m2)
-  (cond ((or (=number? m1 0)
-             (=number? m2 0)) 0)
-        ((=number? m1 1) m2)
-        ((=number? m2 1) m1)
-        ((and (number? m1)
-              (number? m2)) (* m1 m2))
-        (else (list m1 '* m2))))
-
-(define (make-exponentiation b n)
-  (cond ((=number? b 0) 0)
-        ((=number? b 1) 1)
-        ((=number? n 0) 1)
-        ((=number? n 1) b)
-        ((and (number? b)
-              (number? n)) (expt b n))
-        (else (list b '** n))))
-
 (define (op exp)
   (cond ((memq '+ exp) '+)
         ((memq '* exp) '*)
@@ -64,6 +28,32 @@
         (car r)
         r)))
 
+(define (=zero? f)
+  (and (number? f)
+       (zero? f)))
+
+(define (=one? f)
+  (and (number? f)
+       (= f 1)))
+
+(define variable? symbol?)
+
+(define (same-variable? f g)
+  (and (variable? f)
+       (variable? g)
+       (eq? f g)))
+
+(define (make-sum f g)
+  (cond ((=zero? f)
+         g)
+        ((=zero? g)
+         f)
+        ((and (number? f)
+              (number? g))
+         (+ f g))
+        (else
+         (list f '+ g))))
+
 (define (sum? x)
   (eq? (op x) '+))
 
@@ -73,6 +63,20 @@
 (define (augend s)
   (after '+ s))
 
+(define (make-product f g)
+  (cond ((or (=zero? f)
+             (=zero? g))
+         0)
+        ((=one? f)
+         g)
+        ((=one? g)
+         f)
+        ((and (number? f)
+              (number? g))
+         (* f g))
+        (else
+         (list f '* g))))
+
 (define (product? x)
   (eq? (op x) '*))
 
@@ -81,6 +85,21 @@
 
 (define (multiplicand p)
   (after '* p))
+
+(define (make-exponentiation f g)
+  (cond ((=zero? f)
+         0)
+        ((=one? f)
+         1)
+        ((=zero? g)
+         1)
+        ((=one? g)
+         f)
+        ((and (number? f)
+              (number? g))
+         (expt f g))
+        (else
+         (list f '** g))))
 
 (define (exponentiation? x)
   (eq? (op x) '**))

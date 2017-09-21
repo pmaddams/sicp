@@ -29,104 +29,120 @@
 
 (define put (table 'put))
 
+(define (=zero? f)
+  (and (number? f)
+       (zero? f)))
+
+(define (=one? f)
+  (and (number? f)
+       (= f 1)))
+
 (define variable? symbol?)
 
-(define (=number? exp num)
-  (and (number? exp)
-       (= exp num)))
+(define (same-variable? f g)
+  (and (variable? f)
+       (variable? g)
+       (eq? f g)))
 
-(define (same-variable? v1 v2)
-  (and (variable? v1)
-       (variable? v2)
-       (eq? v1 v2)))
+(define (make-sum f g)
+  (cond ((=zero? f)
+         g)
+        ((=zero? g)
+         f)
+        ((and (number? f)
+              (number? g))
+         (+ f g))
+        (else
+         (list '+ f g))))
 
-(define (make-sum a1 a2)
-  (cond ((=number? a1 0) a2)
-        ((=number? a2 0) a1)
-        ((and (number? a1)
-              (number? a2)) (+ a1 a2))
-        (else (list '+ a1 a2))))
+(define (make-product f g)
+  (cond ((or (=zero? f)
+             (=zero? g))
+         0)
+        ((=one? f)
+         g)
+        ((=one? g)
+         f)
+        ((and (number? f)
+              (number? g))
+         (* f g))
+        (else
+         (list '* f g))))
 
-(define (make-product m1 m2)
-  (cond ((or (=number? m1 0)
-             (=number? m2 0)) 0)
-        ((=number? m1 1) m2)
-        ((=number? m2 1) m1)
-        ((and (number? m1)
-              (number? m2)) (* m1 m2))
-        (else (list '* m1 m2))))
-
-(define (make-exponentiation b n)
-  (cond ((=number? b 0) 0)
-        ((=number? b 1) 1)
-        ((=number? n 0) 1)
-        ((=number? n 1) b)
-        ((and (number? b)
-              (number? n)) (expt b n))
-        (else (list '** b n))))
+(define (make-exponentiation f g)
+  (cond ((=zero? f)
+         0)
+        ((=one? f)
+         1)
+        ((=zero? g)
+         1)
+        ((=one? g)
+         f)
+        ((and (number? f)
+              (number? g))
+         (expt f g))
+        (else
+         (list '** f g))))
 
 (define (deriv-sum operands var)
-  (let ((addend (car operands))
-        (augend (cadr operands)))
-    (make-sum (deriv addend var)
-              (deriv augend var))))
+  (let ((f (car operands))
+        (g (cadr operands)))
+    (make-sum (deriv f var)
+              (deriv g var))))
+
+(put 'deriv '+ deriv-sum)
 
 (define (deriv-product operands var)
-  (let ((multiplier (car operands))
-        (multiplicand (cadr operands)))
-    (make-sum (make-product multiplier
-                            (deriv multiplicand var))
-              (make-product (deriv multiplier var)
-                            multiplicand))))
+  (let ((f (car operands))
+        (g (cadr operands)))
+    (make-sum (make-product f
+                            (deriv g var))
+              (make-product (deriv f var)
+                            g))))
+
+(put 'deriv '* deriv-product)
 
 (define (deriv-exponentiation operands var)
-  (let ((base (car operands))
-        (exponent (cadr operands)))
-    (make-product (make-product exponent
-                                (make-exponentiation base
-                                                     (make-sum exponent '-1)))
-                  (deriv base var))))
+  (let ((f (car operands))
+        (g (cadr operands)))
+    (make-product (make-product g
+                                (make-exponentiation f
+                                                     (make-sum g '-1)))
+                  (deriv f var))))
+
+(put 'deriv '** deriv-exponentiation)
 
 (define operator car)
 
 (define operands cdr)
 
 (define (deriv exp var)
-  (cond ((number? exp) 0)
-        ((variable? exp) (if (same-variable? exp var)
-                             1
-                             0))
-        (else ((get 'deriv (operator exp)) (operands exp)
-                                           var))))
+  (cond ((number? exp)
+         0)
+        ((variable? exp)
+         (if (same-variable? exp var)
+             1
+             0))
+        (else
+         ((get 'deriv (operator exp))
+          (operands exp)
+          var))))
 
 ;; We have defined sums, products, and exponentiations as types of arithmetic
-;; expressions. We cannot place the predicates number?, variable?, and 
-;; same-variable? in the table, because the it is a lookup table for operands,
-;; not for special cases of derivatives.
-
-(put 'deriv '+ deriv-sum)
-
-(put 'deriv '* deriv-product)
-
-(put 'deriv '** deriv-exponentiation)
+;; expressions. We cannot place predicates such as variable? and same-variable?
+;; in the table, because they operate on all types.
 
 (define (displayln x)
   (display x)
   (newline))
 
-(displayln (deriv '(+ (** x 3) (* 2 x) 1) 'x))
-;; (+ (* 3 (** x 2)) 2)
-
-(displayln (deriv '(** (+ (** x 2) 1) 2) 'x))
-;; (* (* 2 (+ (** x 2) 1)) (* 2 x))
-
-(set! deriv (lambda (exp var)
-              (cond ((number? exp) 0)
-                    ((variable? exp) (if (same-variable? exp var)
-                                         1
-                                         0))
-                    (else ((get (operator exp) 'deriv) (operands exp)
-                                                       var)))))
+(for-each displayln
+          (list (deriv '(* x x) 'x)
+                (deriv '(* (+ x 2) (+ x 3)) 'x)
+                (deriv '(** (+ (* 3 x) 2) 2) 'x)))
+;; (+ x x)
+;; (+ (+ x 2) (+ x 3))
+;; (* (* 2 (+ (* 3 x) 2)) 3)
 
 (put '+ 'deriv deriv-sum)
 
@@ -134,10 +150,25 @@
 
 (put '** 'deriv deriv-exponentiation)
 
-(displayln (deriv '(+ (** x 3) (* 2 x) 1) 'x))
-;; (+ (* 3 (** x 2)) 2)
+(set! deriv (lambda (exp var)
+              (cond ((number? exp)
+                     0)
+                    ((variable? exp)
+                     (if (same-variable? exp var)
+                         1
+                         0))
+                    (else
+                     ((get (operator exp) 'deriv)
+                      (operands exp)
+                      var)))))
 
-(displayln (deriv '(** (+ (** x 2) 1) 2) 'x))
-;; (* (* 2 (+ (** x 2) 1)) (* 2 x))
+(for-each displayln
+          (list (deriv '(* x x) 'x)
+                (deriv '(* (+ x 2) (+ x 3)) 'x)
+                (deriv '(** (+ (* 3 x) 2) 2) 'x)))
+;; (+ x x)
+;; (+ (+ x 2) (+ x 3))
+;; (* (* 2 (+ (* 3 x) 2)) 3)
 
-;; We are only required to install the procedures into a different subtable.
+;; To adapt to a different scheme for looking up procedures, we need to
+;; reinstall the procedures into the table under a different set of keys.
