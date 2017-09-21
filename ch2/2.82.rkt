@@ -9,17 +9,13 @@
 (define (make-table)
   (let* ((table (make-hash))
          (get (lambda (k1 k2)
-                (if (hash-has-key? table k1)
-                    (let ((subtable (hash-ref table k1)))
-                      (if (hash-has-key? subtable k2)
-                          (hash-ref subtable k2)
-                          #f))
-                    #f)))
+                (hash-ref table
+                          (list k1 k2)
+                          #f)))
          (put (lambda (k1 k2 v)
-                (if (not (hash-has-key? table k1))
-                    (hash-set! table k1 (make-hash)))
-                (let ((subtable (hash-ref table k1)))
-                  (hash-set! subtable k2 v))))
+                (hash-set! table
+                           (list k1 k2)
+                           v)))
          (dispatch (lambda (m)
                      (case m
                        ('get get)
