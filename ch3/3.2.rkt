@@ -1,17 +1,19 @@
 #lang sicp
 
-(define (make-monitored f)
+(define (make-monitored proc)
   (let* ((count 0)
          (inc-count (lambda ()
-                      (set! count (inc count))))
+                      (set! count
+                            (inc count))))
          (reset-count (lambda ()
-                        (set! count 0)))
+                        (set! count
+                              0)))
          (dispatch (lambda (m)
                      (case m
                        ('how-many-calls? count)
                        ('reset-count (reset-count))
                        (else (inc-count)
-                             (f m))))))
+                             (proc m))))))
     dispatch))
 
 (define (displayln x)
