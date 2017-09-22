@@ -1,23 +1,26 @@
 #lang sicp
 
 (define (make-account balance secret)
-  (let* ((withdraw (lambda (n)
+  (let* ((reject (lambda (_)
+                   "incorrect password"))
+         (withdraw (lambda (n)
                      (if (>= balance n)
-                         (begin (set! balance (- balance n))
+                         (begin (set! balance
+                                      (- balance n))
                                 balance)
                          "insufficient funds")))
          (deposit (lambda (n)
-                    (set! balance (+ balance n))))
+                    (set! balance
+                          (+ balance n))
+                    balance))
          (dispatch (lambda (password m)
-                     (if (not (eq? password secret))
-                         (error "account: incorrect password:" password)
+                     (if (not (equal? password secret))
+                         reject
                          (case m
                            ('withdraw withdraw)
                            ('deposit deposit)
                            (else (error "account: unknown method:" m)))))))
-    (if (not (string? secret))
-        (error "account: not a string:" secret)
-        dispatch)))
+    dispatch))
 
 (define (displayln x)
   (display x)
@@ -29,4 +32,4 @@
   (displayln ((acc "54321" 'withdraw) 100)))
 ;; 0
 ;; insufficient funds
-;; account: incorrect password: "54321"
+;; incorrect password
