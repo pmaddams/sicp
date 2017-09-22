@@ -1,9 +1,10 @@
 #lang sicp
 
-(define (make-accumulator amount)
+(define (make-accumulator sum)
   (lambda (n)
-    (set! amount (+ amount n))
-    amount))
+    (set! sum
+          (+ sum n))
+    sum))
 
 (define (displayln x)
   (display x)
