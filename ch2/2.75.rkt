@@ -2,11 +2,12 @@
 
 (define (make-from-mag-ang r a)
   (let ((dispatch (lambda (m)
-                    (cond ((eq? m 'real-part) (* r (cos a)))
-                          ((eq? m 'imag-part) (* r (sin a)))
-                          ((eq? m 'magnitude) r)
-                          ((eq? m 'angle) a)
-                          (else (error "make-from-mag-ang: undefined operation:" m))))))
+                    (case m
+                      ('real-part (* r (cos a)))
+                      ('imag-part (* r (sin a)))
+                      ('magnitude r)
+                      ('angle a)
+                      (else (error "make-from-mag-ang: unknown method:" m))))))
     dispatch))
 
 (define (displayln x)
