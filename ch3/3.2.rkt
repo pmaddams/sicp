@@ -7,7 +7,8 @@
                             (inc count))))
          (reset-count (lambda ()
                         (set! count
-                              0)))
+                              0)
+                        count))
          (dispatch (lambda (m)
                      (case m
                        ('how-many-calls? count)
@@ -21,10 +22,11 @@
   (newline))
 
 (let ((s (make-monitored sqrt)))
-  (displayln (s 100))
-  (displayln (s 'how-many-calls?))
-  (s 'reset-count)
-  (displayln (s 'how-many-calls?)))
+  (for-each (lambda (m)
+              (displayln (s m)))
+            '(100
+              how-many-calls?
+              reset-count)))
 ;; 10
 ;; 1
 ;; 0
