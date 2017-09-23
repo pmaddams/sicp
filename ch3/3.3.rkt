@@ -27,9 +27,11 @@
   (newline))
 
 (let ((acc (make-account 100 "12345")))
-  (displayln ((acc "12345" 'withdraw) 100))
-  (displayln ((acc "12345" 'withdraw) 100))
-  (displayln ((acc "54321" 'withdraw) 100)))
+  (for-each (lambda (password)
+              (displayln ((acc password 'withdraw) 100)))
+            '("12345"
+              "12345"
+              "54321")))
 ;; 0
 ;; insufficient funds
 ;; incorrect password
