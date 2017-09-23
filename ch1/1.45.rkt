@@ -43,7 +43,8 @@
   (letrec ((e (lambda (i result)
                 (if (< i low)
                     result
-                    (e (dec i) (cons i result))))))
+                    (e (dec i)
+                       (cons i result))))))
     (e high '())))
 
 (for-each displayln (map (lambda (n)
