@@ -79,11 +79,6 @@
 (define make-scheme-number
   (get 'make 'scheme-number))
 
-(define (gcd a b)
-  (if (zero? b)
-      a
-      (gcd b (remainder a b))))
-
 (define (install-rational-package)
   (let* ((numer car)
          (denom cdr)

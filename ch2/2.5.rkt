@@ -4,15 +4,10 @@
   (* (expt 2 a)
      (expt 3 b)))
 
-(define (gcd a b)
-  (if (= b 0)
-      a
-      (gcd b (remainder a b))))
-
 (define (count-primes p)
   (lambda (n)
     (letrec ((c (lambda (n result)
-                  (if (= 1 (gcd n p))
+                  (if (= (gcd n p) 1)
                       result
                       (c (/ n p)
                          (inc result))))))

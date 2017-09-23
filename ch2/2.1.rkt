@@ -1,10 +1,5 @@
 #lang sicp
 
-(define (gcd a b)
-  (if (= b 0)
-      a
-      (gcd b (remainder a b))))
-
 (define (make-rat n d)
   (let* ((g (gcd n d))
          (n (/ n g))
@@ -16,14 +11,6 @@
 (define numer car)
 
 (define denom cdr)
-
-(define (print-rat x)
-  (display (numer x))
-  (let ((d (denom x)))
-    (if (not (= d 1))
-        (begin (display "/")
-               (display d))))
-  (newline))
 
 (define (add-rat x y)
   (make-rat (+ (* (numer x) (denom y))
@@ -46,6 +33,14 @@
 (define (equal-rat? x y)
   (= (* (numer x) (denom y))
      (* (numer y) (denom x))))
+
+(define (print-rat x)
+  (display (numer x))
+  (let ((d (denom x)))
+    (if (not (= d 1))
+        (begin (display "/")
+               (display d))))
+  (newline))
 
 (print-rat (add-rat (make-rat -1 2)
                     (make-rat 1 -3)))
