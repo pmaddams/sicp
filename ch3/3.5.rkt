@@ -1,10 +1,15 @@
 #lang sicp
 
-(define (monte-carlo trials experiment)
+(define (monte-carlo trials experiment?)
   (letrec ((m (lambda (remaining passed)
-                (cond ((zero? remaining) (/ passed trials))
-                      ((experiment) (m (dec remaining) (inc passed)))
-                      (else (m (dec remaining) passed))))))
+                (cond ((zero? remaining)
+                       (/ passed trials))
+                      ((experiment?)
+                       (m (dec remaining)
+                          (inc passed)))
+                      (else
+                       (m (dec remaining)
+                          passed))))))
     (m trials 0)))
 
 (define (rand)
@@ -16,12 +21,12 @@
 (define (estimate-pi-a trials)
   (sqrt (/ 6 (monte-carlo trials cesaro-test))))
 
-(define (square x)
-  (expt x 2))
-
 (define (random-in-range low high)
   (let ((range (- high low)))
     (+ low (random range))))
+
+(define (square x)
+  (expt x 2))
 
 (define (circle-test x1 x2 y1 y2)
   (let* ((x-dist (- x2 x1))
@@ -51,8 +56,9 @@
   (display x)
   (newline))
 
-(let ((trials 10000))
-  (displayln (estimate-pi-a trials))
-  (displayln (estimate-pi-b trials)))
-;; 3.145545914925162
-;; 3.1464
+(for-each (lambda (estimate)
+            (displayln (estimate 100000)))
+          (list estimate-pi-a
+                estimate-pi-b))
+;; 3.141636843256942
+;; 3.14232
