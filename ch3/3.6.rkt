@@ -1,6 +1,6 @@
 #lang sicp
 
-(define rand
+(define (make-rand)
   (let* ((a #xfdeece66d)
          (b #xb)
          (m #x1000000000000)
@@ -11,7 +11,8 @@
                                    m))
                      x))
          (reset (lambda (y)
-                  (set! x y)))
+                  (set! x y)
+                  x))
          (dispatch (lambda (m)
                      (case m
                        ('generate (generate))
@@ -23,11 +24,12 @@
   (display x)
   (newline))
 
-(displayln (rand 'generate))
-((rand 'reset) 1)
-(displayln (rand 'generate))
-((rand 'reset) 1)
-(displayln (rand 'generate))
-;; 207885167744470
+(let ((rand (make-rand)))
+  (displayln (rand 'generate))
+  ((rand 'reset) 1)
+  (displayln (rand 'generate))
+  ((rand 'reset) 1)
+  (displayln (rand 'generate)))
+;; 239020880097748
 ;; 68164576888
 ;; 68164576888
