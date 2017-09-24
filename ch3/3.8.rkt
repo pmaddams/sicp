@@ -7,11 +7,13 @@
         (set! state x)
         (* prev x)))))
 
-(f 1)
+(define (displayln x)
+  (display x)
+  (newline))
+
+(for-each (lambda (x)
+            (displayln (f x)))
+          '(1 0 1))
 ;; 1
-
-(f 0)
 ;; 0
-
-(f 1)
 ;; 0
