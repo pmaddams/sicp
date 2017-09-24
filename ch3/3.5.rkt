@@ -19,7 +19,9 @@
   (= (gcd (rand) (rand)) 1))
 
 (define (estimate-pi-a trials)
-  (sqrt (/ 6 (monte-carlo trials cesaro-test))))
+  (sqrt (/ 6
+           (monte-carlo trials
+                        cesaro-test))))
 
 (define (random-in-range low high)
   (let ((range (- high low)))
@@ -43,14 +45,12 @@
                (square (- y-test y-center)))
             (square radius))))))
 
-(define (estimate-integral P x1 x2 y1 y2 trials)
-  (let ((in-circle (monte-carlo trials (P x1 x2 y1 y2)))
-        (area (* (- x2 x1)
-                 (- y2 y1))))
-    (* in-circle area)))
+(define (estimate-integral circle-test x1 x2 y1 y2 trials)
+  (* (monte-carlo trials (circle-test x1 x2 y1 y2))
+     4.0))
 
 (define (estimate-pi-b trials)
-  (estimate-integral circle-test -1.0 1.0 -1.0 1.0 trials))
+  (estimate-integral circle-test -10.0 10.0 -10.0 10.0 trials))
 
 (define (displayln x)
   (display x)
@@ -60,5 +60,5 @@
             (displayln (estimate 100000)))
           (list estimate-pi-a
                 estimate-pi-b))
-;; 3.141636843256942
-;; 3.14232
+;; 3.1452606552092153
+;; 3.14244
