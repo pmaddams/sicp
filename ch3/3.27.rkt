@@ -8,10 +8,10 @@
 
 (define (make-table)
   (let* ((table (make-hash))
-         (get (lambda (k)
-                (hash-ref table k #f)))
-         (put (lambda (k v)
-                (hash-set! table k v)))
+         (get (lambda (key)
+                (hash-ref table key #f)))
+         (put (lambda (key value)
+                (hash-set! table key value)))
          (dispatch (lambda (m)
                      (case m
                        ('get get)
