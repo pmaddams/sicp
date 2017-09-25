@@ -1,61 +1,62 @@
 #lang sicp
 
-(define record car)
+(define (make-node record left right)
+  (list record left right))
+
+(define record-of car)
 
 (define left-branch cadr)
 
 (define right-branch caddr)
 
-(define (make-record given-key given-value)
-  (list given-key given-value))
+(define make-record cons)
 
-(define key car)
+(define key-of car)
 
-(define value cadr)
+(define value-of cdr)
 
-(define (make-tree given-record left right)
-  (list given-record left right))
-
-(define (lookup given-key set-of-records)
-  (letrec ((l (lambda (set-of-records)
-                (if (null? set-of-records)
+(define (lookup key tree)
+  (letrec ((l (lambda (tree)
+                (if (null? tree)
                     #f
-                    (let* ((this-record (record set-of-records))
-                           (this-key (key this-record)))
-                      (cond ((< given-key this-key)
-                             (l (left-branch set-of-records)))
-                            ((> given-key this-key)
-                             (l (right-branch set-of-records)))
+                    (let* ((this-record (record-of tree))
+                           (this-key (key-of this-record)))
+                      (cond ((< key this-key)
+                             (l (left-branch tree)))
+                            ((> key this-key)
+                             (l (right-branch tree)))
                             (else
-                             this-record)))))))
-    (l set-of-records)))
+                             (value-of this-record))))))))
+    (l tree)))
 
-(define (insert given-record set-of-records)
-  (letrec ((given-key (key given-record))
-           (i (lambda (set-of-records)
-                (if (null? set-of-records)
-                    (make-tree given-record '() '())
-                    (let* ((this-record (record set-of-records))
-                           (this-key (key this-record)))
-                      (cond ((< given-key this-key)
-                             (make-tree this-record
-                                        (i (left-branch set-of-records))
-                                        (right-branch set-of-records)))
-                            ((> given-key this-key)
-                             (make-tree this-record
-                                        (left-branch set-of-records)
-                                        (i (right-branch set-of-records))))
-                            (else
-                             set-of-records)))))))
-    (i set-of-records)))
+(define (insert key value tree)
+  (let ((record (make-record key value)))
+    (letrec ((i (lambda (tree)
+                  (if (null? tree)
+                      (make-node record '() '())
+                      (let* ((this-record (record-of tree))
+                             (this-key (key-of this-record)))
+                        (cond ((< key this-key)
+                               (make-node this-record
+                                          (i (left-branch tree))
+                                          (right-branch tree)))
+                              ((> key this-key)
+                               (make-node this-record
+                                          (left-branch tree)
+                                          (i (right-branch tree))))
+                              (else
+                               tree)))))))
+      (i tree))))
 
-(define (make-records l)
+(define (make-tree l)
   (letrec ((m (lambda (l result)
                 (if (null? l)
                     result
                     (m (cdr l)
-                       (insert (car l)
-                               result))))))
+                       (let* ((record (car l))
+                              (key (key-of record))
+                              (value (value-of record)))
+                         (insert key value result)))))))
     (m l '())))
 
 (define (displayln x)
@@ -70,13 +71,13 @@
                        (cons i result))))))
     (e high '())))
 
-(let ((set-of-records (make-records '((1 "foo")
-                                      (2 "bar")
-                                      (3 "baz")
-                                      (4 "qux")
-                                      (5 "quux")))))
+(let ((tree (make-tree '((1 . "foo")
+                         (2 . "bar")
+                         (3 . "baz")
+                         (4 . "qux")
+                         (5 . "quux")))))
   (for-each (lambda (key)
-              (displayln (value (lookup key set-of-records))))
+              (displayln (lookup key tree)))
             (enumerate-interval 1 5)))
 ;; foo
 ;; bar
