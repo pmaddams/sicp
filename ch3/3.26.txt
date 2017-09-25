@@ -1,4 +1,4 @@
 Instead of a headed list, the table would be implemented as a list containing a
 record, a left branch, and a right branch. The method used to search the list
 would accept arguments for less-than? and greater-than? predicates for comparing
-keys. A balanced tree, such as a splay tree, would be a good choice.
+keys.
