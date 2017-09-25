@@ -6,27 +6,31 @@
 
 (define right-branch caddr)
 
-(define (make-tree entry left right)
+(define (make-node entry left right)
   (list entry left right))
 
 (define (element-of-set? x set)
   (letrec ((e (lambda (set)
-                (cond ((null? set) #f)
-                      ((< x (entry set)) (e (left-branch set)))
-                      ((> x (entry set)) (e (right-branch set)))
-                      (else #t)))))
+                (cond ((null? set)
+                       #f)
+                      ((< x (entry set))
+                       (e (left-branch set)))
+                      ((> x (entry set))
+                       (e (right-branch set)))
+                      (else
+                       #t)))))
     (e set)))
 
 (define (adjoin-set x set)
   (letrec ((a (lambda (set)
                 (cond ((null? set)
-                       (make-tree x '() '()))
+                       (make-node x '() '()))
                       ((< x (entry set))
-                       (make-tree (entry set)
+                       (make-node (entry set)
                                   (a (left-branch set))
                                   (right-branch set)))
                       ((> x (entry set))
-                       (make-tree (entry set)
+                       (make-node (entry set)
                                   (left-branch set)
                                   (a (right-branch set))))
                       (else set)))))
@@ -57,7 +61,7 @@
                                               right-size))
                             (right-tree (car right-result))
                             (remaining-l (cdr right-result)))
-                       (cons (make-tree this-entry
+                       (cons (make-node this-entry
                                         left-tree
                                         right-tree)
                              remaining-l))))))
