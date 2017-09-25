@@ -1,7 +1,7 @@
 #lang sicp
 
 (define (make-table same?)
-  (let* ((table (list '<table>))
+  (let* ((table '(<table>))
          (assm (lambda (key records)
                  (letrec ((a (lambda (records)
                                (cond ((null? records)
@@ -27,7 +27,7 @@
                      (case m
                        ('get get)
                        ('put put)
-                       (else "table: unknown method:" m)))))
+                       (else (error "table: unknown method:" m))))))
     dispatch))
 
 (define table (make-table eq?))
