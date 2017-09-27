@@ -28,7 +28,8 @@
                                               tell-receive
                                               constraints))
                             ((not (= value n))
-                             (error "connector: contradiction:" (list value n))))))
+                             (error "connector: set-value: contradiction:"
+                                    (list value n))))))
          (forget-value (lambda (source)
                          (if (eq? source informant)
                              (begin (set! informant #f)
@@ -68,7 +69,21 @@
 
 (define (adder sum x y)
   (let* ((receive (lambda ()
-                    ()))
+                    (cond ((and (has-value? x)
+                                (has-value? y))
+                           (set-value! sum
+                                       (+ (get-value x)
+                                          (get-value y))))
+                          ((and (has-value? x)
+                                (has-value? sum))
+                           (set-value! sum
+                                       (- (get-value sum)
+                                          (get-value x))))
+                          ((and (has-value? x)
+                                (has-value? sum))
+                           (set-value! sum
+                                       (- (get-value sum)
+                                          (get-value x)))))))
          (refresh (lambda ()
                     ()))
          (dispatch (lambda (m)
