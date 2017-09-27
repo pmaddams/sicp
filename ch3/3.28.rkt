@@ -85,13 +85,14 @@
          (segment-queue cdr)
          (empty-agenda? (lambda ()
                           (null? segments)))
-         (first-item (lambda ()
-                       (if (empty-agenda?)
-                           (set! current-time
-                                 (segment-time
-                                  (car segments)))
-                           (front-queue (segment-queue
-                                         (car segments))))))
+         (run-first-item (lambda ()
+                           (if (empty-agenda?)
+                               (error "agenda: run-first-item: empty agenda")
+                               (begin (set! current-time
+                                            (segment-time
+                                             (car segments)))
+                                      ((front-queue (segment-queue
+                                                     (car segments))))))))
          (belongs-before? (lambda (time segments)
                             (or (null? segments)
                                 (< time (segment-time
@@ -121,10 +122,10 @@
          (dispatch (lambda (m)
                      (case m
                        ('current-time current-time)
-                       ('empty-agenda? empty-agenda?)
-                       ('first-item first-item)
+                       ('empty-agenda? (empty-agenda?))
+                       ('run-first-item (run-first-item))
                        ('add-to-agenda! add-to-agenda!)
-                       ('remove-first-item! remove-first-item!)
+                       ('remove-first-item! (remove-first-item!))
                        (else (error "agenda: unknown method:" m))))))
     dispatch))
 
@@ -132,88 +133,75 @@
   (agenda 'current-time))
 
 (define (empty-agenda? agenda)
-  ((agenda 'empty-agenda?)))
+  (agenda 'empty-agenda?))
 
-(define (first-item agenda)
-  ((agenda 'first-item)))
+(define (run-first-item agenda)
+  (agenda 'run-first-item))
 
 (define (add-to-agenda! agenda time action)
   ((agenda 'add-to-agenda!) time action))
 
 (define (remove-first-item! agenda)
-  ((agenda 'remove-first-item!)))
+  (agenda 'remove-first-item!))
 
-;(define (after-delay delay action)
-;  (add-to-agenda! (+ delay (current-time the-agenda))
-;                  action
-;                  the-agenda))
-;
-;(define (propagate)
-;  (if (empty-agenda? the-agenda)
-;      'done
-;      (let ((first-item (first-agenda-item the-agenda)))
-;        (first-item)
-;        (remove-first-agenda-item! the-agenda)
-;        (propagate))))
-;
-;(define (logical-not s)
-;  (cond ((zero? s) 1)
-;        ((= s 1) 0)
-;        (else (error "logical-not: invalid signal:" s))))
-;
-;(define inverter-delay 2)
-;
-;(define (inverter input output)
-;  (let* ((new-value (logical-not (get-signal input)))
-;         (invert-input (lambda ()
-;                         (after-delay inverter-delay
-;                                      (lambda ()
-;                                        (set-signal! output new-value))))))
-;    (add-action! input invert-input)
-;    'ok))
-;
-;(define (logical-and s1 s2)
-;  (cond ((and (= s1 1)
-;              (= s2 1)) 1)
-;        ((or (and (zero? s1)
-;                  (= s2 1))
-;             (and (= s1 1)
-;                  (zero? s2))) 0)
-;        (else (error "logical-and: invalid signal:" (list s1 s2)))))
-;
-;(define and-gate-delay 3)
-;
-;(define (and-gate a1 a2 output)
-;  (let* ((new-value (logical-and (get-signal a1)
-;                                 (get-signal a2)))
-;         (and-action-procedure (lambda ()
-;                                 (after-delay and-gate-delay
-;                                              (lambda ()
-;                                                (set-signal! output new-value))))))
-;    (add-action! a1 and-action-procedure)
-;    (add-action! a2 and-action-procedure)
-;    'ok))
-;
-;(define (logical-or s1 s2)
-;  (cond ((and (zero? s1)
-;              (zero? s2)) 0)
-;        ((or (and (zero? s1)
-;                  (= s2 1))
-;             (and (= s1 1)
-;                  (zero? s2))
-;             (and (= s1 1)
-;                  (= s2 1))) 1)
-;        (else (error "logical-or: invalid signal:" (list s1 s2)))))
-;
-;(define or-gate-delay 5)
-;
-;(define (or-gate a1 a2 output)
-;  (let* ((new-value (logical-or (get-signal a1)
-;                                (get-signal a2)))
-;         (or-action-procedure (lambda ()
-;                                (after-delay or-gate-delay
-;                                             (lambda ()
-;                                               (set-signal! output new-value))))))
-;    (add-action! a1 or-action-procedure)
-;    (add-action! a2 or-action-procedure)
-;    'ok))
+(define agenda (make-agenda))
+
+(define (propagate)
+  (if (not (empty-agenda? agenda))
+      (begin (run-first-item agenda)
+             (remove-first-item! agenda)
+             (propagate))))
+
+(define (after-delay delay action)
+  (add-to-agenda! agenda
+                  (+ (current-time agenda)
+                     delay)
+                  action))
+
+(define (logical-not s)
+  (if (zero? s)
+      1
+      0))
+
+(define (inverter in out)
+  (let* ((delay 2)
+         (value (logical-not (get-signal in)))
+         (action (lambda ()
+                   (after-delay delay
+                                (lambda ()
+                                  (set-signal! out value))))))
+    (add-action! in action)))
+
+(define (logical-and s1 s2)
+  (if (or (zero? s1)
+          (zero? s2))
+      0
+      1))
+
+(define (and-gate i1 i2 out)
+  (let* ((delay 3)
+         (value (logical-and (get-signal i1)
+                             (get-signal i2)))
+         (action (lambda ()
+                   (after-delay delay
+                                (lambda ()
+                                  (set-signal! out value))))))
+    (add-action! i1 action)
+    (add-action! i2 action)))
+
+(define (logical-or s1 s2)
+  (if (and (zero? s1)
+           (zero? s2))
+      0
+      1))
+
+(define (or-gate i1 i2 out)
+  (let* ((delay 5)
+         (value (logical-or (get-signal i1)
+                             (get-signal i2)))
+         (action (lambda ()
+                   (after-delay delay
+                                (lambda ()
+                                  (set-signal! out value))))))
+    (add-action! i1 action)
+    (add-action! i2 action)))
