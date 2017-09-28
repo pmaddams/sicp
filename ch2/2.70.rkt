@@ -46,12 +46,10 @@
                        result)
                       ((symbol-in-tree? symbol (right-branch tree))
                        (e (right-branch tree)
-                          (append result
-                                  (list 1))))
+                          (append result '(1))))
                       ((symbol-in-tree? symbol (left-branch tree))
                        (e (left-branch tree)
-                          (append result
-                                  (list 0))))
+                          (append result '(0))))
                       (else (error "encode: unknown symbol:" symbol))))))
     (e tree '())))
 
