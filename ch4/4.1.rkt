@@ -129,6 +129,78 @@
     (eval (definition-variable exp) env)
     env))
 
+(define (make-if predicate consequent alternative)
+  (list 'if predicate consequent alternative))
+
+(define if?
+  (tagged-list? 'if))
+
+(define if-predicate cadr)
+
+(define if-consequent caddr)
+
+(define (if-alternative exp)
+  (and (not (null? (cdddr exp)))
+       (cadddr exp)))
+
+(define (eval-if exp env)
+  (if (eval (if-predicate exp) env)
+      (eval (if-consequent exp) env)
+      (eval (if-alternative) env)))
+
+(define (make-begin seq)
+  (cons 'begin seq))
+
+(define begin?
+  (tagged-list? 'begin))
+
+(define begin-actions cdr)
+
+(define first-exp car)
+
+(define (last-exp? seq)
+  (null? (cdr seq)))
+
+(define rest-exps cdr)
+
+(define (eval-sequence exps env)
+  (eval (first-exp exps) env)
+  (if (not (last-exp? exps))
+      (eval-sequence (rest-exps exps) env)))
+
+(define cond?
+  (tagged-list? 'cond))
+
+(define cond-clauses cdr)
+
+(define cond-predicate car)
+
+(define cond-actions cdr)
+
+(define (cond-else-clause? clause)
+  (eq? (cond-predicate clause) 'else))
+
+(define (sequence->exp seq)
+  (cond ((null? seq) '())
+        ((last-exp? seq) (first-exp seq))
+        (else (make-begin seq))))
+
+(define (expand-clauses clauses)
+  (if (null? clauses)
+      '#f
+      (let ((first (car clauses))
+            (rest (cdr clauses)))
+        (if (cond-else-clause? first)
+            (if (null? rest)
+                (sequence->exp (cond-actions first))
+                (error "cond->if: else clause must be last:" clauses))
+            (make-if (cond-predicate first)
+                     (sequence->exp (cond-actions first))
+                     (expand-clauses rest))))))
+
+(define (cond->if exp)
+  (expand-clauses (cond-clauses exp)))
+
 ;(define (primitive-procedure? proc)
 ;  (tagged-list? proc 'primitive))
 ;
@@ -156,52 +228,6 @@
 ;    (define-variable! '#f #f initial-env)
 ;    initial-env))
 ;
-;(define (if? exp)
-;  (tagged-list? exp 'if))
-;
-;(define if-predicate cadr)
-;
-;(define if-consequent caddr)
-;
-;(define (if-alternative exp)
-;  (if (not (null? cdddr exp))
-;      (cadddr exp)
-;      #f))
-;
-;(define (make-if predicate consequent alternative)
-;  (list 'if predicate consequent alternative))
-;
-;(define (true? x)
-;  (not (eq? x #f)))
-;
-;(define (false? x)
-;  (eq? x #f))
-;
-;(define (eval-if exp env)
-;  (if (true? (eval (if-predicate exp) env))
-;      (eval (if-consequent exp) env)
-;      (eval (if-alternative) env)))
-;
-;(define (begin? exp)
-;  (tagged-list? exp 'begin))
-;
-;(define begin-actions cdr)
-;
-;(define (last-exp? seq)
-;  (null? (cdr seq)))
-;
-;(define first-exp car)
-;
-;(define rest-exps cdr)
-;
-;(define (make-begin seq)
-;  (cons 'begin seq))
-;
-;(define (sequence->exp seq)
-;  (cond ((null? seq) '())
-;        ((last-exp? seq) (first-exp seq))
-;        (else (make-begin seq))))
-;
 ;(define application? pair?)
 ;
 ;(define operator car)
@@ -213,34 +239,6 @@
 ;(define first-operand car)
 ;
 ;(define rest-operands cdr)
-;
-;(define (cond? exp)
-;  (tagged-list? exp 'cond))
-;
-;(define cond-clauses cdr)
-;
-;(define cond-predicate car)
-;
-;(define cond-actions cdr)
-;
-;(define (cond-else-clause? clause)
-;  (eq? (cond-predicate clause) 'else))
-;
-;(define (cond->if exp)
-;  (expand-clauses (cond-clauses exp)))
-;
-;(define (expand-clauses clauses)
-;  (if (null? clauses)
-;      '#f
-;      (let ((first (car clauses))
-;            (rest (cdr clauses)))
-;        (if (cond-else-clause? first)
-;            (if (null? rest)
-;                (sequence->exp (cond-actions first))
-;                (error "cond->if: else clause must be last:" clauses))
-;            (make-if (cond-predicate first)
-;                     (sequence->exp (cond-actions first))
-;                     (expand-clauses rest))))))
 ;
 ;(define (list-of-values exps env)
 ;  (if (no-operands? exps)
@@ -260,11 +258,6 @@
 ;
 ;(define procedure-environment cadddr)
 ;
-;(define (eval-sequence exps env)
-;  (eval (first-exp exps) env)
-;  (if (not (last-exp? exps))
-;      (eval-sequence (rest-exps exps) env)))
-;
 ;(define (eval exp env)
 ;  (cond ((self-evaluating? exp)
 ;         exp)
@@ -283,7 +276,7 @@
 ;        ((if? exp)
 ;         (eval-if exp env))
 ;        ((begin? exp)
-;         (eval-sequence exp env))
+;         (eval-sequence (begin-actions exp) env))
 ;        ((cond? exp)
 ;         (eval (cond->if exp) env))
 ;        ((application? exp)
