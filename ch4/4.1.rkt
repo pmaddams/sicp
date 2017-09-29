@@ -46,6 +46,12 @@
 (define (extend-environment vars vals env)
   (cons (make-frame vars vals) env))
 
+(define (self-evaluating? exp)
+  (or (number? exp)
+      (string? exp)))
+
+(define variable? symbol?)
+
 (define (define-variable! var val env)
   (let ((frame (car env)))
     (put frame var val)))
@@ -71,15 +77,57 @@
                           (s (cdr env))))))))
     (s env)))
 
-(define variable? symbol?)
+(define (tagged-list? tag)
+  (lambda (exp)
+    (and (pair? exp)
+         (eq? (car exp) tag))))
 
-(define (self-evaluating? exp)
-  (or (number? exp)
-      (string? exp)))
+(define quoted?
+  (tagged-list? 'quote))
 
-(define (tagged-list? exp tag)
-  (and (pair? exp)
-       (eq? (car exp) tag)))
+(define text-of-quotation cadr)
+
+(define assignment?
+  (tagged-list? 'set!))
+
+(define assignment-variable cadr)
+
+(define assignment-value caddr)
+
+(define (eval-assignment exp env)
+  (set-variable-value! (assignment-variable exp)
+                       (eval (assignment-variable exp) env)
+                       env))
+
+(define (make-lambda parameters body)
+  (cons 'lambda
+        (cons parameters body)))
+
+(define lambda?
+  (tagged-list? 'lambda))
+
+(define lambda-parameters cadr)
+
+(define lambda-body cddr)
+
+(define definition?
+  (tagged-list? 'define))
+
+(define (definition-variable exp)
+  (if (variable? (cadr exp))
+      (cadr exp)
+      (caadr exp)))
+
+(define (definition-value exp)
+  (if (variable? (cadr exp))
+      (caddr exp)
+      (make-lambda (cdadr exp)
+                   (cddr exp))))
+
+(define (eval-definition exp env)
+  (define-variable! (definition-variable exp)
+    (eval (definition-variable exp) env)
+    env))
 
 ;(define (primitive-procedure? proc)
 ;  (tagged-list? proc 'primitive))
@@ -108,47 +156,6 @@
 ;    (define-variable! '#f #f initial-env)
 ;    initial-env))
 ;
-;(define (quoted? exp)
-;  (tagged-list? exp 'quote))
-;
-;(define text-of-quotation cadr)
-;
-;(define (assignment? exp)
-;  (tagged-list? exp 'set!))
-;
-;(define assignment-variable cadr)
-;
-;(define assignment-value caddr)
-;
-;(define (eval-assignment exp env)
-;  (set-variable-value! (assignment-variable exp)
-;                       (eval (assignment-variable exp) env)
-;                       env)
-;  'ok)
-;
-;(define (definition? exp)
-;  (tagged-list? exp 'define))
-;
-;(define (definition-variable exp)
-;  (if (symbol? (cadr exp))
-;      (cadr exp)
-;      (caadr exp)))
-;
-;(define (eval-definition exp env)
-;  (define-variable! (definition-variable exp)
-;    (eval (definition-variable exp) env)
-;    env)
-;  'ok)
-;
-;(define (make-lambda parameters body)
-;  (cons 'lambda (cons parameters body)))
-;
-;(define (definition-value exp)
-;  (if (symbol? (cadr exp))
-;      (caddr exp)
-;      (make-lambda (cdadr exp)
-;                   (cddr exp))))
-;
 ;(define (if? exp)
 ;  (tagged-list? exp 'if))
 ;
@@ -174,13 +181,6 @@
 ;  (if (true? (eval (if-predicate exp) env))
 ;      (eval (if-consequent exp) env)
 ;      (eval (if-alternative) env)))
-;
-;(define (lambda? exp)
-;  (tagged-list? exp 'lambda))
-;
-;(define lambda-parameters cadr)
-;
-;(define lambda-body cddr)
 ;
 ;(define (begin? exp)
 ;  (tagged-list? exp 'begin))
@@ -274,14 +274,14 @@
 ;         (text-of-quotation exp))
 ;        ((assignment? exp)
 ;         (eval-assignment exp env))
-;        ((definition? exp)
-;         (eval-definition exp env))
-;        ((if? exp)
-;         (eval-if exp env))
 ;        ((lambda? exp)
 ;         (make-procedure (lambda-parameters exp)
 ;                         (lambda-body exp)
 ;                         env))
+;        ((definition? exp)
+;         (eval-definition exp env))
+;        ((if? exp)
+;         (eval-if exp env))
 ;        ((begin? exp)
 ;         (eval-sequence exp env))
 ;        ((cond? exp)
