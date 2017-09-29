@@ -110,6 +110,18 @@
 
 (define lambda-body cddr)
 
+(define (make-procedure parameters body env)
+  (list 'procedure parameters body env))
+
+(define compound-procedure?
+  (tagged-list? 'procedure))
+
+(define procedure-parameters cadr)
+
+(define procedure-body caddr)
+
+(define procedure-environment cadddr)
+
 (define definition?
   (tagged-list? 'define))
 
@@ -164,9 +176,11 @@
 (define rest-exps cdr)
 
 (define (eval-sequence exps env)
-  (eval (first-exp exps) env)
-  (if (not (last-exp? exps))
-      (eval-sequence (rest-exps exps) env)))
+  (letrec ((e (lambda (exps)
+                (eval (first-exp exps) env)
+                (if (not (last-exp? exps))
+                    (e (rest-exps exps))))))
+    (e exps)))
 
 (define cond?
   (tagged-list? 'cond))
@@ -186,140 +200,130 @@
         (else (make-begin seq))))
 
 (define (expand-clauses clauses)
-  (if (null? clauses)
-      '#f
-      (let ((first (car clauses))
-            (rest (cdr clauses)))
-        (if (cond-else-clause? first)
-            (if (null? rest)
-                (sequence->exp (cond-actions first))
-                (error "cond->if: else clause must be last:" clauses))
-            (make-if (cond-predicate first)
-                     (sequence->exp (cond-actions first))
-                     (expand-clauses rest))))))
+  (and (not (null? clauses))
+       (let ((first (car clauses))
+             (rest (cdr clauses)))
+         (if (cond-else-clause? first)
+             (if (null? rest)
+                 (sequence->exp (cond-actions first))
+                 (error "cond: else clause must be last:" clauses))
+             (make-if (cond-predicate first)
+                      (sequence->exp (cond-actions first))
+                      (expand-clauses rest))))))
 
 (define (cond->if exp)
   (expand-clauses (cond-clauses exp)))
 
-;(define (primitive-procedure? proc)
-;  (tagged-list? proc 'primitive))
-;
-;(define primitive-implementation cadr)
-;
-;(define primitive-procedures
-;  (list (list 'car car)
-;        (list 'cdr cdr)
-;        (list 'cons cons)
-;        (list 'null? null?)))
-;
-;(define (primitive-procedure-names)
-;  (map car primitive-procedures))
-;
-;(define (primitive-procedure-objects)
-;  (map (lambda (proc)
-;         (list 'primitive (cadr proc)))
-;       primitive-procedures))
-;
-;(define (setup-environment)
-;  (let ((initial-env (extend-environment (primitive-procedure-names)
-;                                         (primitive-procedure-objects)
-;                                         the-empty-environment)))
-;    (define-variable! '#t #t initial-env)
-;    (define-variable! '#f #f initial-env)
-;    initial-env))
-;
-;(define application? pair?)
-;
-;(define operator car)
-;
-;(define operands cdr)
-;
-;(define no-operands? null?)
-;
-;(define first-operand car)
-;
-;(define rest-operands cdr)
-;
-;(define (list-of-values exps env)
-;  (if (no-operands? exps)
-;      '()
-;      (cons (eval (first-operand exps) env)
-;            (list-of-values (rest-operands exps) env))))
-;
-;(define (make-procedure parameters body env)
-;  (list 'procedure parameters body env))
-;
-;(define (compound-procedure? p)
-;  (tagged-list? p 'procedure))
-;
-;(define procedure-parameters cadr)
-;
-;(define procedure-body caddr)
-;
-;(define procedure-environment cadddr)
-;
-;(define (eval exp env)
-;  (cond ((self-evaluating? exp)
-;         exp)
-;        ((variable? exp)
-;         (lookup-variable-value exp env))
-;        ((quoted? exp)
-;         (text-of-quotation exp))
-;        ((assignment? exp)
-;         (eval-assignment exp env))
-;        ((lambda? exp)
-;         (make-procedure (lambda-parameters exp)
-;                         (lambda-body exp)
-;                         env))
-;        ((definition? exp)
-;         (eval-definition exp env))
-;        ((if? exp)
-;         (eval-if exp env))
-;        ((begin? exp)
-;         (eval-sequence (begin-actions exp) env))
-;        ((cond? exp)
-;         (eval (cond->if exp) env))
-;        ((application? exp)
-;         (apply (eval (operator exp) env)
-;                (list-of-values (operands exp) env)))
-;        (else (error "eval: unknown expression type:" exp))))
-;
-;(define (apply proc args)
-;  (letrec ((apply-primitive-procedure
-;            (lambda (proc args)
-;              (apply (primitive-implementation proc)
-;                     args))))
-;    (cond ((primitive-procedure? proc)
-;           (apply-primitive-procedure proc args))
-;          ((compound-procedure? proc)
-;           (eval-sequence (procedure-body proc)
-;                          (extend-environment (procedure-parameters proc)
-;                                              args
-;                                              (procedure-environment proc))))
-;          (else
-;           (error "apply: unknown procedure type:" proc)))))
-;
-;(define input-prompt ">>> ")
-;
-;(define (prompt-for-input string)
-;  (display string)
-;  (newline))
-;
-;(define (user-print object)
-;  (if (compound-procedure? object)
-;      (display (list 'compound-procedure
-;                     (procedure-parameters object)
-;                     (procedure-body object)
-;                     '<procedure-env>))
-;      (display object)))
-;
-;(define the-global-environment (setup-environment))
-;
-;(define (driver-loop)
-;  (prompt-for-input input-prompt)
-;  (let ((input (read)))
-;    (let ((output (eval input the-global-environment)))
-;      (user-print output)))
-;  (driver-loop))
-;
-;(driver-loop)
+(define application? pair?)
+
+(define operator car)
+
+(define operands cdr)
+
+(define first-operand car)
+
+(define rest-operands cdr)
+
+(define no-operands? null?)
+
+(define (list-of-values exps env)
+  (letrec ((l (lambda (exps)
+                (if (no-operands? exps)
+                    '()
+                    (cons (eval (first-operand exps) env)
+                          (l (rest-operands exps)))))))
+    (l exps)))
+
+(define primitive-procedures
+  (list (list '+ +)
+        (list '- -)
+        (list '* *)
+        (list '/ /)
+        (list 'car car)
+        (list 'cdr cdr)
+        (list 'cons cons)
+        (list 'null? null?)))
+
+(define (primitive-procedure-names)
+  (map car primitive-procedures))
+
+(define (primitive-procedure-objects)
+  (map (lambda (proc)
+         (list 'primitive (cadr proc)))
+       primitive-procedures))
+
+(define primitive-procedure?
+  (tagged-list? 'primitive))
+
+(define primitive-implementation cadr)
+
+(define (apply-primitive-procedure proc args)
+  (apply (primitive-implementation proc) args))
+
+(define (apply-metacircular proc args)
+  (cond ((primitive-procedure? proc)
+         (apply-primitive-procedure proc args))
+        ((compound-procedure? proc)
+         (eval-sequence (procedure-body proc)
+                        (extend-environment (procedure-parameters proc)
+                                            args
+                                            (procedure-environment proc))))
+        (else (error "apply: unknown procedure type:" proc))))
+
+(define (eval exp env)
+  (cond ((self-evaluating? exp)
+         exp)
+        ((variable? exp)
+         (lookup-variable-value exp env))
+        ((quoted? exp)
+         (text-of-quotation exp))
+        ((assignment? exp)
+         (eval-assignment exp env))
+        ((lambda? exp)
+         (make-procedure (lambda-parameters exp)
+                         (lambda-body exp)
+                         env))
+        ((definition? exp)
+         (eval-definition exp env))
+        ((if? exp)
+         (eval-if exp env))
+        ((begin? exp)
+         (eval-sequence (begin-actions exp) env))
+        ((cond? exp)
+         (eval (cond->if exp) env))
+        ((application? exp)
+         (apply-metacircular (eval (operator exp) env)
+                             (list-of-values (operands exp) env)))
+        (else (error "eval: unknown expression type:" exp))))
+
+(define (setup-environment)
+  (let ((env (extend-environment (primitive-procedure-names)
+                                 (primitive-procedure-objects)
+                                 '())))
+    (define-variable! '#t #t env)
+    (define-variable! '#f #f env)
+    env))
+
+(define (displayln x)
+  (display x)
+  (newline))
+
+(define (print object)
+  (if (compound-procedure? object)
+      (display (list 'compound-procedure
+                     (procedure-parameters object)
+                     (procedure-body object)
+                     '<procedure-env>))
+      (displayln object)))
+
+(define (scheme)
+  (let ((env (setup-environment)))
+    (letrec ((loop (lambda ()
+                     (displayln "> ")
+                     (let* ((input (read))
+                            (output (eval input env)))
+                       (print output))
+                     (loop))))
+      (loop))))
+
+(scheme)
