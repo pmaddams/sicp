@@ -2,7 +2,6 @@
 
 (#%require (only racket/base
                  make-hash
-                 hash-has-key?
                  hash-ref
                  hash-set!))
 
