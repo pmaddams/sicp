@@ -71,6 +71,16 @@
                           (s (cdr env))))))))
     (s env)))
 
+(define variable? symbol?)
+
+(define (self-evaluating? exp)
+  (or (number? exp)
+      (string? exp)))
+
+(define (tagged-list? exp tag)
+  (and (pair? exp)
+       (eq? (car exp) tag)))
+
 ;(define (primitive-procedure? proc)
 ;  (tagged-list? proc 'primitive))
 ;
@@ -97,17 +107,6 @@
 ;    (define-variable! '#t #t initial-env)
 ;    (define-variable! '#f #f initial-env)
 ;    initial-env))
-;
-;(define (self-evaluating? exp)
-;  (or (number? exp)
-;      (string? exp)))
-;
-;(define variable? symbol?)
-;
-;(define (tagged-list? exp tag)
-;  (if (pair? exp)
-;      (eq? (car exp) tag)
-;      #f))
 ;
 ;(define (quoted? exp)
 ;  (tagged-list? exp 'quote))
