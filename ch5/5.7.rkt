@@ -69,135 +69,76 @@
 (define (pop stack)
   (stack 'pop))
 
-;;
+(define (init-stack stack)
+  (stack 'init))
 
-;(define (make-instruction text)
-;  (list text))
-;
-;(define instruction-text car)
-;
-;(define instruction-execution-proc cdr)
-;
-;(define set-instruction-execution-proc! set-cdr!)
-;
-;(define (make-label-entry label-name insts)
-;  (cons label-name insts))
-;
-;(define (lookup-label labels label-name)
-;  ())
-;
-;(define (extract-labels text)
-;  (if ()
-;      '(())
-;      (let* ((result (extract-labels (cdr text)))
-;             (insts (car result))
-;             (labels (cdr result))
-;             (next-inst (car text)))
-;        (if (symbol? next-inst)
-;            (cons insts
-;                  (cons (make-label-entry next-inst insts)
-;                        labels))
-;            (cons (cons (make-instruction next-inst)
-;                        insts)
-;                  labels)))))
-;
-;(define (assemble text machine)
-;  ())
-;
-;(define (make-machine regs ops text))
+(define (make-instruction text)
+  (list text))
 
-;(define (make-register name)
-;  (let* ((contents '<unassigned>)
-;         (dispatch (lambda (m)
-;                     (case m
-;                       ('get contents)
-;                       ('set (lambda (value)
-;                               (set! contents value)))
-;                       (else (error "register: unknown method:" m))))))
-;    dispatch))
-;
-;(define (get-contents register)
-;  (register 'get))
-;
-;(define (set-contents! register value)
-;  ((register 'set) value))
-;
-;(define (make-stack)
-;  (let* ((s '())
-;         (push (lambda (x)
-;                 (set! s (cons x s))))
-;         (pop (lambda ()
-;                (if (null? s)
-;                    (error "stack: pop: empty stack")
-;                    (let ((top (car s)))
-;                      (set! s (cdr s))
-;                      top))))
-;         (initialize (lambda ()
-;                       (set! s '())
-;                       'done))
-;         (dispatch (lambda (m)
-;                     (case m
-;                       ('push push)
-;                       ('pop (pop))
-;                       ('initialize (initialize))
-;                       (else (error "stack: unknown method:" m))))))
-;    dispatch))
-;
-;(define (make-instruction text)
-;  (cons text '()))
-;
-;(define instruction-text car)
-;
-;(define instruction-execution-proc cdr)
-;
-;(define set-instruction-execution-proc! set-cdr!)
-;
-;(define (make-new-machine)
-;  (letrec ((pc (make-register 'pc))
-;           (flag (make-register 'flag))
-;           (stack (make-stack))
-;           (the-instruction-sequence '())
-;           (the-ops (list (list 'initialize-stack
-;                                (lambda ()
-;                                  (stack 'initialize)))))
-;           (register-table (list (list 'pc pc)
-;                                 (list 'flag flag)))
-;           (allocate-register (lambda (name)
-;                                (if (assoc name register-table)
-;                                    (error "multiply defined register:" name)
-;                                    (set! register-table
-;                                          (cons (list name (make-register name))
-;                                                register-table)))
-;                                'register-allocated))
-;           (lookup-register (lambda (name)
-;                              (let ((val (assoc name register-table)))
-;                                (if val
-;                                    (cadr val)
-;                                    (error "unknown register:" name)))))
-;           (execute (lambda ()
-;                      (let ((insts (get-contents pc)))
-;                        (if (null? insts)
-;                            'done
-;                            (begin ((instruction-execution-proc (car insts)))
-;                                   (execute))))))
-;           (dispatch (lambda (m)
-;                       (case m
-;                         ('start
-;                          (set-contents! pc the-instruction-sequence)
-;                          (execute))
-;                         ('install-instruction-sequence
-;                          (lambda (seq)
-;                            (set! the-instruction-sequence seq)))
-;                         ('allocate-register
-;                          allocate-register)
-;                         ('get-register
-;                          lookup-register)
-;                         ('install-operations
-;                          (lambda (ops)
-;                            (set! the-ops (append the-ops ops))))
-;                         ('stack
-;                          stack)
-;                         ('operations
-;                          the-ops)
-;                         (else (error "machine: unknown method:" m))))))
-;    dispatch))
+(define instruction-text car)
+
+(define instruction-execution-proc cdr)
+
+(define set-instruction-execution-proc! set-cdr!)
+
+(define (add-label-entry labels label-name insts)
+  (put labels label-name insts)
+  labels)
+
+(define (extract-labels text)
+  (if (null? text)
+      (list '() (make-table))
+      (let* ((result (extract-labels (cdr text)))
+             (insts (car result))
+             (labels (cdr result))
+             (next-inst (car text)))
+        (if (symbol? next-inst)
+            (cons insts
+                  (add-label-entry labels next-inst insts))
+            (cons (cons (make-instruction next-inst)
+                        insts)
+                  labels)))))
+
+(define (make-machine-model)
+  (let* ((pc (make-register))
+         (flag (make-register))
+         (stack (make-stack))
+         (instruction-sequence '())
+         (operations (list (list 'init-stack
+                                 init-stack)))
+         (registers (make-table))
+         (install-instruction-sequence (lambda (seq)
+                                         (set! instruction-sequence seq)))
+         (install-operations (lambda (ops)
+                               (set! operations
+                                     (append operations ops))))
+         (init-registers (lambda ()
+                           (put registers 'pc pc)
+                           (put registers 'flag flag)))
+         (allocate-register (lambda (name)
+                              (if (get registers name)
+                                  (error "machine: multiply defined register:" name)
+                                  (put registers name (make-register)))))
+         (get-register (lambda (name)
+                         (let ((reg (get registers name)))
+                           (if reg
+                               reg
+                               (error "machine: unknown register:" name)))))
+         (execute (letrec ((x (lambda ()
+                                (let ((insts (get-contents pc)))
+                                  (if (not (null? insts))
+                                      (begin (instruction-execution-proc (car insts))
+                                             (x)))))))
+                    x))
+         (dispatch (lambda (m)
+                     (case m
+                       ('install-instruction-sequence install-instruction-sequence)
+                       ('install-operations install-operations)
+                       ('get-register get-register)
+                       ('allocate-register allocate-register)
+                       ('stack stack)
+                       ('operations operations)
+                       ('execute execute)
+                       (else (error "machine: unknown method:" m))))))
+    (init-registers)
+    dispatch))
