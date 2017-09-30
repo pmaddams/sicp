@@ -1,13 +1,20 @@
 #lang sicp
 
+(define (square x)
+  (expt x 2))
+
 (define (expmod a n m)
-  (let ((square (lambda (x)
-                  (expt x 2))))
-    (letrec ((e (lambda (n)
-                  (cond ((zero? n) 1)
-                        ((even? n) (remainder (square (e (/ n 2))) m))
-                        (else (remainder (* a (e (dec n))) m))))))
-      (e n))))
+  (letrec ((e (lambda (n)
+                (cond ((zero? n)
+                       1)
+                      ((even? n)
+                       (remainder (square (e (/ n 2)))
+                                  m))
+                      (else
+                       (remainder (* a
+                                     (e (dec n)))
+                                  m))))))
+    (e n)))
 
 (define (fools? n)
   (letrec ((f (lambda (a)

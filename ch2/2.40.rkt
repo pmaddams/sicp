@@ -5,15 +5,21 @@
 
 (define (expmod-with-composite-test a n m)
   (letrec ((e (lambda (n)
-                (cond ((zero? n) 1)
-                      ((even? n) (let* ((x (e (/ n 2)))
-                                        (y (remainder (square x) m)))
-                                   (if (and (= y 1)
-                                            (not (= x 1))
-                                            (not (= x (dec m))))
-                                       0
-                                       y)))
-                      (else (remainder (* a (e (dec n))) m))))))
+                (cond ((zero? n)
+                       1)
+                      ((even? n)
+                       (let* ((x (e (/ n 2)))
+                              (y (remainder (square x)
+                                            m)))
+                         (if (and (= y 1)
+                                  (not (= x 1))
+                                  (not (= x (dec m))))
+                             0
+                             y)))
+                      (else
+                       (remainder (* a
+                                     (e (dec n)))
+                                  m))))))
     (e n)))
 
 (define (miller-rabin n)

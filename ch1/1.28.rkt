@@ -1,23 +1,30 @@
 #lang sicp
 
+(define (square x)
+  (expt x 2))
+
 (define (expmod-with-composite-test a n m)
-  (let ((square (lambda (x)
-                  (expt x 2))))
-    (letrec ((e (lambda (n)
-                  (cond ((zero? n) 1)
-                        ((even? n) (let* ((x (e (/ n 2)))
-                                          (y (remainder (square x) m)))
-                                     (if (and (= y 1)
-                                              (not (= x 1))
-                                              (not (= x (dec m))))
-                                         0
-                                         y)))
-                        (else (remainder (* a (e (dec n))) m))))))
-      (e n))))
+  (letrec ((e (lambda (n)
+                (cond ((zero? n)
+                       1)
+                      ((even? n)
+                       (let* ((x (e (/ n 2)))
+                              (y (remainder (square x)
+                                            m)))
+                         (if (and (= y 1)
+                                  (not (= x 1))
+                                  (not (= x (dec m))))
+                             0
+                             y)))
+                      (else
+                       (remainder (* a
+                                     (e (dec n)))
+                                  m))))))
+    (e n)))
 
 (define (miller-rabin n)
   (let ((a (inc (random (dec n)))))
-    (= 1 (expmod-with-composite-test a (dec n) n))))
+    (= (expmod-with-composite-test a (dec n) n) 1)))
 
 (define (prime? n)
   (letrec ((p (lambda (times)

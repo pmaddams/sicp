@@ -1,15 +1,17 @@
 #lang sicp
 
+(define (square x)
+  (expt x 2))
+
+(define (divides? a b)
+  (zero? (remainder b a)))
+
 (define (smallest-divisor n)
-  (let ((square (lambda (x)
-                  (expt x 2)))
-        (divides? (lambda (a b)
-                    (zero? (remainder b a)))))
-    (letrec ((s (lambda (i)
-                  (cond ((> (square i) n) n)
-                        ((divides? i n) i)
-                        (else (s (+ i 2)))))))
-      (s 3))))
+  (letrec ((s (lambda (i)
+                (cond ((> (square i) n) n)
+                      ((divides? i n) i)
+                      (else (s (+ i 2)))))))
+    (s 3)))
 
 (define (prime? n)
   (and (> n 1)

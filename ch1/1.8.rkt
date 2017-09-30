@@ -1,9 +1,10 @@
 #lang sicp
 
+(define (square x)
+  (expt x 2))
+
 (define (cbrt x)
-  (let* ((square (lambda (x)
-                   (expt x 2)))
-         (improve (lambda (guess)
+  (let* ((improve (lambda (guess)
                     (/ (+ (/ x (square guess))
                           (* guess 2))
                        3)))
