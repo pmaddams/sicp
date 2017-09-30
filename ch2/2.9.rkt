@@ -12,12 +12,16 @@
      2))
 
 (define (add-interval i j)
-  (make-interval (+ (lower-bound i) (lower-bound j))
-                 (+ (upper-bound i) (upper-bound j))))
+  (make-interval (+ (lower-bound i)
+                    (lower-bound j))
+                 (+ (upper-bound i)
+                    (upper-bound j))))
 
 (define (sub-interval i j)
-  (make-interval (- (lower-bound i) (upper-bound j))
-                 (- (upper-bound i) (lower-bound j))))
+  (make-interval (- (lower-bound i)
+                    (upper-bound j))
+                 (- (upper-bound i)
+                    (lower-bound j))))
 
 (define (mul-interval i j)
   (let ((il (lower-bound i))

@@ -28,13 +28,13 @@
 
 (for-each (lambda (p)
             (displayln (equal? (car p)
-                               (cdr p))))
-          (list (cons '(a (b c ((d e) f) (g) h))
-                      '(a (b c ((d e) f) (g) h)))
-                (cons '(1 2 (3 (4 5 (6 7 8))))
-                      '(1 2 (3 (4 5 (6 7 8)))))
-                (cons '(a (b c ((d e) f) (g) h))
-                      '(1 2 (3 (4 5 (6 7 8)))))))
+                               (cadr p))))
+          '(((a (b c ((d e) f)))
+             (a (b c ((d e) f))))
+            ((1 2 (3 (4 5 (6))))
+             (1 2 (3 (4 5 (6)))))
+            ((a (b c ((d e) f)))
+             (1 2 (3 (4 5 (6)))))))
 ;; #t
 ;; #t
 ;; #f
