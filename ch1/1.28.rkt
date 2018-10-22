@@ -1,7 +1,26 @@
 #lang racket/base
 
+(require racket/generator)
+
 (module+ test
   (require rackunit))
+
+(define (make-prime? f)
+  (lambda (n)
+    (if (< n 2)
+        #f
+        (f n))))
+
+(define (trial-division n)
+  (define (loop i)
+    (cond ((= n i) #t)
+          ((zero? (modulo n i)) #f)
+          (else (loop (add1 i)))))
+  (loop 2))
+
+(define (fermat k)
+  (lambda (n)
+    ()))
 
 (define (square n)
   (* n n))
@@ -19,3 +38,7 @@
           (x (random 100))
           (m (random 100)))
       (check = (expmod b x m) (modulo (expt b x) m)))))
+
+(define (miller-rabin k)
+  (lambda (n)
+    ()))
