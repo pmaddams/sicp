@@ -57,7 +57,7 @@
 (module+ test
   (check-prime? (fermat 10)))
 
-(define (miller-expmod b x m)
+(define (expmod-nontrivial-sqrt b x m)
   (let loop ((x x))
     (cond ((zero? x) 1)
           ((even? x) (let* ((n (loop (/ x 2)))
@@ -69,21 +69,21 @@
                            r)))
           (else (modulo (* b (loop (sub1 x))) m)))))
 
-(define miller-rabin (probable-prime miller-expmod))
+(define miller-rabin (probable-prime expmod-nontrivial-sqrt))
 
 (module+ test
   (check-prime? (miller-rabin 10)))
 
 (define (fools-prime? with-expmod)
   (lambda (n)
-    (let loop ((i (sub1 n)))
-      (or (< i 2)
-          (and (= i (with-expmod i n n))
-               (loop (sub1 i)))))))
+    (let loop ((a (sub1 n)))
+      (or (< a 2)
+          (and (= a (with-expmod a n n))
+               (loop (sub1 a)))))))
 
 (define fools-fermat? (fools-prime? expmod))
 
-(define fools-miller-rabin? (fools-prime? miller-expmod))
+(define fools-miller-rabin? (fools-prime? expmod-nontrivial-sqrt))
 
 (module+ test
   (for ((carmichael '(561 1105 1729 2465 2821 6601)))
