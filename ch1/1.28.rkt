@@ -9,19 +9,31 @@
          (or (<= n 3)
              (f n)))))
 
+(module+ test
+  (define (check-prime? f)
+    (let ((prime? (make-prime? f)))
+      (for ((p '(2 3 5 7 11 13)))
+        (check-true (prime? p)))
+      (for ((c '(0 1 4 6 8 9)))
+        (check-false (prime? c))))))
+
 (define (trial-division n)
   (let loop ((i 2))
     (cond ((= n i) #t)
           ((zero? (modulo n i)) #f)
           (else (loop (add1 i))))))
 
-(define (fermat k)
-  (lambda (n)
-    (let loop ((k k))
-      (or (zero? k)
-          (let ((a (random 2 (sub1 n))))
-            (and (= 1 (expmod a (sub1 n) n))
-                 (loop (sub1 k))))))))
+(module+ test
+  (check-prime? trial-division))
+
+(define (probable-prime with-expmod)
+  (lambda (k)
+    (lambda (n)
+      (let loop ((k k))
+        (or (zero? k)
+            (let ((a (random 2 (sub1 n))))
+              (and (= 1 (with-expmod a (sub1 n) n))
+                   (loop (sub1 k)))))))))
 
 (define (expmod b x m)
   (let loop ((x x))
@@ -39,25 +51,24 @@
           (m (random 100)))
       (check = (expmod b x m) (modulo (expt b x) m)))))
 
-#;(define (miller-expmod b x m)
-    (define (loop b x)
-      (cond ((zero? x) 1)
-            ((even? x) (let ((x (modulo (square (loop b (/ x 2))) m)))
-                         (and (not ())
-                              (not ())
-                              x)))
-            (else (modulo (* b (loop b (sub1 x))) m))))
-    (loop b x))
-
-#;(define (miller-rabin k)
-    (lambda (n)
-      (define (loop k)
-        (or (zero? k)
-            (let ((a (random 2 (sub1 n))))
-              ())))
-      (loop k)))
+(define fermat (probable-prime expmod))
 
 (module+ test
-  (let ((prime? (make-prime? (fermat 10))))
-    (for ((n '(2 3 5 7 11 13)))
-      (check-true (prime? n)))))
+  (check-prime? (fermat 10)))
+
+(define (miller-expmod b x m)
+  (let loop ((x x))
+    (cond ((zero? x) 1)
+          ((even? x) (let* ((n (loop (/ x 2)))
+                            (r (modulo (square n) m)))
+                       (if (and (not (or (= n 1)
+                                         (= n (sub1 m))))
+                                (= r 1))
+                           0
+                           r)))
+          (else (modulo (* b (loop (sub1 x))) m)))))
+
+(define miller-rabin (probable-prime miller-expmod))
+
+(module+ test
+  (check-prime? (miller-rabin 10)))
