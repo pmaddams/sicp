@@ -4,14 +4,18 @@
          rackunit
          "main.rkt")
 
-(define (check-prime? f)
-  (let ((prime? (make-prime? f))
-        (primes '(2 3 5 7 11 13))
-        (composites '(0 1 4 6 8 9)))
+(define primes '(2 3 5 7 11 13 17 23 29 31))
+
+(define composites '(0 1 4 6 8 9 10 12 14 15))
+
+(define-check (check-prime? f)
+  (let ((prime? (make-prime? f)))
     (for ((n primes))
-      (check-true (prime? n)))
+      (unless (prime? n)
+        (fail-check (format "~a is prime" n))))
     (for ((n composites))
-      (check-false (prime? n)))))
+      (when (prime? n)
+        (fail-check (format "~a is composite" n))))))
 
 (test-case
  "trial-division"
@@ -35,8 +39,9 @@
  (check-prime? (miller-rabin 10)))
 
 (test-case
- "carmichaels"
- (let ((carmichaels '(561 1105 1729 2465 2821 6601)))
-   (for ((n carmichaels))
-     (check-true (fools-fermat? n))
-     (check-false (fools-miller-rabin? n)))))
+ "carmichael numbers"
+ (for ((n '(561 1105 1729 2465 2821 6601)))
+   (check-true (fools-fermat? n)
+               (format "~a doesn't fool fermat" n))
+   (check-false (fools-miller-rabin? n)
+                (format "~a fools miller-rabin" n))))
