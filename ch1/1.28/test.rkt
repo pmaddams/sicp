@@ -1,7 +1,6 @@
 #lang racket/base
 
-(require racket/dict
-         rackunit
+(require rackunit
          "main.rkt")
 
 (define primes '(2 3 5 7 11 13 17 23 29 31))
