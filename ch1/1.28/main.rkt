@@ -1,7 +1,30 @@
 #lang racket/base
 
-(module+ test
-  (require rackunit))
+(provide make-prime?
+         trial-division
+         fermat
+         expmod
+         miller-rabin
+         fools-fermat?
+         fools-miller-rabin?)
+
+(require racket/dict)
+
+(module+ main
+  (for (((name f)
+         (in-dict `(("trial division" . ,trial-division)
+                    ("fermat" . ,(fermat 10))
+                    ("miller-rabin" . ,(miller-rabin 10))))))
+    (let ((prime? (make-prime? f)))
+      (printf "~a:\n" name)
+      (for ((n (in-range 100000 100100)))
+        (timed-prime-test prime? n)))))
+
+(define (timed-prime-test with-prime? n)
+  (define (now) (current-inexact-milliseconds))
+  (let ((start (now)))
+    (when (with-prime? n)
+      (printf "~a is prime: ~a ms\n" n (- (now) start)))))
 
 (define (make-prime? f)
   (lambda (n)
@@ -9,22 +32,11 @@
          (or (<= n 3)
              (f n)))))
 
-(module+ test
-  (define (check-prime? f)
-    (let ((prime? (make-prime? f)))
-      (for ((p '(2 3 5 7 11 13)))
-        (check-true (prime? p)))
-      (for ((c '(0 1 4 6 8 9)))
-        (check-false (prime? c))))))
-
 (define (trial-division n)
   (let loop ((i 2))
     (cond ((= n i) #t)
           ((zero? (modulo n i)) #f)
           (else (loop (add1 i))))))
-
-(module+ test
-  (check-prime? trial-division))
 
 (define (probable-prime with-expmod)
   (lambda (k)
@@ -44,18 +56,7 @@
 (define (square n)
   (* n n))
 
-(module+ test
-  (for ((i (in-range 10)))
-    (let ((b (random 2 100))
-          (x (random 2 100))
-          (m (random 2 100)))
-      (check-eq? (expmod b x m)
-                 (modulo (expt b x) m)))))
-
 (define fermat (probable-prime expmod))
-
-(module+ test
-  (check-prime? (fermat 10)))
 
 (define (expmod-nontrivial-sqrt b x m)
   (let loop ((x x))
@@ -71,9 +72,6 @@
 
 (define miller-rabin (probable-prime expmod-nontrivial-sqrt))
 
-(module+ test
-  (check-prime? (miller-rabin 10)))
-
 (define (fools-prime? with-expmod)
   (lambda (n)
     (let loop ((a (sub1 n)))
@@ -84,25 +82,3 @@
 (define fools-fermat? (fools-prime? expmod))
 
 (define fools-miller-rabin? (fools-prime? expmod-nontrivial-sqrt))
-
-(module+ test
-  (for ((carmichael '(561 1105 1729 2465 2821 6601)))
-    (check-true (fools-fermat? carmichael))
-    (check-false (fools-miller-rabin? carmichael))))
-
-(define (timed-prime-test with-prime? n)
-  (define (now) (current-inexact-milliseconds))
-  (let ((start (now)))
-    (when (with-prime? n)
-      (printf "~a is prime: ~a ms\n" n (- (now) start)))))
-
-(module+ main
-  (require racket/dict)
-  (for (((name f)
-         (in-dict `(("trial division" . ,trial-division)
-                    ("fermat" . ,(fermat 10))
-                    ("miller-rabin" . ,(miller-rabin 10))))))
-    (let ((prime? (make-prime? f)))
-      (printf "~a:\n" name)
-      (for ((n (in-range 100000 100100)))
-        (timed-prime-test prime? n)))))

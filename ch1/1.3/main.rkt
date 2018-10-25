@@ -1,5 +1,7 @@
 #lang racket/base
 
+(provide sum-largest-squares)
+
 (define (sum-largest-squares . l)
   (apply + (map square (remove-smallest l))))
 
