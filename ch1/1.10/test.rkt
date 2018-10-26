@@ -3,15 +3,15 @@
 (require rackunit
          "main.rkt")
 
-(define-check (check-A i f seq)
-  (for ((n seq))
+(define-check (check-A i f)
+  (for ((n (in-range 5)))
     (let ((m (A i n))
           (p (f n)))
       (unless (= m p)
-        (fail-check (format "(A ~a ~a) is ~a, not ~a" i n m p))))))
+        (fail-check (format "(A ~a ~a) -> ~a, got ~a" i n m p))))))
 
-(test-case "f" (check-A 0 f (in-range 15)))
+(test-case "f" (check-A 0 f))
 
-(test-case "g" (check-A 1 g (in-range 10)))
+(test-case "g" (check-A 1 g))
 
-(test-case "h" (check-A 2 h (in-range 5)))
+(test-case "h" (check-A 2 h))
