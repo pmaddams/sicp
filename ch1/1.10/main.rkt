@@ -3,21 +3,9 @@
 (provide A f g h)
 
 (module+ main
-  (for ((p (permutations 2 '(1 2 3))))
-    (printf "(A ~a ~a) -> ~a\n"
-            (car p) (cadr p) (apply A p))))
-
-(define (permutations n l)
-  (let loop ((n n))
-    (if (zero? n)
-        '(())
-        (flatmap (lambda (p)
-                   (map (lambda (x)
-                          (cons x p)) l))
-                 (loop (sub1 n))))))
-
-(define (flatmap f l)
-  (apply append (map f l)))
+  (for ((n (in-range 4)))
+    (for ((m (in-range 4)))
+      (printf "(A ~a ~a) -> ~a\n" n m (A n m)))))
 
 (define (A n m)
   (cond ((= m 0) 0)
