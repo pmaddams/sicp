@@ -2,29 +2,23 @@
 
 (provide make-prime?
          trial-division
-         fermat
          expmod
+         fermat
          miller-rabin
          fools-fermat?
          fools-miller-rabin?)
 
 (require racket/dict)
 
-(module+ main
-  (for (((name f)
-         (in-dict `(("trial division" . ,trial-division)
-                    ("fermat" . ,(fermat 10))
-                    ("miller-rabin" . ,(miller-rabin 10))))))
-    (let ((prime? (make-prime? f)))
-      (printf "~a:\n" name)
-      (for ((n (in-range 100000 100100)))
-        (timed-prime-test prime? n)))))
+(define (search-for-primes from to)
+  (for ((n (in-range from (add1 to))))
+    (timed-prime-test (miller-rabin 10) n)))
 
 (define (timed-prime-test with-prime? n)
   (define (now) (current-inexact-milliseconds))
   (let ((start (now)))
     (when (with-prime? n)
-      (printf "~a is prime: ~a ms\n" n (- (now) start)))))
+      (printf "~a (~a ms)\n" n (- (now) start)))))
 
 (define (make-prime? f)
   (lambda (n)

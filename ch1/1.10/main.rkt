@@ -2,11 +2,6 @@
 
 (provide A f g h)
 
-(module+ main
-  (for ((n (in-range 4)))
-    (for ((m (in-range 4)))
-      (printf "(A ~a ~a) -> ~a\n" n m (A n m)))))
-
 (define (A n m)
   (cond ((= m 0) 0)
         ((= n 0) (* 2 m))
