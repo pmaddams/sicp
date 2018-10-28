@@ -3,15 +3,14 @@
 (require rackunit
          "main.rkt")
 
-(define-check (check-op f1 f2)
+(define-check (check-op f reference)
   (for ((i (in-range 5)))
     (let* ((n (random 1 5))
            (m (random 1 5))
-           (v1 (f1 n m))
-           (v2 (f2 n m)))
-      (unless (= v1 v2)
-        (fail-check (format "(~a ~a ~a) -> ~a, (~a ~a ~a) -> ~a"
-                            f1 n m v1 f2 n m v2))))))
+           (expected (reference n m))
+           (actual (f n m)))
+      (with-check-info (('actual actual) ('expected expected))
+        (unless (= actual expected) (fail-check))))))
 
 (test-case "add" (check-op add +))
 

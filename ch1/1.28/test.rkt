@@ -10,11 +10,11 @@
 (define-check (check-prime? f)
   (let ((prime? (make-prime? f)))
     (for ((n primes))
-      (unless (prime? n)
-        (fail-check (format "~a is prime" n))))
+      (with-check-info (('actual n) ('expected 'prime))
+        (unless (prime? n) (fail-check))))
     (for ((n composites))
-      (when (prime? n)
-        (fail-check (format "~a is composite" n))))))
+      (with-check-info (('actual n) ('expected 'composite))
+        (when (prime? n)  (fail-check))))))
 
 (test-case
  "trial-division"

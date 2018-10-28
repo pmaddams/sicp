@@ -5,10 +5,10 @@
 
 (define-check (check-A i f)
   (for ((n (in-range 5)))
-    (let ((m (A i n))
-          (p (f n)))
-      (unless (= m p)
-        (fail-check (format "(A ~a ~a) -> ~a, got ~a" i n m p))))))
+    (let ((expected (A i n))
+          (actual (f n)))
+      (with-check-info (('actual actual) ('expected expected))
+        (unless (= actual expected) (fail-check))))))
 
 (test-case "f" (check-A 0 f))
 
