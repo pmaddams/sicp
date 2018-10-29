@@ -28,9 +28,9 @@
 
 (define (trial-division n)
   (let loop ((i 2))
-    (cond ((= n i) #t)
-          ((zero? (modulo n i)) #f)
-          (else (loop (add1 i))))))
+    (or (= i n)
+        (and (not (zero? (modulo n i)))
+             (loop (add1 i))))))
 
 (define (probable-prime with-expmod)
   (lambda (k)
@@ -72,7 +72,7 @@
   (lambda (n)
     (let loop ((a (sub1 n)))
       (or (< a 2)
-          (and (= a (with-expmod a n n))
+          (and (= (with-expmod a n n) a)
                (loop (sub1 a)))))))
 
 (define fools-fermat? (fools-prime? expmod))
