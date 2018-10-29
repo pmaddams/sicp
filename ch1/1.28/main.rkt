@@ -38,7 +38,7 @@
       (let loop ((k k))
         (or (zero? k)
             (let ((a (random 2 (sub1 n))))
-              (and (= 1 (with-expmod a (sub1 n) n))
+              (and (= (with-expmod a (sub1 n) n) 1)
                    (loop (sub1 k)))))))))
 
 (define (expmod b x m)
@@ -52,13 +52,15 @@
 
 (define fermat (probable-prime expmod))
 
+(define-syntax-rule (neither expr ...)
+  (not (or expr ...)))
+
 (define (expmod-nontrivial-sqrt b x m)
   (let loop ((x x))
     (cond ((zero? x) 1)
           ((even? x) (let* ((n (loop (/ x 2)))
                             (r (modulo (square n) m)))
-                       (if (and (not (or (= n 1)
-                                         (= n (sub1 m))))
+                       (if (and (neither (= n 1) (= n (sub1 m)))
                                 (= r 1))
                            0
                            r)))
