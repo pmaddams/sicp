@@ -11,10 +11,10 @@
 
 (define (repeated f n)
   (lambda (x)
-      (let loop ((n n) (acc x))
-        (if (zero? n)
-            acc
-            (loop (sub1 n) (f x))))))
+    (let loop ((n n) (acc x))
+      (if (zero? n)
+          acc
+          (loop (sub1 n) (f x))))))
 
 (define (average-damp f)
   (lambda (x) (average x (f x))))
