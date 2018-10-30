@@ -1,6 +1,7 @@
 #lang racket/base
 
-(provide nth-root-within)
+(provide nth-root-within
+         within?)
 
 (define (nth-root-within percent n)
   (lambda (x)
@@ -23,7 +24,7 @@
 
 (define (fixed-point-within percent)
   (lambda (f guess)
-    ((improve f (within percent)) guess)))
+    ((improve f (within? percent)) guess)))
 
 (define (improve better good-enough?)
   (lambda (guess)
@@ -32,7 +33,7 @@
           guess
           (loop next (better next))))))
 
-(define (within percent)
+(define (within? percent)
   (lambda (guess next)
     (< (abs (/ (- next guess) guess))
        (/ percent 100.0))))
