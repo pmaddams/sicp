@@ -30,7 +30,7 @@
   (lambda (guess)
     (let loop ((guess guess) (next (better guess)))
       (if (good-enough? guess next)
-          guess
+          next
           (loop next (better next))))))
 
 (define (within? percent)
