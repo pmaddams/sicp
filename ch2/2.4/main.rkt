@@ -1,7 +1,7 @@
 #lang racket/base
 
 (provide cons car cdr set-car! set-cdr! null null? equal?
-         length member remove map filter foldr foldl
+         length member remove map filter
          append reverse sum product)
 
 (define (cons x y)
@@ -48,7 +48,7 @@
 (define (remove x l)
   (cond ((null? l) (null))
         ((equal? (car l) x) (cdr l))
-        (else (remove x (cdr l)))))
+        (else (cons (car l) (remove x (cdr l))))))
 
 (define (map f l)
   (if (null? l)
@@ -59,16 +59,6 @@
   (cond ((null? l) (null))
         ((f (car l)) (cons (car l) (filter f (cdr l))))
         (else (filter f (cdr l)))))
-
-(define (foldr f z l)
-  (if (null? l)
-      z
-      (f (car l) (foldr f z (cdr l)))))
-
-(define (foldl f z l)
-  (if (null? l)
-      z
-      (foldl f (f (car l) z) (cdr l))))
 
 (define (append l1 l2)
   (foldr cons l2 l1))
@@ -81,3 +71,13 @@
 
 (define (product l)
   (foldl * 1 l))
+
+(define (foldr f z l)
+  (if (null? l)
+      z
+      (f (car l) (foldr f z (cdr l)))))
+
+(define (foldl f z l)
+  (if (null? l)
+      z
+      (foldl f (f (car l) z) (cdr l))))
