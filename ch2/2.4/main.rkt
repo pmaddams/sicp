@@ -1,4 +1,54 @@
-#lang racket
+#lang racket/base
+
+(provide cons car cdr set-car! set-cdr! null null? equal?
+         length member remove map filter foldr foldl
+         append reverse sum product)
+
+(define (cons x y)
+  (lambda (f)
+    (f x y (lambda (z) (set! x z)) (lambda (z) (set! y z)))))
+
+(define (car p)
+  (p (lambda (x y set-x set-y) x)))
+
+(define (cdr p)
+  (p (lambda (x y set-x set-y) y)))
+
+(define (set-car! p z)
+  (p (lambda (x y set-x set-y) (set-x z))))
+
+(define (set-cdr! p z)
+  (p (lambda (x y set-x set-y) (set-y z))))
+
+(define (null) 'null)
+
+(define (null? l)
+  (eq? l 'null))
+
+(define (equal? x y)
+  (cond ((number? x) (and (number? y) (= x y)))
+        ((symbol? x) (and (symbol? y) (eq? x y)))
+        (else (and (neither (number? y) (symbol? y))
+                   (equal? (car x) (car y))
+                   (equal? (cdr x) (cdr y))))))
+
+(define-syntax-rule (neither expr ...)
+  (not (or expr ...)))
+
+(define (length l)
+  (if (null? l)
+      0
+      (add1 (length (cdr l)))))
+
+(define (member x l)
+  (cond ((null? l) #f)
+        ((equal? (car l) x) l)
+        (else (member x (cdr l)))))
+
+(define (remove x l)
+  (cond ((null? l) (null))
+        ((equal? (car l) x) (cdr l))
+        (else (remove x (cdr l)))))
 
 (define (map f l)
   (if (null? l)
@@ -31,31 +81,3 @@
 
 (define (product l)
   (foldl * 1 l))
-
-(define (length l)
-  (sum (map (const 1) l)))
-
-(define (equal? x y)
-  (cond ((number? x) (and (number? y) (= x y)))
-        ((symbol? x) (and (symbol? y) (eq? x y)))
-        (else (and (neither (number? y) (symbol? y))
-                   (equal? (car x) (car y))
-                   (equal? (cdr x) (cdr y))))))
-
-(define-syntax-rule (neither expr ...)
-  (not (or expr ...)))
-
-(define (cons x y)
-  (lambda (f)
-    (f x y)))
-
-(define (car p)
-  (p (lambda (x y) x)))
-
-(define (cdr p)
-  (p (lambda (x y) y)))
-
-(define (null) 'null)
-
-(define (null? l)
-  (eq? l 'null))
