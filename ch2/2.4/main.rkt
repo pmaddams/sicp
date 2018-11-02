@@ -25,15 +25,15 @@
 (define (null? l)
   (eq? l 'null))
 
+(define-syntax-rule (neither expr ...)
+  (not (or expr ...)))
+
 (define (equal? x y)
   (cond ((number? x) (and (number? y) (= x y)))
         ((symbol? x) (and (symbol? y) (eq? x y)))
         (else (and (neither (number? y) (symbol? y))
                    (equal? (car x) (car y))
                    (equal? (cdr x) (cdr y))))))
-
-(define-syntax-rule (neither expr ...)
-  (not (or expr ...)))
 
 (define (length l)
   (if (null? l)
