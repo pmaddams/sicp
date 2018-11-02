@@ -1,5 +1,11 @@
 #lang racket/base
 
+(provide church-0 church-1 church-2 church-add1
+         number->church church->number church-=
+         church-add church-mul church-expt)
+
+(require racket/function)
+
 (define (church-0 f)
   (lambda (x) x))
 
