@@ -1,6 +1,8 @@
 #lang racket/base
 
 (provide nth-root-within
+         repeated
+         fixed-point-within
          within?)
 
 (define (nth-root-within percent n)
@@ -14,7 +16,7 @@
     (let loop ((n n) (acc x))
       (if (zero? n)
           acc
-          (loop (sub1 n) (f x))))))
+          (loop (sub1 n) (f acc))))))
 
 (define (average-damp f)
   (lambda (x) (average x (f x))))
