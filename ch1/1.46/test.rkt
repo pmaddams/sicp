@@ -12,3 +12,11 @@
        (check (within? percent)
               ((nth-root-within percent n) x)
               (expt x (/ 1 n)))))))
+
+(define (square n) (* n n))
+
+(test-case
+ "repeated"
+ (for ((n (in-range 5)))
+   (check = ((repeated add1 n) 0) n)
+   (check = ((repeated square n) 2) (expt 2 (expt 2 n)))))

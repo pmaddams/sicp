@@ -2,7 +2,6 @@
 
 (provide nth-root-within
          repeated
-         fixed-point-within
          within?)
 
 (define (nth-root-within percent n)
