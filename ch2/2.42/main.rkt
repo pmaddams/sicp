@@ -12,8 +12,7 @@
     (and (not (reject state))
          (if (accept state)
              (return state)
-             (for ((state (children state)))
-               (loop state))))))
+             (for-each loop (children state))))))
 
 (define (reject board)
   (and (not (null? board))
