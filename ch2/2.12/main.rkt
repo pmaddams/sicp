@@ -53,3 +53,21 @@
     (if (or (zero? l2) (zero? u2) (and (negative? l2) (positive? u2)))
         (error "division by zero:" i1 i2)
         (interval-mul i2 (interval (/ 1.0 u2) (/ 1.0 l2))))))
+
+(define (center i)
+  (average (interval-lower i) (interval-upper i)))
+
+(define (average . args)
+  (/ (apply + args) (length args)))
+
+(define (width i)
+  (/ (- (interval-upper i) (interval-lower i)) 2.0))
+
+(define (center-width c w)
+  (interval (- c w) (+ c w)))
+
+(define (percent i)
+  (* (/ (width i) (center i)) 100.0))
+
+(define (center-percent c p)
+  (center-width c (* c (/ p 100.0))))
