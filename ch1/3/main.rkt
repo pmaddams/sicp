@@ -1,9 +1,16 @@
 #lang racket/base
 
-(provide sum-largest-squares)
+; Exercise 1.3: Sum of squares
 
-(define (sum-largest-squares . l)
-  (apply + (map square (remove-smallest l))))
+(provide sum-largest-squares
+         sum-of-squares
+         remove-smallest)
+
+(define (sum-largest-squares . args)
+  (apply sum-of-squares (remove-smallest args)))
+
+(define (sum-of-squares . args)
+  (apply + (map square args)))
 
 (define (square n) (* n n))
 
