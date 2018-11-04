@@ -1,5 +1,7 @@
 #lang racket/base
 
+; Exercise 1.28: Primality testing
+
 (provide make-prime?
          trial-division
          expmod

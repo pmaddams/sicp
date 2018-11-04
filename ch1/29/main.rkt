@@ -1,5 +1,7 @@
 #lang racket/base
 
+; Exercise 1.29: Numerical integration
+
 (provide naive-integral simpson-integral)
 
 (define (naive-integral f lo hi step)

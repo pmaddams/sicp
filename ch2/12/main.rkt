@@ -1,5 +1,7 @@
 #lang racket/base
 
+; Exercise 2.12: Interval arithmetic
+
 (struct interval (lower upper) #:transparent)
 
 (define (interval-add i1 i2)

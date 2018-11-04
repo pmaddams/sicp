@@ -1,5 +1,7 @@
 #lang racket/base
 
+; Exercise 1.38: Continued fractions
+
 (provide e-within
          pi-within
          within?)

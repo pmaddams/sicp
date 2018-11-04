@@ -1,5 +1,7 @@
 #lang racket/base
 
+; Exercise 1.12: Pascal's triangle
+
 (provide choose)
 
 (define (choose n k)

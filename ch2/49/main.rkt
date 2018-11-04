@@ -1,5 +1,7 @@
 #lang racket/base
 
+; Exercise 2.49: Functional geometry
+
 (require racket/class
          racket/draw)
 

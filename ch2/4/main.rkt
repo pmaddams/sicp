@@ -1,5 +1,7 @@
 #lang racket/base
 
+; Exercise 2.4: Functional pairs
+
 (provide cons car cdr set-car! set-cdr! null null? equal?
          length member remove map filter
          append reverse sum product)

@@ -1,5 +1,7 @@
 #lang racket/base
 
+; Exercise 2.19: Counting change
+
 (define us-coins '(1 5 10 25 50))
 
 (define uk-coins '(0.5 1 2 5 10 20 50 100))

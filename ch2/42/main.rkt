@@ -1,5 +1,7 @@
 #lang racket/base
 
+; Exercise 2.42: Eight queens
+
 (require racket/function)
 
 (define size 8)

@@ -1,5 +1,7 @@
 #lang racket/base
 
+; Exercise 1.46: Iterative improvement
+
 (provide nth-root-within
          repeated
          within?)

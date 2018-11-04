@@ -1,5 +1,7 @@
 #lang racket/base
 
+; Exercise 1.33: Filtered accumulation
+
 (provide sum-squares-prime
          product-relative-prime-upto
          prime?

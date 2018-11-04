@@ -1,5 +1,7 @@
 #lang racket/base
 
+; Exercise 2.6: Church numerals
+
 (provide church-0 church-1 church-2 church-add1
          number->church church->number church-=
          church-add church-mul church-expt)

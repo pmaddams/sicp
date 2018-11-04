@@ -1,5 +1,7 @@
 #lang racket/base
 
+; Exercise 1.18: Peano arithmetic
+
 (provide add sub mul div pow)
 
 (define (add n m)
