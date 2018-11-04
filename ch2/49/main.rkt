@@ -11,24 +11,24 @@
   (painter unit-frame)
   (show))
 
-(define (make-painter . args)
+(define (make-painter . segment-coordinates)
   (segments->painter
-   (apply append (map make-segment args))))
+   (apply append (map make-segment segment-coordinates))))
 
-(define (make-segment l)
+(define (make-segment list-of-coordinates)
   (points->segments
-   (for/list ((coords l))
-     (apply point coords))))
+   (for/list ((l list-of-coordinates))
+     (apply point l))))
 
-(define (show) image)
+(define (show) bitmap)
 
-(define image (make-bitmap size size))
+(define bitmap (make-bitmap size size))
 
-(define dc (make-object bitmap-dc% image))
+(define dc (make-object bitmap-dc% bitmap))
 
 (define (reset)
-  (set! image (make-bitmap size size))
-  (set! dc (make-object bitmap-dc% image)))
+  (set! bitmap (make-bitmap size size))
+  (set! dc (make-object bitmap-dc% bitmap)))
 
 (struct point (x y))
 
