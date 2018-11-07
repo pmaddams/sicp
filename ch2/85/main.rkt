@@ -5,17 +5,6 @@
 (require racket/function
          racket/list)
 
-(define (type-tag n)
-  (cond ((int? n) 'int)
-        ((rat? n) 'rat)
-        ((re? n) 're)
-        ((cmplx? n) 'cmplx)
-        (else (error "unknown type:" n))))
-
-(define (level n)
-  (let ((tower '(int rat re cmplx)))
-    (index-of tower (type-tag n))))
-
 (define tab (make-hash))
 
 (define (put k v)
@@ -23,34 +12,6 @@
 
 (define (get k)
   (hash-ref tab k))
-
-(define (super n)
-  ((get `(super ,(type-tag n))) n))
-
-(define (simpl n)
-  ((get `(simpl ,(type-tag n))) n))
-
-(define (show n)
-  ((get `(show ,(type-tag n))) n))
-
-(define (repeated f n)
-  (let loop ((n n) (acc identity))
-    (if (zero? n)
-        acc
-        (loop (sub1 n) (compose f acc)))))
-
-(define (coerce args)
-  (let* ((levels (map level args))
-         (top (apply max levels)))
-    (let loop ((l (map cons args levels)) (acc '()))
-      (if (null? l)
-          acc
-          (loop (cdr l)
-                (cons ((repeated super (- top (cdar l))) (caar l)) acc))))))
-
-(define (apply-generic op . args)
-  (let ((args (coerce args)))
-    (simpl (apply (get (list op (type-tag (car args)))) args))))
 
 (define (add n m)
   (apply-generic 'add n m))
@@ -63,6 +24,49 @@
 
 (define (div n m)
   (apply-generic 'div n m))
+
+(define (apply-generic op . args)
+  (let ((args (coerce args)))
+    (simpl (apply (get (list op (type-tag (car args)))) args))))
+
+(define (coerce args)
+  (let* ((levels (map type-level args))
+         (top (apply max levels)))
+    (let loop ((args args) (levels levels) (acc '()))
+      (if (null? args)
+          acc
+          (loop (cdr args)
+                (cdr levels)
+                (cons ((repeated super (- top (car levels))) (car args))
+                      acc))))))
+
+(define (type-tag n)
+  (car (type n)))
+
+(define (type-level n)
+  (cdr (type n)))
+
+(define (type n)
+  (cond ((int? n) '(int . 0))
+        ((rat? n) '(rat . 1))
+        ((re? n) '(re . 2))
+        ((cmplx? n) '(cmplx . 3))
+        (else (error "unknown type:" n))))
+
+(define (repeated f n)
+  (let loop ((n n) (acc identity))
+    (if (zero? n)
+        acc
+        (loop (sub1 n) (compose f acc)))))
+
+(define (super n)
+  ((get `(super ,(type-tag n))) n))
+
+(define (simpl n)
+  ((get `(simpl ,(type-tag n))) n))
+
+(define (show n)
+  ((get `(show ,(type-tag n))) n))
 
 (struct int (val))
 
@@ -139,7 +143,7 @@
   (put '(simpl rat)
        (lambda (n)
          (let ((n (make-rat (rat-numer n) (rat-denom n))))
-           (if (= 1 (rat-denom n))
+           (if (= (rat-denom n) 1)
                (rat-numer n)
                n))))
 
