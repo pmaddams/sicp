@@ -5,96 +5,97 @@
 (require racket/function
          racket/list)
 
-(define (type n)
+(define (type-tag n)
   (cond ((int? n) 'int)
         ((rat? n) 'rat)
         ((re? n) 're)
         ((cmplx? n) 'cmplx)
-        (else (error "unknown type" n))))
+        (else (error "unknown type:" n))))
 
 (define (level n)
   (let ((tower '(int rat re cmplx)))
-    (index-of tower (type n))))
+    (index-of tower (type-tag n))))
 
-(define table (make-hash))
-
-(define (get k)
-  (hash-ref table k))
+(define tab (make-hash))
 
 (define (put k v)
-  (hash-set! table k v))
+  (hash-set! tab k v))
+
+(define (get k)
+  (hash-ref tab k))
 
 (define (super n)
-  ((get `(super ,(type n))) n))
+  ((get `(super ,(type-tag n))) n))
 
 (define (simpl n)
-  ((get `(simpl ,(type n))) n))
+  ((get `(simpl ,(type-tag n))) n))
 
 (define (show n)
-  ((get `(show ,(type n))) n))
+  ((get `(show ,(type-tag n))) n))
 
-(define (repeated n f)
-  (if (zero? n)
-      identity
-      (compose f (repeated (sub1 n) f))))
+(define (repeated f n)
+  (let loop ((n n) (acc identity))
+    (if (zero? n)
+        acc
+        (loop (sub1 n) (compose f acc)))))
 
 (define (coerce args)
   (let* ((levels (map level args))
          (top (apply max levels)))
-    (letrec
-        ((c (lambda (args levels)
-              (if (null? args)
-                  '()
-                  (cons ((repeated (- top (car levels)) super) (car args))
-                        (c (cdr args) (cdr levels)))))))
-      (c args levels))))
+    (let loop ((l (map cons args levels)) (acc '()))
+      (if (null? l)
+          acc
+          (loop (cdr l)
+                (cons ((repeated super (- top (cdar l))) (caar l)) acc))))))
 
-(define (apply-generic op args)
-  (let* ((args (coerce args))
-         (k (list op (type (car args))))
-         (v (get k)))
-    (simpl (apply v args))))
+(define (apply-generic op . args)
+  (let ((args (coerce args)))
+    (simpl (apply (get (list op (type-tag (car args)))) args))))
 
-(define (add . args)
-  (apply-generic 'add args))
+(define (add n m)
+  (apply-generic 'add n m))
 
-(define (sub . args)
-  (apply-generic 'sub args))
+(define (sub n m)
+  (apply-generic 'sub n m))
 
-(define (mul . args)
-  (apply-generic 'mul args))
+(define (mul n m)
+  (apply-generic 'mul n m))
 
-(define (div . args)
-  (apply-generic 'div args))
+(define (div n m)
+  (apply-generic 'div n m))
 
-(define (flip f)
-  (lambda (x y)
-    (f y x)))
+(struct int (val))
 
-(define (fold op args)
-  (foldl (flip op) (car args) (cdr args)))
+(define (install-int-package)
+  (put '(add int)
+       (lambda (n m)
+         (int (+ (int-val n) (int-val m)))))
 
-(define int? integer?)
+  (put '(sub int)
+       (lambda (n m)
+         (int (- (int-val n) (int-val m)))))
 
-(define (install-int)
-  (put '(add int) +)
-
-  (put '(sub int) -)
-
-  (put '(mul int) *)
+  (put '(mul int)
+       (lambda (n m)
+         (int (* (int-val n) (int-val m)))))
 
   (put '(div int)
-       (lambda args
-         (apply div (map (lambda (n) (make-rat n 1)) args))))
+       (lambda (n m)
+         (int (/ (int-val n) (int-val m)))))
 
   (put '(super int)
-       (lambda (n) (rat n 1)))
+       (lambda (n)
+         (rat (int-val n) 1)))
 
-  (put '(simpl int) inexact->exact)
+  (put '(simpl int)
+       (lambda (n)
+         (int (inexact->exact (int-val n)))))
 
-  (put '(show int) number->string))
+  (put '(show int)
+       (lambda (n)
+         (number->string (int-val n)))))
 
-(install-int)
+(install-int-package)
 
 (struct rat (numer denom))
 
@@ -106,40 +107,32 @@
         (rat (- numer) (- denom))
         (rat numer denom))))
 
-(define (install-rat)
-  (define (add n1 n2)
-    (make-rat (+ (* (rat-numer n1) (rat-denom n2))
-                 (* (rat-denom n1) (rat-numer n2)))
-              (* (rat-denom n1) (rat-denom n2))))
-
-  (put '(add rat) (lambda args (fold add args)))
-
-  (define (sub n1 n2)
-    (make-rat (- (* (rat-numer n1) (rat-denom n2))
-                 (* (rat-denom n1) (rat-numer n2)))
-              (* (rat-denom n1) (rat-denom n2))))
+(define (install-rat-package)
+  (put '(add rat)
+       (lambda (n m)
+         (make-rat (+ (* (rat-numer n) (rat-denom m))
+                      (* (rat-denom n) (rat-numer m)))
+                   (* (rat-denom n) (rat-denom m)))))
 
   (put '(sub rat)
-       (lambda args
-         (if (= (length args) 1)
-             (sub (rat 0 0) (car args))
-             (fold sub args))))
+       (lambda (n m)
+         (make-rat (- (* (rat-numer n) (rat-denom m))
+                      (* (rat-denom n) (rat-numer m)))
+                   (* (rat-denom n) (rat-denom m)))))
 
-  (define (mul n1 n2)
-    (make-rat (* (rat-numer n1) (rat-numer n2))
-              (* (rat-denom n1) (rat-denom n2))))
+  (put '(mul rat)
+       (lambda (n m)
+         (make-rat (* (rat-numer n) (rat-numer m))
+                   (* (rat-denom n) (rat-denom m)))))
 
-  (put '(mul rat) (lambda args (fold mul args)))
-
-  (define (div n1 n2)
-    (make-rat (* (rat-numer n1) (rat-denom n2))
-              (* (rat-denom n1) (rat-numer n2))))
-
-  (put '(div rat) (lambda args (fold div args)))
+  (put '(div rat)
+       (lambda (n m)
+         (make-rat (* (rat-numer n) (rat-denom m))
+                   (* (rat-denom n) (rat-numer m)))))
 
   (put '(super rat)
        (lambda (n)
-         (let ((int->re (lambda (i) (+ i 0.0))))
+         (let ((int->re (lambda (v) (+ v 0.0))))
            (/ (int->re (rat-numer n))
               (int->re (rat-denom n))))))
 
@@ -157,32 +150,41 @@
           "/"
           (number->string (rat-denom n))))))
 
-(install-rat)
+(install-rat-package)
 
-(define re? real?)
+(struct re (val))
 
-(define (install-re)
-  (put '(add re) +)
+(define (install-re-package)
+  (put '(add re)
+       (lambda (n m)
+         (re (+ (re-val n) (re-val m)))))
 
-  (put '(sub re) -)
+  (put '(sub re)
+       (lambda (n m)
+         (re (- (re-val n) (re-val m)))))
 
-  (put '(mul re) *)
+  (put '(mul re)
+       (lambda (n m)
+         (re (* (re-val n) (re-val m)))))
 
-  (put '(div re) /)
+  (put '(div re)
+       (lambda (n m)
+         (re (/ (re-val n) (re-val m)))))
 
   (put '(super re)
        (lambda (n)
-         (cmplx n 0.0)))
+         (cmplx (re-val n) 0.0)))
 
   (put '(simpl re)
        (lambda (n)
-         (let ((epsilon 0.0000000001)
-               (i (round n)))
-           (if (< (abs (- i n)) epsilon) i n))))
+         (let ((v (re-val n)))
+           (if (= (round v) v) (int v) n))))
 
-  (put '(show re) number->string))
+  (put '(show re)
+       (lambda (n)
+         (number->string (re-val n)))))
 
-(install-re)
+(install-re-package)
 
 (struct rect (re im))
 
@@ -207,7 +209,7 @@
 (define (cmplx-mag n)
   (if (polar? n)
       (polar-mag n)
-      (let ((square (lambda (x) (* x x))))
+      (let ((square (lambda (v) (* v v))))
         (sqrt (+ (square (rect-re n))
                  (square (rect-im n)))))))
 
@@ -217,34 +219,26 @@
       (atan (rect-im n)
             (rect-re n))))
 
-(define (install-cmplx)
-  (define (add n1 n2)
-    (rect (+ (cmplx-re n1) (cmplx-re n2))
-          (+ (cmplx-im n1) (cmplx-im n2))))
-
-  (put '(add cmplx) (lambda args (fold add args)))
-
-  (define (sub n1 n2)
-    (rect (- (cmplx-re n1) (cmplx-re n2))
-          (- (cmplx-im n1) (cmplx-im n2))))
+(define (install-cmplx-package)
+  (put '(add cmplx)
+       (lambda (n m)
+         (rect (+ (cmplx-re n) (cmplx-re m))
+               (+ (cmplx-im n) (cmplx-im m)))))
 
   (put '(sub cmplx)
-       (lambda args
-         (if (= (length args) 1)
-             (sub (cmplx 0.0 0.0) (car args))
-             (fold sub args))))
+       (lambda (n m)
+         (rect (- (cmplx-re n) (cmplx-re m))
+               (- (cmplx-im n) (cmplx-im m)))))
 
-  (define (mul n1 n2)
-    (polar (* (cmplx-mag n1) (cmplx-mag n2))
-           (+ (cmplx-ang n1) (cmplx-ang n2))))
+  (put '(mul cmplx)
+       (lambda (n m)
+         (polar (* (cmplx-mag n) (cmplx-mag m))
+                (+ (cmplx-ang n) (cmplx-ang m)))))
 
-  (put '(mul cmplx) (lambda args (fold mul args)))
-
-  (define (div n1 n2)
-    (polar (/ (cmplx-mag n1) (cmplx-mag n2))
-           (- (cmplx-ang n1) (cmplx-ang n2))))
-
-  (put '(div cmplx) (lambda args (fold div args)))
+  (put '(div cmplx)
+       (lambda (n m)
+         (polar (/ (cmplx-mag n) (cmplx-mag m))
+                (- (cmplx-ang n) (cmplx-ang m)))))
 
   (put '(simpl cmplx)
        (lambda (n)
@@ -262,4 +256,4 @@
           (number->string (cmplx-im n))
           "i"))))
 
-(install-cmplx)
+(install-cmplx-package)
