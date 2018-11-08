@@ -24,6 +24,12 @@
     (define/public (pop-back)
       (pop 'back))
 
+    (define/public (empty?)
+      (let ((fail (lambda () (error "invalid state:" front back))))
+        (if (null? front)
+            (or (null? back) (fail))
+            (and (null? back) (fail)))))
+
     (define (push val where)
       (let ((elem (node val '() '())))
         (cond ((empty?) (set! front elem)
@@ -48,10 +54,4 @@
                                  (if (null? back)
                                      (set! front '())
                                      (set-node-next! back '()))
-                                 val))))
-
-    (define (empty?)
-      (let ((fail (lambda () (error "invalid state:" front back))))
-        (if (null? front)
-          (or (null? back) (fail))
-          (and (null? back) (fail)))))))
+                                 val))))))
