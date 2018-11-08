@@ -7,7 +7,9 @@
 (define deque%
   (class object%
     (super-new)
+
     (struct node (val prev next) #:mutable)
+
     (field (front '()) (back '()))
 
     (define/public (push-front val)

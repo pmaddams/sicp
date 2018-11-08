@@ -11,6 +11,7 @@
 (define account%
   (class object%
     (super-new)
+
     (init password)
     (init-field (balance 0))
     (field (passwords '()) (attempts 0))
