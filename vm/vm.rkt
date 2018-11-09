@@ -8,6 +8,7 @@
 (define register%
   (class object%
     (super-new)
+
     (field (var (void)))
 
     (define/public (get) var)
@@ -18,6 +19,7 @@
 (define stack%
   (class object%
     (super-new)
+
     (field (l '()))
 
     (define/public (empty?)
@@ -34,6 +36,7 @@
 (define vm%
   (class stack%
     (super-new)
+
     (init regs ops)
 
     (define regtab
