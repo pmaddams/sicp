@@ -2,7 +2,8 @@
 
 ; Exercise 3.30: Circuit simulator
 
-(require racket/class)
+(require racket/class
+         racket/function)
 
 (define wire%
   (class object%
@@ -128,44 +129,34 @@
         ((and (= a 1) (= b 1)) 1)
         (else (error "invalid input:" a b))))
 
-(define-syntax-rule (perform expr ...)
-  (lambda () expr ...))
-
 (define (probe name wire)
-  (send wire add
-        (perform
-         (printf "~a -- current time: ~a new value: ~a\n"
-                 name (current-time) (receive wire)))))
+  (send wire add (thunk (printf "~a -- current time: ~a new value: ~a\n"
+                                name (current-time) (receive wire)))))
 
 (define (inverter in out)
-  (define delay 2)
-  (define action
-    (perform
-     (let ((val (logical-not (receive in))))
-       (after delay (perform (set out val))))))
-  (add in action))
+  (let* ((delay 2)
+         (action
+          (thunk (let ((val (logical-not (receive in))))
+                   (after delay (thunk (set out val)))))))
+    (add in action)))
 
 (define (nand-gate in1 in2 out)
-  (define delay 3)
-  (define action
-    (perform
-     (let ((val (logical-not
-                 (logical-and (receive in1)
-                              (receive in2)))))
-       (after delay (perform (set out val))))))
-  (add in1 action)
-  (add in2 action))
+  (let* ((delay 3)
+         (action
+          (thunk (let ((val (logical-not (logical-and (receive in1)
+                                                      (receive in2)))))
+                   (after delay (thunk (set out val)))))))
+    (add in1 action)
+    (add in2 action)))
 
 (define (nor-gate in1 in2 out)
-  (define delay 3)
-  (define action
-    (perform
-     (let ((val (logical-not
-                 (logical-or (receive in1)
-                             (receive in2)))))
-       (after delay (perform (set out val))))))
-  (add in1 action)
-  (add in2 action))
+  (let* ((delay 3)
+         (action
+          (thunk (let ((val (logical-not (logical-or (receive in1)
+                                                     (receive in2)))))
+                   (after delay (thunk (set out val)))))))
+    (add in1 action)
+    (add in2 action)))
 
 (define-syntax-rule (circuit (wire ...) expr ...)
   (let ((wire (new wire%)) ...)
