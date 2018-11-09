@@ -3,13 +3,14 @@
 (provide vm%)
 
 (require racket/class
-         racket/dict)
+         racket/dict
+         racket/function)
 
 (define register%
   (class object%
     (super-new)
 
-    (field (var (void)))
+    (field (var '()))
 
     (define/public (get) var)
 
@@ -112,9 +113,8 @@
          (proc (if (op-expr? val-expr)
                    (generate-op-expr vm labels val-expr)
                    (generate-primitive-expr vm labels (car val-expr)))))
-    (lambda ()
-      (send reg write proc)
-      (send vm advance))))
+    (thunk (send reg write proc)
+           (send vm advance))))
 
 (define (assign-reg expr)
   (cadr expr))
@@ -127,9 +127,8 @@
          (proc (if (op-expr? cond-expr)
                    (generate-op-expr vm labels cond-expr)
                    (error "invalid expression:" expr))))
-    (lambda ()
-      (send vm set 'flag proc)
-      (send vm advance))))
+    (thunk (send vm set 'flag proc)
+           (send vm advance))))
 
 (define (test-cond-expr expr)
   (cdr expr))
@@ -139,10 +138,9 @@
          (insts (if (label-expr? loc-expr)
                     (dict-ref labels (label-expr-label loc-expr))
                     (error "invalid expression:" expr))))
-    (lambda ()
-      (if (send vm get 'flag)
-          (send vm set 'pc insts)
-          (send vm advance)))))
+    (thunk (if (send vm get 'flag)
+               (send vm set 'pc insts)
+               (send vm advance)))))
 
 (define (branch-loc-expr expr)
   (cadr expr))
@@ -156,12 +154,10 @@
   (let ((loc-expr (goto-loc-expr expr)))
     (cond ((label-expr? loc-expr)
            (let ((insts (dict-ref labels (label-expr-label loc-expr))))
-             (lambda ()
-               (send vm set 'pc insts))))
+             (thunk (send vm set 'pc insts))))
           ((reg-expr? loc-expr)
            (let ((reg (reg-expr-reg loc-expr)))
-             (lambda ()
-               (send vm set 'pc (send vm get reg)))))
+             (thunk (send vm set 'pc (send vm get reg)))))
           (else (error "invalid expression:" expr)))))
 
 (define (goto-loc-expr expr)
@@ -169,15 +165,13 @@
 
 (define (generate-save vm expr)
   (let ((reg (stack-expr-reg expr)))
-    (lambda ()
-      (send vm push (send vm get reg))
-      (send vm advance))))
+    (thunk (send vm push (send vm get reg))
+           (send vm advance))))
 
 (define (generate-restore vm expr)
   (let ((reg (stack-expr-reg expr)))
-    (lambda ()
-      (send vm set reg (send vm pop))
-      (send vm advance))))
+    (thunk (send vm set reg (send vm pop))
+           (send vm advance))))
 
 (define (stack-expr-reg expr)
   (cadr expr))
@@ -186,9 +180,8 @@
   (let ((op-expr (perform-op-expr expr)))
     (if (op-expr? op-expr)
         (let ((proc (generate-op-expr vm labels op-expr)))
-          (lambda ()
-            (proc)
-            (send vm advance)))
+          (thunk (proc)
+                 (send vm advance)))
         (error "invalid expression:" expr))))
 
 (define (perform-op-expr expr)
@@ -201,10 +194,9 @@
 (define (generate-op-expr vm labels expr)
   (let ((primitive-proc (send vm op (op-expr-op expr)))
         (primitive-operands (map (lambda (expr)
-                      (generate-primitive-expr vm labels expr))
-                    (op-expr-operands expr))))
-    (lambda ()
-      (apply primitive-proc (map (lambda (proc) (proc)) primitive-operands)))))
+                                   (generate-primitive-expr vm labels expr))
+                                 (op-expr-operands expr))))
+    (thunk (apply primitive-proc (map (lambda (proc) (proc)) primitive-operands)))))
 
 (define op-expr-op cadar)
 
@@ -213,13 +205,13 @@
 (define (generate-primitive-expr vm labels expr)
   (cond ((const-expr? expr)
          (let ((val (cadr expr)))
-           (lambda () val)))
+           (thunk val)))
         ((reg-expr? expr)
          (let ((reg (cadr expr)))
-           (lambda () (send vm get reg))))
+           (thunk (send vm get reg))))
         ((label-expr? expr)
          (let ((insts (dict-ref labels (cadr expr))))
-           (lambda () insts)))
+           (thunk insts)))
         (else (error "invalid expression:" expr))))
 
 (define (const-expr? expr)
