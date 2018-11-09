@@ -8,19 +8,19 @@
   (class object%
     (super-new)
 
-    (field (actions '()) (signal 0))
-
-    (define/public (add action)
-      (set! actions (cons action actions))
-      (action))
+    (field (signal 0) (actions '()))
 
     (define/public (set val)
       (unless (or (= val 0) (= val 1))
         (error "invalid signal:" val))
-      (unless (= signal val)
+      (unless (= val signal)
         (set! signal val)
         (for ((action actions))
-          (action))))))
+          (action))))
+
+    (define/public (add action)
+      (set! actions (cons action actions))
+      (action))))
 
 (define queue%
   (class object%
@@ -60,9 +60,9 @@
   (class object%
     (super-new)
 
-    (field (segments '()) (current-time 0))
+    (field (current-time 0) (segments '()))
 
-    (define/public (run)
+    (define/public (execute)
       (for ((segment segments))
         (set! current-time (get-field time segment))
         (let loop ((segment segment))
@@ -74,14 +74,19 @@
     (define/public (after delay action)
       (let ((time (+ current-time delay)))
         (if (before? time segments)
-            (set! segments (mcons (make-object segment% action time) segments))
+            (set! segments (mcons (make-segment time action) segments))
             (let loop ((segments segments))
               (let ((first (mcar segments))
                     (rest (mcdr segments)))
-                (cond ((= (get-field time first) time) (send first push action))
-                      ((before? time rest) (set-mcdr! segments (mcons (make-object segment% action time) rest)))
+                (cond ((= (get-field time first) time)
+                       (send first push action))
+                      ((before? time rest)
+                       (set-mcdr! segments (mcons (make-segment time action) rest)))
                       (else (loop rest))))))))
 
     (define (before? time segments)
       (or (null? segments)
-          (< time (get-field time (mcar segments)))))))
+          (< time (get-field time (mcar segments)))))
+
+    (define (make-segment time action)
+      (new segment% (time time) (action action)))))
