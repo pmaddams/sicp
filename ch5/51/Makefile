@@ -1,6 +1,6 @@
-NAME =	lisp
-BUILD =	clang -Weverything -Werror
-FILES =	`find * -name "*.[c|h]"`
+NAME = lisp
+BUILD = clang -Weverything -Werror
+FILES = `find * -name "*.[c|h]"`
 
 .PHONY: build
 build:
