@@ -46,3 +46,42 @@
 
     (define/public (empty?)
       (null? front))))
+
+(define segment%
+  (class queue%
+    (super-new)
+
+    (init action)
+    (init-field time)
+
+    (send this push action)))
+
+(define agenda%
+  (class object%
+    (super-new)
+
+    (field (segments '()) (current-time 0))
+
+    (define/public (run)
+      (for ((segment segments))
+        (set! current-time (get-field time segment))
+        (let loop ((segment segment))
+          (unless (send segment empty?)
+            ((send segment pop))
+            (loop segment))))
+      (set! segments '()))
+
+    (define/public (after delay action)
+      (let ((time (+ current-time delay)))
+        (if (before? time segments)
+            (set! segments (mcons (make-object segment% action time) segments))
+            (let loop ((segments segments))
+              (let ((first (mcar segments))
+                    (rest (mcdr segments)))
+                (cond ((= (get-field time first) time) (send first push action))
+                      ((before? time rest) (set-mcdr! segments (mcons (make-object segment% action time) rest)))
+                      (else (loop rest))))))))
+
+    (define (before? time segments)
+      (or (null? segments)
+          (< time (get-field time (mcar segments)))))))
