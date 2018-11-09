@@ -8,6 +8,7 @@
 (define (monitored %)
   (class %
     (super-new)
+
     (field (pushes 0)
            (cur-depth 0)
            (max-depth 0))
