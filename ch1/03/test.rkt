@@ -11,8 +11,8 @@
         (unless (equal? actual expected) (fail-check))))))
 
 (test-case
- "sum-largest-squares"
- (check-all sum-largest-squares
+ "sum-larger-squares"
+ (check-all sum-larger-squares
             `(((1 2 3) . ,(sum-of-squares 2 3))
               ((4 3 5 2) . ,(sum-of-squares 4 3 5))
               ((6 7 3 4 5) . ,(sum-of-squares 6 7 4 5)))))
