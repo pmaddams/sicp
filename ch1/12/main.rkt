@@ -4,6 +4,8 @@
 
 (provide pascal)
 
+(require racket/sequence)
+
 (define (pascal n)
   (for/list ((k (in-range (add1 n))))
     (choose n k)))
@@ -14,5 +16,7 @@
 
 (define factorial
   (case-lambda
-    ((hi) (factorial 2 hi))
-    ((lo hi) (for/product ((n (in-range lo (add1 hi)))) n))))
+    ((n) (factorial 2 n))
+    ((lo hi) (product (in-range lo (add1 hi))))))
+
+(define (product seq) (sequence-fold * 1 seq))
