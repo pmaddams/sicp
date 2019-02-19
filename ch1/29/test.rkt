@@ -16,5 +16,5 @@
      (for ((step '(0.01 0.001)))
        (let* ((definite (- (g hi) (g lo)))
               (tolerance (max step (/ definite 100))))
-         (check-= definite (naive-integral f lo hi step) tolerance)
-         (check-= definite (simpson-integral f lo hi step) tolerance))))))
+         (check-= definite (simpson-integral f lo hi step) tolerance)
+         (check-= definite (riemann-integral f lo hi step) tolerance))))))
