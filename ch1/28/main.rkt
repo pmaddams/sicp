@@ -1,82 +1,81 @@
 #lang racket/base
 
-; Exercise 1.28: Primality testing
+; Exercise 1.28
 
-(provide make-prime?
-         trial-division
+(provide trial-division
          expmod
          fermat
          miller-rabin
-         fools-fermat?
-         fools-miller-rabin?)
+         fools-fermat
+         fools-miller-rabin)
 
-(require racket/dict)
-
-(define (search-for-primes from to)
-  (for ((n (in-range from (add1 to))))
+(define (search-for-primes lo hi)
+  (for ((n (in-range lo (add1 hi))))
     (timed-prime-test (miller-rabin 10) n)))
 
-(define (timed-prime-test with-prime? n)
+(define (timed-prime-test p n)
   (define (now) (current-inexact-milliseconds))
   (let ((start (now)))
-    (when (with-prime? n)
+    (when (p n)
       (printf "~a (~a ms)\n" n (- (now) start)))))
 
-(define (make-prime? f)
-  (lambda (n)
-    (and (not (< n 2))
-         (or (<= n 3)
-             (f n)))))
+(define ((make-prime p) n)
+  (and (not (< n 2))
+       (or (<= n 3)
+           (p n))))
 
-(define (trial-division n)
-  (let loop ((i 2))
-    (or (= i n)
-        (and (not (zero? (modulo n i)))
-             (loop (add1 i))))))
+(define trial-division
+  (make-prime
+   (lambda (n)
+     (for/fold ((prime #t))
+               ((d (in-range 2 (add1 (integer-sqrt n)))))
+       (and (not (zero? (remainder n d))) prime)))))
 
-(define (probable-prime with-expmod)
-  (lambda (k)
-    (lambda (n)
-      (let loop ((k k))
-        (or (zero? k)
-            (let ((a (random 2 (sub1 n))))
-              (and (= (with-expmod a (sub1 n) n) 1)
-                   (loop (sub1 k)))))))))
+(define ((probable-prime expmod) k)
+  (make-prime
+   (lambda (n)
+     (for/fold ((prime #t))
+               ((i (in-range k)))
+       (let ((a (random 2 (sub1 n))))
+         (and (= 1 (expmod a (sub1 n) n)) prime))))))
 
-(define (expmod b x m)
-  (let loop ((x x))
-    (cond ((zero? x) 1)
-          ((even? x) (modulo (square (loop (/ x 2))) m))
-          (else (modulo (* b (loop (sub1 x))) m)))))
-
-(define (square n)
-  (* n n))
-
-(define fermat (probable-prime expmod))
+(define (expmod a n m)
+  (let loop ((n n))
+    (cond ((zero? n) 1)
+          ((even? n)
+           (remainder (square (loop (quotient n 2))) m))
+          (else
+           (remainder (* a (loop (sub1 n))) m)))))
 
 (define-syntax-rule (neither expr ...)
   (not (or expr ...)))
 
-(define (expmod-nontrivial-sqrt b x m)
-  (let loop ((x x))
-    (cond ((zero? x) 1)
-          ((even? x) (let* ((n (loop (/ x 2)))
-                            (r (modulo (square n) m)))
-                       (if (and (neither (= n 1) (= n (sub1 m)))
-                                (= r 1))
-                           0
-                           r)))
-          (else (modulo (* b (loop (sub1 x))) m)))))
+(define (expmod-nontrivial-sqrt a n m)
+  (let loop ((n n))
+    (cond ((zero? n) 1)
+          ((even? n)
+           (let* ((r (loop (quotient n 2)))
+                  (x (remainder (square r) m)))
+             (if (and (neither (= r 1) (= r (sub1 m)))
+                      (= x 1))
+                 0
+                 x)))
+          (else
+           (remainder (* a (loop (sub1 n))) m)))))
+
+(define fermat (probable-prime expmod))
 
 (define miller-rabin (probable-prime expmod-nontrivial-sqrt))
 
-(define (fools-prime? with-expmod)
+(define (fools expmod)
   (lambda (n)
     (let loop ((a (sub1 n)))
       (or (< a 2)
-          (and (= (with-expmod a n n) a)
+          (and (= a (expmod a n n))
                (loop (sub1 a)))))))
 
-(define fools-fermat? (fools-prime? expmod))
+(define fools-fermat (fools expmod))
 
-(define fools-miller-rabin? (fools-prime? expmod-nontrivial-sqrt))
+(define fools-miller-rabin (fools expmod-nontrivial-sqrt))
+
+(define (square n) (* n n))
