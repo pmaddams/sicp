@@ -1,6 +1,6 @@
 #lang racket/base
 
-; Exercise 1.18: Peano arithmetic
+; Exercise 1.18
 
 (provide add sub mul div pow)
 
@@ -20,12 +20,6 @@
           ((even? m) (loop (double n) (halve m) acc))
           (else (loop n (sub1 m) (add n acc))))))
 
-(define (double n)
-  (add n n))
-
-(define (halve n)
-  (div n 2))
-
 (define (div n m)
   (let loop ((n n) (acc 0))
     (if (< n m)
@@ -38,5 +32,8 @@
           ((even? m) (loop (square n) (halve m) acc))
           (else (loop n (sub1 m) (mul n acc))))))
 
-(define (square n)
-  (mul n n))
+(define (double n) (add n n))
+
+(define (halve n) (div n 2))
+
+(define (square n) (mul n n))
