@@ -11,7 +11,7 @@
     (choose n k)))
 
 (define (choose n k)
-  (quotient (factorial (add1 k) n)
+  (quotient (factorial (+ k 1) n)
             (factorial (- n k))))
 
 (define factorial
