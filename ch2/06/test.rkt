@@ -5,47 +5,47 @@
 
 (test-case
  "basic tests"
- (check = (church->number church-0) 0)
- (check = (church->number church-1) 1)
- (check = (church->number church-2) 2)
- (check church-= (number->church 0) church-0)
- (check church-= (number->church 1) church-1)
- (check church-= (number->church 2) church-2)
- (check church-= (church-add1 church-0) church-1)
- (check church-= (church-add1 church-1) church-2))
+ (check-equal? (church->number zero) 0)
+ (check-equal? (church->number one) 1)
+ (check-equal? (church->number two) 2)
+ (check church=? (number->church 0) zero)
+ (check church=? (number->church 1) one)
+ (check church=? (number->church 2) two)
+ (check church=? (add one zero) one)
+ (check church=? (add one one) two))
 
 (test-case
  "random tests"
  (for ((i (in-range 5)))
    (let ((n (random 10)))
-     (check = (church->number (number->church n)) n)
-     (check church-=
-            (church-add1 (number->church n))
+     (check-equal? (church->number (number->church n)) n)
+     (check church=?
+            (add one (number->church n))
             (number->church (add1 n))))))
 
 (test-case
- "church-add"
+ "add"
  (for ((i (in-range 5)))
    (let ((n (random 10))
          (m (random 10)))
-     (check church-=
-            (church-add (number->church n) (number->church m))
+     (check church=?
+            (add (number->church n) (number->church m))
             (number->church (+ n m))))))
 
 (test-case
- "church-mul"
+ "mul"
  (for ((i (in-range 5)))
    (let ((n (random 10))
          (m (random 10)))
-     (check church-=
-            (church-mul (number->church n) (number->church m))
+     (check church=?
+            (mul (number->church n) (number->church m))
             (number->church (* n m))))))
 
 (test-case
- "church-expt"
+ "pow"
  (for ((i (in-range 5)))
    (let ((n (random 2 5))
          (m (random 2 5)))
-     (check church-=
-            (church-expt (number->church n) (number->church m))
+     (check church=?
+            (pow (number->church n) (number->church m))
             (number->church (expt n m))))))
