@@ -1,44 +1,33 @@
 #lang racket/base
 
-; Exercise 1.38: Continued fractions
+; Exercise 1.38
 
-(provide e-within
-         pi-within
+(provide e-approx
          within?)
 
-(define (e-within percent)
-  (let ((numer (lambda (i) 1))
-        (denom (lambda (i)
+(define (e-approx %)
+  (let ((n (lambda (i) 1))
+        (d (lambda (i)
                  (let ((j (add1 i)))
-                   (if (zero? (modulo j 3))
-                       (* 2 (/ j 3))
+                   (if (zero? (remainder j 3))
+                       (* 2 (quotient j 3))
                        1)))))
-    (+ 2.0 (cont-frac-within percent numer denom))))
+    (+ 2.0 (cont-frac-approx % n d))))
 
-(define (pi-within percent)
-  (let ((numer (lambda (i)
-                 (square (sub1 (* 2 i)))))
-        (denom (lambda (i) 6)))
-    (+ 3.0 (cont-frac-within percent numer denom))))
-
-(define (square n)
-  (* n n))
-
-(define (cont-frac-within percent numer denom)
-  (let loop ((guess (cont-frac numer denom 1)) (terms 2))
-    (let ((next (cont-frac numer denom terms)))
-      (if ((within? percent) guess next)
+(define (cont-frac-approx % n d)
+  (let loop ((guess (cont-frac n d 1)) (k 2))
+    (let ((next (cont-frac n d k)))
+      (if ((within? %) guess next)
           next
-          (loop next (* 2 terms))))))
+          (loop next (* 2 k))))))
 
-(define (cont-frac numer denom terms)
-  (let loop ((i terms) (acc 0))
+(define (cont-frac n d k)
+  (let loop ((i k) (acc 0))
     (if (zero? i)
         acc
-        (loop (sub1 i) (/ (numer i)
-                          (+ (denom i) acc))))))
+        (loop (sub1 i) (/ (n i) (+ (d i) acc))))))
 
-(define (within? percent)
+(define (within? %)
   (lambda (guess next)
     (< (abs (/ (- next guess) guess))
-       (/ percent 100.0))))
+       (/ % 100.0))))

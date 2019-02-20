@@ -5,8 +5,7 @@
          "main.rkt")
 
 (test-case
- "cont-frac-within"
+ "e-approx"
  (let ((e (exp 1)))
-   (for ((percent '(0.1 0.01 0.001)))
-     (check (within? percent) (e-within percent) e)
-     (check (within? percent) (pi-within percent) pi))))
+   (for ((% '(0.1 0.01 0.001)))
+     (check (within? %) (e-approx %) e))))
