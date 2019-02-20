@@ -1,46 +1,35 @@
 #lang racket/base
 
-; Exercise 2.4: Functional pairs
+; Exercise 2.4
 
-(provide cons car cdr set-car! set-cdr! null null? equal?
-         length member remove map filter
-         append reverse sum product)
+(provide cons car cdr set-car! set-cdr! equal?
+         member remove length append reverse
+         map filter sum product)
 
-(define (cons x y)
-  (lambda (f)
-    (f x y (lambda (z) (set! x z)) (lambda (z) (set! y z)))))
+(define ((cons x y) m)
+  (m x
+     y
+     (lambda (z) (set! x z))
+     (lambda (z) (set! y z))))
 
-(define (car p)
-  (p (lambda (x y set-x set-y) x)))
+(define (car c)
+  (c (lambda (x y sx sy) x)))
 
-(define (cdr p)
-  (p (lambda (x y set-x set-y) y)))
+(define (cdr c)
+  (c (lambda (x y sx sy) y)))
 
-(define (set-car! p z)
-  (p (lambda (x y set-x set-y) (set-x z))))
+(define (set-car! c z)
+  (c (lambda (x y sx sy) (sx z))))
 
-(define (set-cdr! p z)
-  (p (lambda (x y set-x set-y) (set-y z))))
-
-(define (null) 'null)
-
-(define (null? l)
-  (eq? l 'null))
-
-(define-syntax-rule (neither expr ...)
-  (not (or expr ...)))
+(define (set-cdr! c z)
+  (c (lambda (x y sx sy) (sy z))))
 
 (define (equal? x y)
-  (cond ((number? x) (and (number? y) (= x y)))
-        ((symbol? x) (and (symbol? y) (eq? x y)))
-        (else (and (neither (number? y) (symbol? y))
-                   (equal? (car x) (car y))
-                   (equal? (cdr x) (cdr y))))))
-
-(define (length l)
-  (if (null? l)
-      0
-      (add1 (length (cdr l)))))
+  (if (not (procedure? x))
+      (eq? x y)
+      (and (procedure? y)
+           (equal? (car x) (car y))
+           (equal? (cdr x) (cdr y)))))
 
 (define (member x l)
   (cond ((null? l) #f)
@@ -48,38 +37,36 @@
         (else (member x (cdr l)))))
 
 (define (remove x l)
-  (cond ((null? l) (null))
+  (cond ((null? l) '())
         ((equal? (car l) x) (cdr l))
         (else (cons (car l) (remove x (cdr l))))))
 
-(define (map f l)
-  (if (null? l)
-      (null)
-      (cons (f (car l)) (map f (cdr l)))))
-
-(define (filter f l)
-  (cond ((null? l) (null))
-        ((f (car l)) (cons (car l) (filter f (cdr l))))
-        (else (filter f (cdr l)))))
+(define (length l)
+  (let ((f (lambda (x acc) (add1 acc))))
+    (foldr f 0 l)))
 
 (define (append l1 l2)
   (foldr cons l2 l1))
 
 (define (reverse l)
-  (foldl cons (null) l))
+  (let ((f (lambda (x acc) (append acc (cons x '())))))
+    (foldr f '() l)))
+
+(define (map g l)
+  (let ((f (lambda (x acc) (cons (g x) acc))))
+    (foldr f '() l)))
+
+(define (filter p l)
+  (let ((f (lambda (x acc) (if (p x) (cons x acc) acc))))
+    (foldr f '() l)))
 
 (define (sum l)
-  (foldl + 0 l))
+  (foldr + 0 l))
 
 (define (product l)
-  (foldl * 1 l))
+  (foldr * 1 l))
 
 (define (foldr f z l)
   (if (null? l)
       z
       (f (car l) (foldr f z (cdr l)))))
-
-(define (foldl f z l)
-  (if (null? l)
-      z
-      (foldl f (f (car l) z) (cdr l))))
