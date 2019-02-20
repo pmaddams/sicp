@@ -27,6 +27,6 @@
 
 (define ((add c1 c2) f) (compose (c1 f) (c2 f)))
 
-(define ((mul c1 c2) f) (c1 (c2 f)))
+(define (mul c1 c2) (compose c1 c2))
 
 (define (pow c1 c2) (c2 c1))
