@@ -27,17 +27,17 @@
 (define trial-division
   (make-prime
    (lambda (n)
-     (for/fold ((prime #t))
+     (for/fold ((acc #t))
                ((d (in-range 2 (add1 (integer-sqrt n)))))
-       (and (not (zero? (remainder n d))) prime)))))
+       (and (not (zero? (remainder n d))) acc)))))
 
 (define ((probable-prime expmod) k)
   (make-prime
    (lambda (n)
-     (for/fold ((prime #t))
+     (for/fold ((acc #t))
                ((i (in-range k)))
        (let ((a (random 2 (sub1 n))))
-         (and (= 1 (expmod a (sub1 n) n)) prime))))))
+         (and (= 1 (expmod a (sub1 n) n)) acc))))))
 
 (define (expmod a n m)
   (let loop ((n n))

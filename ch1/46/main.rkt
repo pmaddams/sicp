@@ -8,7 +8,7 @@
 
 (require racket/function)
 
-(define (((nth-root-approx %) n) x)
+(define ((nth-root-approx n %) x)
   (let ((damped (repeated average-damp (ceiling (log n))))
         (f (lambda (y) (/ x (expt y (sub1 n))))))
     ((fixed-point-approx %) (damped f) 1.0)))
@@ -30,9 +30,9 @@
        (/ % 100.0))))
 
 (define (repeated f n)
-  (for/fold ((g identity))
+  (for/fold ((acc identity))
             ((i (in-range n)))
-    (compose f g)))
+    (compose f acc)))
 
 (define (average . args)
   (/ (apply + args)

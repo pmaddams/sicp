@@ -15,9 +15,9 @@
 (define (two f) (compose f f))
 
 (define ((number->church n) f)
-  (for/fold ((g identity))
+  (for/fold ((acc identity))
             ((i (in-range n)))
-    (compose f g)))
+    (compose f acc)))
 
 (define (church->number c) ((c add1) 0))
 

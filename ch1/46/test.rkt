@@ -10,7 +10,7 @@
      (let ((n (random 2 5))
            (x (random 10 100)))
        (check (within? %)
-              (((nth-root-approx %) n) x)
+              ((nth-root-approx n %) x)
               (expt x (/ 1 n)))))))
 
 (define (square n) (* n n))
