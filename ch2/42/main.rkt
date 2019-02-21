@@ -1,6 +1,6 @@
 #lang racket/base
 
-; Exercise 2.42: Eight queens
+; Exercise 2.42
 
 (require racket/function)
 
@@ -11,46 +11,45 @@
 
 (define (backtrack state reject accept children return)
   (let loop ((state state))
-    (and (not (reject state))
-         (if (accept state)
-             (return state)
-             (for-each loop (children state))))))
+    (unless (reject state)
+      (if (accept state)
+          (return state)
+          (for-each loop (children state))))))
 
-(define (reject board)
-  (and (not (null? board))
-       (let ((i (car board)))
-         (or (collide-up i board)
-             (collide-right i board)
-             (collide-down i board)))))
+(define (reject state)
+  (and (not (null? state))
+       (let ((i (car state)))
+         (or (collide-up state i)
+             (collide-right state i)
+             (collide-down state i)))))
 
-(define (collide invalid next)
-  (lambda (i board)
-    (let loop ((i (next i)) (board (cdr board)))
-      (and (not (null? board))
-           (not (invalid i))
-           (or (= i (car board))
-               (loop (next i) (cdr board)))))))
+(define ((collide next invalid) state i)
+  (let loop ((i (next i)) (state (cdr state)))
+    (and (not (null? state))
+         (not (invalid i))
+         (or (= i (car state))
+             (loop (next i) (cdr state))))))
 
 (define collide-right
-  (collide (const #f) identity))
+  (collide identity (const #f)))
 
 (define collide-up
-  (collide (lambda (i) (>= i size)) add1))
+  (collide add1 (lambda (i) (>= i size))))
 
 (define collide-down
-  (collide (lambda (i) (negative? i)) sub1))
+  (collide sub1 (lambda (i) (negative? i))))
 
-(define (accept board)
-  (and (= (length board) size)
-       (not (reject board))))
+(define (accept state)
+  (and (= size (length state))
+       (not (reject state))))
 
-(define (children board)
-  (if (= (length board) size)
+(define (children state)
+  (if (= size (length state))
       '()
       (for/list ((i (in-range size)))
-        (cons i board))))
+        (cons i state))))
 
-(define (return board)
-  (for ((i board))
-    (printf "~a " (add1 i)))
+(define (return state)
+  (for ((i state))
+    (printf "~a " i))
   (newline))
