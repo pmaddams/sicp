@@ -1,6 +1,6 @@
 #lang racket/base
 
-; Exercise 2.70: Huffman coding
+; Exercise 2.70
 
 (struct leaf (symbol weight))
 
