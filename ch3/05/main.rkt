@@ -1,30 +1,33 @@
 #lang racket/base
 
-; Exercise 3.5: Monte Carlo method
+; Exercise 3.5
 
-(define (estimate-integral make-experiment x1 x2 y1 y2 trials)
-  (* (monte-carlo trials (make-experiment x1 x2 y1 y2))
-     (- x2 x1)
-     (- y2 y1)))
+(require racket/function)
 
-(define (monte-carlo trials experiment)
-  (let loop ((remaining trials) (passed 0))
-    (cond ((zero? remaining) (/ passed trials))
-          ((experiment) (loop (sub1 remaining) (add1 passed)))
-          (else (loop (sub1 remaining) passed)))))
+(define (pi-approx trials)
+  (integral-approx make-circle-experiment -1.0 1.0 -1.0 1.0 trials))
 
-(define (estimate-pi trials)
-  (estimate-integral make-circle-experiment -1.0 1.0 -1.0 1.0 trials))
+(define (integral-approx make-experiment x1 x2 y1 y2 trials)
+  (let ((fraction (monte-carlo trials (make-experiment x1 x2 y1 y2)))
+        (area (* (- x2 x1) (- y2 y1))))
+    (* fraction area)))
 
 (define (make-circle-experiment x1 x2 y1 y2)
-  (let ((radius (/ (- x2 x1) 2)))
-    (if (not (= radius (/ (- y2 y1) 2)))
+  (let ((r (/ (- x2 x1) 2)))
+    (if (not (= r (/ (- y2 y1) 2)))
         (error "invalid bounds:" x1 x2 y1 y2)
-        (lambda ()
-          (let ((x (random-in-range x1 x2))
-                (y (random-in-range y1 y2)))
-            (<= (+ (square x) (square y))
-                (square radius)))))))
+        (thunk (let ((x (random-in-range x1 x2))
+                     (y (random-in-range y1 y2)))
+                 (within x y r))))))
+
+(define (within x y r)
+  (<= (+ (square x) (square y))
+      (square r)))
+
+(define (monte-carlo trials experiment)
+  (/ (for/sum ((i (in-range trials)))
+       (if (experiment) 1 0))
+     trials))
 
 (define (random-in-range lo hi)
   (+ lo (* (random) (- hi lo))))
