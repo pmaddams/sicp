@@ -24,7 +24,9 @@
 
 (define (paint painter)
   (painter unit-frame)
-  bitmap)
+  (let ((output bitmap))
+    (reset)
+    output))
 
 (define (reset)
   (set! bitmap (make-bitmap size size))
@@ -40,9 +42,9 @@
      (apply point l))))
 
 (define ((segments->painter l) fr)
-  (for ((seg l))
-    (let ((p1 ((coordinate-map fr) (segment-start seg)))
-          (p2 ((coordinate-map fr) (segment-end seg))))
+  (for ((s l))
+    (let ((p1 ((coordinate-map fr) (segment-start s)))
+          (p2 ((coordinate-map fr) (segment-end s))))
       (send dc draw-line
             (point-x p1) (point-y p1)
             (point-x p2) (point-y p2)))))
@@ -71,14 +73,6 @@
 (define (point-scale n pt)
   (point (* n (point-x pt))
          (* n (point-y pt))))
-
-(define wave
-  (make-painter
-   '((0.00 0.85) (0.15 0.60) (0.30 0.65) (0.40 0.65) (0.35 0.85) (0.40 1.00))
-   '((0.60 1.00) (0.65 0.85) (0.60 0.65) (0.75 0.65) (1.00 0.35))
-   '((1.00 0.15) (0.60 0.45) (0.75 0.00))
-   '((0.60 0.00) (0.50 0.30) (0.40 0.00))
-   '((0.25 0.00) (0.35 0.50) (0.30 0.60) (0.15 0.40) (0.00 0.65))))
 
 (define ((transform-painter origin e1 e2) painter)
   (compose painter (relative-frame origin e1 e2)))
@@ -173,3 +167,11 @@
    (point 0.0 1.0)
    (point 0.0 0.0)
    (point 1.0 1.0)))
+
+(define wave
+  (make-painter
+   '((0.00 0.85) (0.15 0.60) (0.30 0.65) (0.40 0.65) (0.35 0.85) (0.40 1.00))
+   '((0.60 1.00) (0.65 0.85) (0.60 0.65) (0.75 0.65) (1.00 0.35))
+   '((1.00 0.15) (0.60 0.45) (0.75 0.00))
+   '((0.60 0.00) (0.50 0.30) (0.40 0.00))
+   '((0.25 0.00) (0.35 0.50) (0.30 0.60) (0.15 0.40) (0.00 0.65))))
