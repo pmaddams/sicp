@@ -39,17 +39,14 @@
 
 (define (coerce args)
   (let* ((top (apply max (map level args)))
-         (f (lambda (n) ((repeated raise (- top (level n))) n))))
+         (f (lambda (n) ((repeated super (- top (level n))) n))))
     (map f args)))
 
-(define (raise n)
-  ((get `(raise . ,(type n))) n))
+(define (super n)
+  ((get `(super . ,(type n))) n))
 
 (define (simplify n)
   ((get `(simplify . ,(type n))) n))
-
-(define (show n)
-  ((get `(show . ,(type n))) n))
 
 (define (make-integer v)
   (number 'integer v))
@@ -79,25 +76,16 @@
           (value n)
           (value m))))
 
-  (put '(raise . integer)
+  (put '(super . integer)
        (lambda (n)
          (make-rational
           (value n)
-          1)))
-
-  (put '(simplify . integer)
-       (lambda (n)
-         (make-integer
-          (inexact->exact (value n)))))
-
-  (put '(show . integer)
-       (lambda (n)
-         (number->string (value n)))))
+          1))))
 
 (install-integer-package)
 
-(define (make-rational n d)
-  (number 'rational (cons n d)))
+(define (make-rational nv dv)
+  (number 'rational (cons nv dv)))
 
 (define (rational? n)
   (eq? 'rational (type n)))
@@ -139,7 +127,7 @@
           (* (numer n) (denom m))
           (* (denom n) (numer m)))))
 
-  (put '(raise . rational)
+  (put '(super . rational)
        (lambda (n)
          (make-real
           (/ (numer n) (denom n)))))
@@ -147,18 +135,11 @@
   (put '(simplify . rational)
        (lambda (n)
          (let* ((g (gcd (numer n) (denom n)))
-                (n* (quotient (numer n) g))
-                (d* (quotient (denom n) g)))
-           (if (= d* 1)
-               (make-integer n*)
-               n))))
-
-  (put '(show . rational)
-       (lambda (n)
-         (string-append
-          (number->string (numer n))
-          "/"
-          (number->string (denom n))))))
+                (nv (quotient (numer n) g))
+                (dv (quotient (denom n) g)))
+           (if (= dv 1)
+               (make-integer nv)
+               n)))))
 
 (install-rational-package)
 
@@ -189,7 +170,7 @@
          (make-real
           (/ (value n) (value m)))))
 
-  (put '(raise . real)
+  (put '(super . real)
        (lambda (n)
          (make-rectangular
           (value n)
@@ -200,22 +181,18 @@
          (let ((v (value n)))
            (if (= v (round v))
                (make-integer v)
-               n))))
-
-  (put '(show . real)
-       (lambda (n)
-         (number->string (value n)))))
+               n)))))
 
 (install-real-package)
 
-(define (make-rectangular r i)
-  (number 'rectangular (cons r i)))
+(define (make-rectangular rv iv)
+  (number 'rectangular (cons rv iv)))
 
 (define (rectangular? n)
   (eq? 'rectangular (number-type n)))
 
-(define (make-polar m a)
-  (number 'polar (cons m a)))
+(define (make-polar mv av)
+  (number 'polar (cons mv av)))
 
 (define (polar? n)
   (eq? 'polar (number-type n)))
@@ -234,9 +211,9 @@
         (else (error "type error"))))
 
 (define (magnitude n)
-  (cond ((rectangular? n) (let ((r (real-part n))
-                                (i (imag-part n)))
-                            (sqrt (+ (* r r) (* i i)))))
+  (cond ((rectangular? n) (let ((rv (real-part n))
+                                (iv (imag-part n)))
+                            (sqrt (+ (* rv rv) (* iv iv)))))
         ((polar? n) (car (value n)))
         (else (error "type error"))))
 
@@ -272,19 +249,11 @@
 
   (put '(simplify . complex)
        (lambda (n)
-         (let ((r (real-part n))
-               (i (imag-part n)))
-           (if (zero? i)
-               (simplify (make-real r))
-               n))))
-
-  (put '(show . complex)
-       (lambda (n)
-         (string-append
-          (number->string (real-part n))
-          "+"
-          (number->string (imag-part n))
-          "i"))))
+         (let ((rv (real-part n))
+               (iv (imag-part n)))
+           (if (zero? iv)
+               (simplify (make-real rv))
+               n)))))
 
 (install-complex-package)
 
