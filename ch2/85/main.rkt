@@ -5,7 +5,18 @@
 (require racket/function
          racket/list)
 
-(struct number (type val))
+(struct number (type val) #:transparent)
+
+(define (type n)
+  (if (complex? n)
+      'complex
+      (number-type n)))
+
+(define (value n)
+  (number-val n))
+
+(define (level n)
+  (index-of '(integer rational real complex) (type n)))
 
 (define table (make-hash))
 
@@ -23,101 +34,83 @@
 
 (define (apply-generic op . args)
   (let* ((args* (coerce args))
-         (t (number-type (car args*)))
-         (f (get (cons op t))))
+         (f (get (cons op (type (car args*))))))
     (simplify (apply f args*))))
 
 (define (coerce args)
-  (let* ((levels (map level args))
-         (top (apply max levels)))
-    (for/fold ((acc '()))
-              ((a (in-list args))
-               (l (in-list levels)))
-      (cons ((repeated super (- top l)) a) acc))))
+  (let* ((top (apply max (map level args)))
+         (f (lambda (n) ((repeated raise (- top (level n))) n))))
+    (map f args)))
 
-(define (level n)
-  (let ((t (number-type n)))
-    (index-of '(integer rational real complex) t)))
-
-(define (super n)
-  (let* ((t (number-type n))
-         (f (get (cons 'super t))))
-    (f n)))
+(define (raise n)
+  ((get `(raise . ,(type n))) n))
 
 (define (simplify n)
-  (let* ((t (number-type n))
-         (f (get (cons 'simplify t))))
-    (f n)))
+  ((get `(simplify . ,(type n))) n))
 
 (define (show n)
-  (let* ((t (number-type n))
-         (f (get (cons 'show t))))
-    (f n)))
+  ((get `(show . ,(type n))) n))
 
 (define (make-integer v)
   (number 'integer v))
 
 (define (integer? n)
-  (eq? 'integer (number-type n)))
+  (eq? 'integer (type n)))
 
 (define (install-integer-package)
   (put '(add . integer)
        (lambda (n m)
          (make-integer
-          (+ (number-val n) (number-val m)))))
+          (+ (value n) (value m)))))
 
   (put '(sub . integer)
        (lambda (n m)
          (make-integer
-          (- (number-val n) (number-val m)))))
+          (- (value n) (value m)))))
 
   (put '(mul . integer)
        (lambda (n m)
          (make-integer
-          (* (number-val n) (number-val m)))))
+          (* (value n) (value m)))))
 
   (put '(div . integer)
        (lambda (n m)
-         (make-integer
-          (/ (number-val n) (number-val m)))))
+         (make-rational
+          (value n)
+          (value m))))
 
-  (put '(super . integer)
+  (put '(raise . integer)
        (lambda (n)
          (make-rational
-          (number-val n)
+          (value n)
           1)))
 
   (put '(simplify . integer)
        (lambda (n)
          (make-integer
-          (inexact->exact (number-val n)))))
+          (inexact->exact (value n)))))
 
   (put '(show . integer)
        (lambda (n)
-         (number->string (number-val n)))))
+         (number->string (value n)))))
 
 (install-integer-package)
 
 (define (make-rational n d)
-  (let* ((g (gcd n d))
-         (n* (/ n g))
-         (d* (/ d g)))
-    (if (negative? d*)
-        (number 'rational (cons (- n*) (- d*)))
-        (number 'rational (cons n* d*)))))
+  (number 'rational (cons n d)))
 
 (define (rational? n)
-  (eq? 'rational (number-type n)))
+  (eq? 'rational (type n)))
 
 (define (numer n)
   (if (rational? n)
-      (car (number-val n))
-      (error "not a rational number")))
+      (car (value n))
+      (error "type error")))
 
 (define (denom n)
   (if (rational? n)
-      (cdr (number-val n))
-      (error "not a rational number")))
+      (cdr (value n))
+      (error "type error")))
 
 (define (install-rational-package)
   (put '(add . rational)
@@ -146,17 +139,19 @@
           (* (numer n) (denom m))
           (* (denom n) (numer m)))))
 
-  (put '(super . rational)
+  (put '(raise . rational)
        (lambda (n)
          (make-real
           (/ (numer n) (denom n)))))
 
   (put '(simplify . rational)
        (lambda (n)
-         (let ((n* (make-rational (numer n) (denom n))))
-           (if (= 1 (denom n*))
-               (make-integer (numer n*))
-               n*))))
+         (let* ((g (gcd (numer n) (denom n)))
+                (n* (quotient (numer n) g))
+                (d* (quotient (denom n) g)))
+           (if (= d* 1)
+               (make-integer n*)
+               n))))
 
   (put '(show . rational)
        (lambda (n)
@@ -171,43 +166,45 @@
   (number 'real v))
 
 (define (real? n)
-  (eq? 'real (number-type n)))
+  (eq? 'real (type n)))
 
 (define (install-real-package)
   (put '(add . real)
        (lambda (n m)
          (make-real
-          (+ (number-val n) (number-val m)))))
+          (+ (value n) (value m)))))
 
   (put '(sub . real)
        (lambda (n m)
          (make-real
-          (- (number-val n) (number-val m)))))
+          (- (value n) (value m)))))
 
   (put '(mul . real)
        (lambda (n m)
          (make-real
-          (* (number-val n) (number-val m)))))
+          (* (value n) (value m)))))
 
   (put '(div . real)
        (lambda (n m)
          (make-real
-          (/ (number-val n) (number-val m)))))
+          (/ (value n) (value m)))))
 
-  (put '(super . real)
+  (put '(raise . real)
        (lambda (n)
          (make-rectangular
-          (number-val n)
+          (value n)
           0.0)))
 
   (put '(simplify . real)
        (lambda (n)
-         (let ((v (number-val n)))
-           (if (= v (round v)) (make-integer v) n))))
+         (let ((v (value n)))
+           (if (= v (round v))
+               (make-integer v)
+               n))))
 
   (put '(show . real)
        (lambda (n)
-         (number->string (number-val n)))))
+         (number->string (value n)))))
 
 (install-real-package)
 
@@ -218,7 +215,7 @@
   (eq? 'rectangular (number-type n)))
 
 (define (make-polar m a)
-  (number 'polar m a))
+  (number 'polar (cons m a)))
 
 (define (polar? n)
   (eq? 'polar (number-type n)))
@@ -227,26 +224,26 @@
   (or (rectangular? n) (polar? n)))
 
 (define (real-part n)
-  (cond ((rectangular? n) (car (number-val n)))
+  (cond ((rectangular? n) (car (value n)))
         ((polar? n) (* (magnitude n) (cos (angle n))))
-        (else (error "not a complex number"))))
+        (else (error "type error"))))
 
 (define (imag-part n)
-  (cond ((rectangular? n) (cdr (number-val n)))
+  (cond ((rectangular? n) (cdr (value n)))
         ((polar? n) (* (magnitude n) (sin (angle n))))
-        (else (error "not a complex number"))))
+        (else (error "type error"))))
 
 (define (magnitude n)
   (cond ((rectangular? n) (let ((r (real-part n))
                                 (i (imag-part n)))
                             (sqrt (+ (* r r) (* i i)))))
-        ((polar? n) (car (number-val n)))
-        (else (error "not a complex number"))))
+        ((polar? n) (car (value n)))
+        (else (error "type error"))))
 
 (define (angle n)
   (cond ((rectangular? n) (atan (real-part n) (imag-part n)))
-        ((polar? n) (cdr (number-val n)))
-        (else (error "not a complex number"))))
+        ((polar? n) (cdr (value n)))
+        (else (error "type error"))))
 
 (define (install-complex-package)
   (put '(add . complex)
@@ -278,8 +275,8 @@
          (let ((r (real-part n))
                (i (imag-part n)))
            (if (zero? i)
-               r
-               (make-rectangular r i)))))
+               (simplify (make-real r))
+               n))))
 
   (put '(show . complex)
        (lambda (n)
