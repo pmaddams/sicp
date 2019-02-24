@@ -2,6 +2,8 @@
 
 ; Exercise 2.49
 
+(provide (all-defined-out))
+
 (require racket/class
          racket/draw)
 

@@ -2,6 +2,8 @@
 
 ; Exercise 2.85
 
+(provide (all-defined-out))
+
 (require racket/function
          racket/list)
 

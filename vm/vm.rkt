@@ -1,6 +1,6 @@
 #lang racket/base
 
-(provide vm%)
+(provide (all-defined-out))
 
 (require racket/class
          racket/dict

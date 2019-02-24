@@ -2,6 +2,8 @@
 
 ; Exercise 2.42
 
+(provide (all-defined-out))
+
 (require racket/function)
 
 (define size 8)

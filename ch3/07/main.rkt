@@ -2,6 +2,8 @@
 
 ; Exercise 3.7: Bank accounts
 
+(provide (all-defined-out))
+
 (require racket/class)
 
 (define (make-joint account user-password new-password)

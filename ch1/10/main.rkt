@@ -2,7 +2,7 @@
 
 ; Exercise 1.10
 
-(provide A f g h)
+(provide (all-defined-out))
 
 (define (A n m)
   (cond ((= m 0) 0)

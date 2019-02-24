@@ -2,6 +2,8 @@
 
 ; Exercise 2.65
 
+(provide (all-defined-out))
+
 (struct tree (val left right))
 
 (define (list->tree l)

@@ -2,7 +2,7 @@
 
 ; Exercise 1.12
 
-(provide pascal)
+(provide (all-defined-out))
 
 (require racket/sequence)
 

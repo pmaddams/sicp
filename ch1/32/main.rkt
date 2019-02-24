@@ -2,7 +2,7 @@
 
 ; Exercise 1.32
 
-(provide sum product)
+(provide (all-defined-out))
 
 (require racket/generator
          racket/sequence)

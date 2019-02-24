@@ -2,7 +2,7 @@
 
 ; Exercise 1.19
 
-(provide fib)
+(provide (all-defined-out))
 
 (define (fib n)
   (let loop ((n n) (a 1) (b 0) (p 0) (q 1))

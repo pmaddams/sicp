@@ -2,6 +2,8 @@
 
 ; Exercise 3.23: Deques
 
+(provide (all-defined-out))
+
 (require racket/class)
 
 (define deque%

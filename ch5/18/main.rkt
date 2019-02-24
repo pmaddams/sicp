@@ -2,6 +2,8 @@
 
 ; Exercise 5.18: Monitoring performance
 
+(provide (all-defined-out))
+
 (require racket/class
          "../../vm/vm.rkt")
 

@@ -2,6 +2,8 @@
 
 ; Exercise 3.37: Constraint propagation
 
+(provide (all-defined-out))
+
 (require racket/class)
 
 (define connector%

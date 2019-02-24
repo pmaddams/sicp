@@ -2,10 +2,7 @@
 
 ; Exercise 2.12
 
-(provide make-center-percent percent
-         make-center-width center width
-         interval-add interval-sub
-         interval-mul interval-div)
+(provide (all-defined-out))
 
 (struct interval (lo hi) #:transparent)
 

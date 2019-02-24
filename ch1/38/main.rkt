@@ -2,8 +2,7 @@
 
 ; Exercise 1.38
 
-(provide e-approx
-         within?)
+(provide (all-defined-out))
 
 (define (e-approx %)
   (let ((n (lambda (i) 1))

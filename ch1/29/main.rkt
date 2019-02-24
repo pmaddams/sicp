@@ -2,8 +2,7 @@
 
 ; Exercise 1.29
 
-(provide simpson-integral
-         riemann-integral)
+(provide (all-defined-out))
 
 (require racket/sequence)
 

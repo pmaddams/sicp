@@ -2,9 +2,7 @@
 
 ; Exercise 1.46
 
-(provide nth-root-approx
-         repeated
-         within?)
+(provide (all-defined-out))
 
 (require racket/function)
 

@@ -2,9 +2,7 @@
 
 ; Exercise 1.3
 
-(provide sum-larger-squares
-         sum-of-squares
-         remove-smallest)
+(provide (all-defined-out))
 
 (define (sum-larger-squares . args)
   (apply sum-of-squares (remove-smallest args)))

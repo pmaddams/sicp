@@ -2,6 +2,8 @@
 
 ; Exercise 2.57
 
+(provide (all-defined-out))
+
 (define (deriv expr var)
   (cond ((number? expr) 0)
         ((symbol? expr) (if (eq? var expr) 1 0))

@@ -2,6 +2,8 @@
 
 ; Exercise 3.30: Circuit simulator
 
+(provide (all-defined-out))
+
 (require racket/class
          racket/function)
 

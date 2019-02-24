@@ -2,6 +2,8 @@
 
 ; Exercise 2.70
 
+(provide (all-defined-out))
+
 (struct leaf (symbol weight))
 
 (struct branch (symbols weight left right))

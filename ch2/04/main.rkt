@@ -2,9 +2,7 @@
 
 ; Exercise 2.4
 
-(provide cons car cdr set-car! set-cdr! equal?
-         member remove length append reverse
-         map filter sum product)
+(provide (all-defined-out))
 
 (define ((cons x y) m)
   (m x

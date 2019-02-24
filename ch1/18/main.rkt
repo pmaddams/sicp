@@ -2,7 +2,7 @@
 
 ; Exercise 1.18
 
-(provide add sub mul div pow)
+(provide (all-defined-out))
 
 (define (add n m)
   (if (zero? m)

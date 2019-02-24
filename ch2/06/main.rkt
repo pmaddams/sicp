@@ -2,9 +2,7 @@
 
 ; Exercise 2.6
 
-(provide zero one two number->church
-         church->number church=?
-         add mul pow)
+(provide (all-defined-out))
 
 (require racket/function)
 

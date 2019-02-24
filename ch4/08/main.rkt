@@ -2,6 +2,8 @@
 
 ; Exercise 4.8: Metacircular evaluator
 
+(provide (all-defined-out))
+
 (struct primitive (impl))
 
 (define primitives

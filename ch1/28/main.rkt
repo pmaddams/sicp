@@ -2,12 +2,7 @@
 
 ; Exercise 1.28
 
-(provide trial-division
-         expmod
-         fermat
-         miller-rabin
-         fools-fermat
-         fools-miller-rabin)
+(provide (all-defined-out))
 
 (define (search-for-primes lo hi)
   (for ((n (in-range lo (add1 hi))))

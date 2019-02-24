@@ -2,6 +2,8 @@
 
 ; Exercise 3.19: Finding cycles
 
+(provide (all-defined-out))
+
 (define (has-cycle? l)
   (define (next l)
     (if (null? l) '() (cdr l)))

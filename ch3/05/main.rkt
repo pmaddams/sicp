@@ -2,6 +2,8 @@
 
 ; Exercise 3.5
 
+(provide (all-defined-out))
+
 (require racket/function)
 
 (define (pi-approx trials)

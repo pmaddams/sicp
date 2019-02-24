@@ -2,6 +2,8 @@
 
 ; Exercise 3.47: Semaphores
 
+(provide (all-defined-out))
+
 (require ffi/unsafe/atomic
          racket/class)
 
