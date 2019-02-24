@@ -1,6 +1,6 @@
 #lang racket/base
 
-; Exercise 3.19: Finding cycles
+; Exercise 3.19
 
 (provide (all-defined-out))
 
