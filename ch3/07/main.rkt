@@ -1,14 +1,10 @@
 #lang racket/base
 
-; Exercise 3.7: Bank accounts
+; Exercise 3.7
 
 (provide (all-defined-out))
 
 (require racket/class)
-
-(define (make-joint account user-password new-password)
-  (send account authorize user-password new-password)
-  account)
 
 (define account%
   (class object%
@@ -18,35 +14,33 @@
     (init-field (balance 0))
     (field (passwords '()) (attempts 0))
 
-    (define/public (deposit user-password n)
-      (when (valid? user-password)
+    (define/public (deposit password n)
+      (when (check-password password)
         (set! balance (+ balance n))
         balance))
 
-    (define/public (withdraw user-password n)
-      (when (valid? user-password)
+    (define/public (withdraw password n)
+      (when (check-password password)
         (if (>= balance n)
             (begin (set! balance (- balance n))
                    balance)
             "insufficient funds")))
 
-    (define/public (authorize user-password new-password)
-      (when (valid? user-password)
+    (define/public (add-user current-password new-password)
+      (when (check-password current-password)
         (unless (member new-password passwords)
           (set! passwords (cons new-password passwords)))))
 
-    (define max-attempts 7)
-
-    (define (valid? user-password)
-      (if (or (null? passwords) (member user-password passwords))
+    (define (check-password password)
+      (if (or (null? passwords) (member password passwords))
           (begin (set! attempts 0)
                  #t)
           (begin (set! attempts (add1 attempts))
-                 (when (> attempts max-attempts)
+                 (when (> attempts 7)
                    (call-the-cops))
                  #f)))
 
     (define (call-the-cops)
       (error "dialing 911..."))
 
-    (send this authorize (void) password)))
+    (send this add-user (void) password)))
