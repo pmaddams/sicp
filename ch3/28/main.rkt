@@ -1,29 +1,11 @@
 #lang racket/base
 
-; Exercise 3.30: Circuit simulator
+; Exercise 3.28
 
 (provide (all-defined-out))
 
 (require racket/class
          racket/function)
-
-(define wire%
-  (class object%
-    (super-new)
-
-    (field (signal 0) (actions '()))
-
-    (define/public (set val)
-      (unless (or (= val 0) (= val 1))
-        (error "invalid signal:" val))
-      (unless (= val signal)
-        (set! signal val)
-        (for ((action actions))
-          (action))))
-
-    (define/public (add action)
-      (set! actions (cons action actions))
-      (action))))
 
 (define queue%
   (class object%
@@ -59,6 +41,24 @@
 
     (send this push action)))
 
+(define wire%
+  (class object%
+    (super-new)
+
+    (field (current-signal 0) (actions '()))
+
+    (define/public (set signal)
+      (unless (or (= signal 0) (= signal 1))
+        (error "invalid signal:" signal))
+      (unless (= current-signal signal)
+        (set! current-signal signal)
+        (for ((action actions))
+          (action))))
+
+    (define/public (add action)
+      (set! actions (cons action actions))
+      (action))))
+
 (define agenda%
   (class object%
     (super-new)
@@ -68,14 +68,14 @@
     (define/public (propagate)
       (for ((segment segments))
         (set! current-time (get-field time segment))
-        (let loop ((segment segment))
+        (let loop ()
           (unless (send segment empty?)
             ((send segment pop))
-            (loop segment))))
+            (loop))))
       (set! segments '()))
 
     (define/public (after delay action)
-      (let ((time (+ current-time delay)))
+      (let ((time (+ delay current-time)))
         (if (before? time segments)
             (set! segments (mcons (at time action) segments))
             (let loop ((segments segments))
@@ -103,14 +103,14 @@
 (define (current-time)
   (get-field current-time agenda))
 
-(define (set wire val)
-  (send wire set val))
+(define (set wire signal)
+  (send wire set signal))
 
 (define (add wire action)
   (send wire add action))
 
 (define (receive wire)
-  (get-field signal wire))
+  (get-field current-signal wire))
 
 (define (logical-not a)
   (cond ((= a 0) 1)
@@ -131,32 +131,39 @@
         ((and (= a 1) (= b 1)) 1)
         (else (error "invalid input:" a b))))
 
-(define (probe name wire)
-  (send wire add (thunk (printf "~a -- current time: ~a new value: ~a\n"
-                                name (current-time) (receive wire)))))
+(define (probe wire name)
+  (send wire add
+        (thunk
+         (printf "~a -- current time: ~a signal: ~a\n"
+                 name (current-time) (receive wire)))))
 
 (define (inverter in out)
   (let* ((delay 2)
          (action
-          (thunk (let ((val (logical-not (receive in))))
-                   (after delay (thunk (set out val)))))))
+          (thunk
+           (let ((signal (logical-not (receive in))))
+             (after delay (thunk (set out signal)))))))
     (add in action)))
 
 (define (nand-gate in1 in2 out)
   (let* ((delay 3)
          (action
-          (thunk (let ((val (logical-not (logical-and (receive in1)
-                                                      (receive in2)))))
-                   (after delay (thunk (set out val)))))))
+          (thunk
+           (let ((signal (logical-not
+                          (logical-and (receive in1)
+                                       (receive in2)))))
+             (after delay (thunk (set out signal)))))))
     (add in1 action)
     (add in2 action)))
 
 (define (nor-gate in1 in2 out)
   (let* ((delay 3)
          (action
-          (thunk (let ((val (logical-not (logical-or (receive in1)
-                                                     (receive in2)))))
-                   (after delay (thunk (set out val)))))))
+          (thunk
+           (let ((signal (logical-not
+                          (logical-or (receive in1)
+                                      (receive in2)))))
+             (after delay (thunk (set out signal)))))))
     (add in1 action)
     (add in2 action)))
 
