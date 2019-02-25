@@ -143,13 +143,13 @@
 (define (forget conn)
   (send conn forget 'user))
 
-(define (probe conn name)
-  (make-object probe% conn name))
-
 (define (var name)
   (let ((conn (new connector%)))
     (probe conn name)
     conn))
+
+(define (probe conn name)
+  (make-object probe% conn name))
 
 (define (const conn val)
   (make-object constant% conn val))
