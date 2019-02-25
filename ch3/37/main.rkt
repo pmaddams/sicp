@@ -1,6 +1,6 @@
 #lang racket/base
 
-; Exercise 3.37: Constraint propagation
+; Exercise 3.37
 
 (provide (all-defined-out))
 
@@ -10,12 +10,11 @@
   (class object%
     (super-new)
 
-    (field (val #f)
+    (field (val (void))
            (informant #f)
            (constraints '()))
 
-    (define/public (set?)
-      (if informant #t #f))
+    (define/public (set?) (and informant #t))
 
     (define/public (set new-val setter)
       (if (set?)
@@ -41,58 +40,43 @@
       (when (set?)
         (send constraint inform)))))
 
-(define (set? connector)
-  (send connector set?))
-
-(define (get connector)
-  (get-field val connector))
-
-(define (set connector val)
-  (send connector set val 'user))
-
-(define (forget connector)
-  (send connector forget 'user))
-
 (define constraint%
   (class object%
     (super-new)
 
-    (define/public (set connector val)
-      (send connector set val this))
+    (define/public (set conn val)
+      (send conn set val this))
 
-    (define/public (forget connector)
-      (send connector forget this))
+    (define/public (forget conn)
+      (send conn forget this))
 
-    (define/public (connect connector)
-      (send connector connect this))))
+    (define/public (connect conn)
+      (send conn connect this))))
 
 (define probe%
   (class constraint%
     (super-new)
     (inherit connect)
 
-    (init-field name connector)
-
-    (define (print val)
-      (printf "~a = ~a\n" name val))
+    (init-field conn name)
 
     (define/public (inform)
-      (print (get connector)))
+      (print (get conn)))
 
     (define/public (retract)
       (print "?"))
 
-    (connect connector)))
+    (define (print val)
+      (printf "~a = ~a\n" name val))
 
-(define (probe name connector)
-  (make-object probe% name connector))
+    (connect conn)))
 
 (define constant%
   (class constraint%
     (super-new)
     (inherit set connect)
 
-    (init-field val connector)
+    (init-field conn val)
 
     (define/public (inform)
       (error "can't redefine a constant"))
@@ -100,71 +84,91 @@
     (define/public (retract)
       (error "can't redefine a constant"))
 
-    (connect connector)
-    (set connector val)))
+    (connect conn)
+    (set conn val)))
 
-(define (constant val connector)
-  (make-object constant% val connector))
-
-(define adder%
+(define sum%
   (class constraint%
     (super-new)
     (inherit set forget connect)
 
-    (init-field a1 a2 sum)
+    (init-field a1 a2 s)
 
     (define/public (inform)
       (cond ((and (set? a1) (set? a2))
-             (set sum (+ (get a1) (get a2))))
-            ((and (set? a1) (set? sum))
-             (set a2 (- (get sum) (get a1))))
-            ((and (set? a2) (set? sum))
-             (set a1 (- (get sum) (get a2))))))
+             (set s (+ (get a1) (get a2))))
+            ((and (set? a1) (set? s))
+             (set a2 (- (get s) (get a1))))
+            ((and (set? a2) (set? s))
+             (set a1 (- (get s) (get a2))))))
 
     (define/public (retract)
-      (for ((connector (list a1 a2 sum)))
-        (forget connector)))
+      (for ((conn (list a1 a2 s)))
+        (forget conn)))
 
-    (for ((connector (list a1 a2 sum)))
-      (connect connector))))
+    (for ((conn (list a1 a2 s)))
+      (connect conn))))
 
-(define (adder a1 a2 sum)
-  (make-object adder% a1 a2 sum))
-
-(define multiplier%
+(define product%
   (class constraint%
     (super-new)
     (inherit set forget connect)
 
-    (init-field m1 m2 product)
+    (init-field m1 m2 p)
 
     (define/public (inform)
       (cond ((and (set? m1) (set? m2))
-             (set product (* (get m1) (get m2))))
-            ((and (set? m1) (set? product))
-             (set m2 (/ (get product) (get m1))))
-            ((and (set? m2) (set? product))
-             (set m1 (/ (get product) (get m2))))))
+             (set p (* (get m1) (get m2))))
+            ((and (set? m1) (set? p))
+             (set m2 (/ (get p) (get m1))))
+            ((and (set? m2) (set? p))
+             (set m1 (/ (get p) (get m2))))))
 
     (define/public (retract)
-      (for ((connector (list m1 m2 product)))
-        (forget connector)))
+      (for ((conn (list m1 m2 p)))
+        (forget conn)))
 
-    (for ((connector (list m1 m2 product)))
-      (connect connector))))
+    (for ((conn (list m1 m2 p)))
+      (connect conn))))
 
-(define (multiplier m1 m2 product)
-  (make-object multiplier% m1 m2 product))
+(define (set? conn)
+  (send conn set?))
 
-(define (celsius-fahrenheit-converter c f)
+(define (get conn)
+  (get-field val conn))
+
+(define (set conn val)
+  (send conn set val 'user))
+
+(define (forget conn)
+  (send conn forget 'user))
+
+(define (probe conn name)
+  (make-object probe% conn name))
+
+(define (var name)
+  (let ((conn (new connector%)))
+    (probe conn name)
+    conn))
+
+(define (const conn val)
+  (make-object constant% conn val))
+
+(define (add a1 a2 s)
+  (make-object sum% a1 a2 s))
+
+(define (mul m1 m2 p)
+  (make-object product% m1 m2 p))
+
+(define (celsius<->fahrenheit c f)
   (let ((u (new connector%))
         (v (new connector%))
         (w (new connector%))
         (x (new connector%))
         (y (new connector%)))
-    (multiplier c w u)
-    (multiplier v x u)
-    (adder v y f)
-    (constant 9 w)
-    (constant 5 x)
-    (constant 32 y)))
+    (mul c w u)
+    (mul v x u)
+    (add v y f)
+    (const w 9)
+    (const x 5)
+    (const y 32)))
