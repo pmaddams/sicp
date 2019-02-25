@@ -1,10 +1,10 @@
 #lang racket/base
 
-; Exercise 4.21: Y combinator
+; Exercise 4.21
 
 (provide (all-defined-out))
 
-(define (yc f)
+(define (Y f)
   (let ((r (lambda (r*)
              (lambda (x)
                ((f (r* r*)) x)))))
