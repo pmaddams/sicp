@@ -35,9 +35,9 @@
 (define (div n m) (apply-generic 'div n m))
 
 (define (apply-generic op . args)
-  (let* ((args* (coerce args))
-         (f (get (cons op (type (car args*))))))
-    (simplify (apply f args*))))
+  (let* ((l (coerce args))
+         (f (get (cons op (type (car l))))))
+    (simplify (apply f l))))
 
 (define (coerce args)
   (let* ((top (apply max (map level args)))
@@ -50,8 +50,8 @@
 (define (simplify n)
   ((get `(simplify . ,(type n))) n))
 
-(define (make-integer v)
-  (number 'integer v))
+(define (make-integer val)
+  (number 'integer val))
 
 (define (integer? n)
   (eq? 'integer (type n)))
@@ -145,8 +145,8 @@
 
 (install-rational-package)
 
-(define (make-real v)
-  (number 'real v))
+(define (make-real val)
+  (number 'real val))
 
 (define (real? n)
   (eq? 'real (type n)))
@@ -180,9 +180,9 @@
 
   (put '(simplify . real)
        (lambda (n)
-         (let ((v (value n)))
-           (if (= v (round v))
-               (make-integer v)
+         (let ((val (value n)))
+           (if (= val (round val))
+               (make-integer val)
                n)))))
 
 (install-real-package)
