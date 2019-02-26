@@ -11,7 +11,7 @@
 (struct closure (vars body env))
 
 (define (eval expr env)
-  (cond ((or (number? expr) (string? expr)) expr)
+  (cond ((literal? expr) expr)
         ((symbol? expr) (lookup-var expr env))
         (else (case (car expr)
                 ('quote (cadr expr))
@@ -21,7 +21,7 @@
                 ('define (eval-define expr env))
                 ('set! (eval-set expr env))
                 ('if (eval-if expr env))
-                ('begin (eval-begin (cdr expr) env))
+                ('begin (eval-list (cdr expr) env))
                 ('cond (eval-if (cond->if expr) env))
                 (else (let ((proc (eval (car expr) env))
                             (vals (map (lambda (x) (eval x env))
@@ -31,10 +31,21 @@
 (define (apply proc vals)
   (if (builtin? proc)
       (builtin-apply (builtin-impl proc) vals)
-      (eval-begin (closure-body proc)
-                  (subst (closure-vars proc)
-                         vals
-                         (closure-env proc)))))
+      (eval-list (closure-body proc)
+                 (subst (closure-vars proc)
+                        vals
+                        (closure-env proc)))))
+
+(define (literal? expr)
+  (or (boolean? expr)
+      (number? expr)
+      (string? expr)))
+
+(define (eval-list exprs env)
+  (let ((val (eval (car exprs) env)))
+    (if (null? (cdr exprs))
+        val
+        (eval-list (cdr exprs) env))))
 
 (define (eval-define expr env)
   (let ((var (if (symbol? (cadr expr))
@@ -52,28 +63,13 @@
         (x (caddr expr)))
     (assign-var var (eval x env) env)))
 
-(define (eval-begin exprs env)
-  (if (last? exprs)
-      (eval (car exprs) env)
-      (begin (eval (car exprs) env)
-             (eval-begin (cdr exprs) env))))
-
-(define (last? l)
-  (null? (cdr l)))
-
 (define (eval-if expr env)
   (let ((predicate (cadr expr))
         (consequent (caddr expr))
         (alternative (cadddr expr)))
-    (if (true? (eval predicate env))
+    (if (eval predicate env)
         (eval consequent env)
         (eval alternative env))))
-
-(define (true? expr)
-  (not (false? expr)))
-
-(define (false? expr)
-  (eq? expr #f))
 
 (define (cond->if expr) (expand (cdr expr)))
 
@@ -86,14 +82,14 @@
              (rest (cdr clauses)))
         (if (eq? predicate 'else)
             (if (null? rest)
-                (seq->expr actions)
+                (list->expr actions)
                 (error "else clause must be last"))
-            (list 'if predicate (seq->expr actions) (expand rest))))))
+            (list 'if predicate (list->expr actions) (expand rest))))))
 
-(define (seq->expr seq)
-  (cond ((null? seq) '())
-        ((last? seq) (car seq))
-        (else (cons 'begin seq))))
+(define (list->expr l)
+  (if (null? (cdr l))
+      (car l)
+      (cons 'begin l)))
 
 (define (subst vars vals env)
   (cons (make-frame vars vals) env))
@@ -142,12 +138,9 @@
     (newline . ,newline)))
 
 (define (make-env)
-  (let* ((vars (map car builtins))
-         (vals (map builtin (map cdr builtins)))
-         (env (subst vars vals '())))
-    (define-var 'true #t env)
-    (define-var 'false #f env)
-    env))
+  (let ((vars (map car builtins))
+        (vals (map builtin (map cdr builtins))))
+    (subst vars vals '())))
 
 (define (interpret code)
   (let ((env (make-env)))
