@@ -29,4 +29,4 @@
 
 (define (scale s n)
   (for/stream ((i s))
-    (* i n)))
+    (* n i)))
