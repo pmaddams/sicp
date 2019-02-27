@@ -5,7 +5,7 @@
 
 (test-case
  "pascal"
- (for ((n (in-range 5))
+ (for ((n 5)
        (l '((1)
             (1 1)
             (1 2 1)

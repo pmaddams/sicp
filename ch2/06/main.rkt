@@ -14,7 +14,7 @@
 
 (define ((number->church n) f)
   (for/fold ((acc identity))
-            ((i (in-range n)))
+            ((i n))
     (compose f acc)))
 
 (define (church->number c) ((c add1) 0))

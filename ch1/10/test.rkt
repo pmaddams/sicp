@@ -4,7 +4,7 @@
          "main.rkt")
 
 (define-check (check-A i f)
-  (for ((n (in-range 5)))
+  (for ((n 5))
     (let ((expected (A i n))
           (actual (f n)))
       (with-check-info (('actual actual) ('expected expected))

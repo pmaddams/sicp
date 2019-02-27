@@ -4,7 +4,7 @@
          "main.rkt")
 
 (define-check (check-op f reference)
-  (for ((i (in-range 5)))
+  (for ((i 5))
     (let* ((n (random 1 5))
            (m (random 1 5))
            (expected (reference n m))

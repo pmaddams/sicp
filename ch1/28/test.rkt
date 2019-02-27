@@ -21,7 +21,7 @@
 
 (test-case
  "expmod"
- (for ((i (in-range 10)))
+ (for ((i 10))
    (let ((b (random 2 100))
          (x (random 2 100))
          (m (random 2 100)))

@@ -261,5 +261,5 @@
 
 (define (repeated f n)
   (for/fold ((acc identity))
-            ((i (in-range n)))
+            ((i n))
     (compose f acc)))

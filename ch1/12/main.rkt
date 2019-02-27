@@ -7,7 +7,7 @@
 (require racket/sequence)
 
 (define (pascal n)
-  (for/list ((k (in-range (add1 n))))
+  (for/list ((k (add1 n)))
     (choose n k)))
 
 (define (choose n k)

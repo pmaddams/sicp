@@ -4,6 +4,6 @@
          "main.rkt")
 
 (test-case
- "fib"
- (check-equal? (for/list ((n (in-range 10))) (fib n))
+ "fibonacci"
+ (check-equal? (for/list ((n 10)) (fibonacci n))
                '(0 1 1 2 3 5 8 13 21 34)))
