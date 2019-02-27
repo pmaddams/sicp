@@ -1,14 +1,14 @@
 #lang racket/base
 
-; Exercise 5.18: Monitoring performance
+; Exercise 5.18
 
 (provide (all-defined-out))
 
 (require racket/class
          "../../vm/vm.rkt")
 
-(define (monitored %)
-  (class %
+(define (monitored vm%)
+  (class vm%
     (super-new)
 
     (field (pushes 0)
