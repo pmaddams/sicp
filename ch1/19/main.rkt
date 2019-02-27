@@ -4,7 +4,7 @@
 
 (provide (all-defined-out))
 
-(define (fib n)
+(define (fibonacci n)
   (let loop ((n n) (a 1) (b 0) (p 0) (q 1))
     (cond ((zero? n) b)
           ((even? n)
