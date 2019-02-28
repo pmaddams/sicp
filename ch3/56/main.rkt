@@ -2,6 +2,8 @@
 
 ; Exercise 3.56
 
+(provide (all-defined-out))
+
 (require racket/stream)
 
 (define hamming

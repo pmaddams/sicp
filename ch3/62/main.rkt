@@ -2,6 +2,8 @@
 
 ; Exercise 3.62
 
+(provide (all-defined-out))
+
 (require racket/stream)
 
 (define (add s1 s2)
