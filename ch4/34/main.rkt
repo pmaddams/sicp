@@ -12,6 +12,8 @@
 
 (struct promise (forced result expr env) #:mutable)
 
+(struct stream (proc))
+
 (define (eval expr env)
   (cond ((literal? expr) expr)
         ((symbol? expr) (lookup-var expr env))
@@ -149,11 +151,30 @@
             (hash-set! frame var val)
             (assign-var var val (cdr env))))))
 
+(define (stream-cons x y)
+  (stream
+   (lambda (m)
+     (m x y))))
+
+(define (stream-first s)
+  ((stream-proc s)
+   (lambda (x y) x)))
+
+(define (stream-rest s)
+  ((stream-proc s)
+   (lambda (x y) y)))
+
+(define (stream-display x)
+  (display
+   (if (stream? x)
+       (format "(~a ..." (stream-first x))
+       x)))
+
 (define builtins
-  `((cons . ,cons)
-    (car . ,car)
-    (cdr . ,cdr)
-    (pair? . ,pair?)
+  `((cons . ,stream-cons)
+    (car . ,stream-first)
+    (cdr . ,stream-rest)
+    (pair? . ,stream?)
     (null? . ,null?)
     (+ . ,+)
     (- . ,-)
@@ -163,7 +184,7 @@
     (> . ,>)
     (= . ,=)
     (eq? . ,eq?)
-    (display . ,display)
+    (display . ,stream-display)
     (newline . ,newline)))
 
 (define (make-env)
