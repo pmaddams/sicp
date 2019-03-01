@@ -42,12 +42,6 @@
       (number? expr)
       (string? expr)))
 
-(define (eval-list exprs env)
-  (let ((val (eval (car exprs) env)))
-    (if (null? (cdr exprs))
-        val
-        (eval-list (cdr exprs) env))))
-
 (define (eval-define expr env)
   (let ((var (if (symbol? (cadr expr))
                  (cadr expr)
@@ -71,6 +65,12 @@
     (if (eval predicate env)
         (eval consequent env)
         (eval alternative env))))
+
+(define (eval-list l env)
+  (let ((val (eval (car l) env)))
+    (if (null? (cdr l))
+        val
+        (eval-list (cdr l) env))))
 
 (define (cond->if expr) (expand (cdr expr)))
 
