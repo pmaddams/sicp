@@ -27,7 +27,6 @@
                 ('if (eval-if expr env))
                 ('begin (eval-list (cdr expr) env))
                 ('cond (eval-if (cond->if expr) env))
-                ('let (eval (let->lambda expr) env))
                 (else (let ((proc (value (car expr) env))
                             (args (cdr expr)))
                         (apply proc args env)))))))
@@ -114,13 +113,6 @@
   (if (null? (cdr l))
       (car l)
       (cons 'begin l)))
-
-(define (let->lambda expr)
-  (let* ((bindings (cadr expr))
-         (vars (map car bindings))
-         (exprs (map cadr bindings))
-         (body (cddr expr)))
-    (cons (cons 'lambda (cons vars body)) exprs)))
 
 (define (subst vars vals env)
   (cons (make-frame vars vals) env))
