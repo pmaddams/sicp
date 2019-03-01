@@ -24,17 +24,17 @@
                 ('begin (eval-list (cdr expr) env))
                 ('cond (eval-if (cond->if expr) env))
                 ('let (eval (let->lambda expr) env))
-                (else (let ((proc (eval (car expr) env))
-                            (vals (map (lambda (x) (eval x env))
-                                       (cdr expr))))
-                        (apply proc vals)))))))
+                (else (let* ((vals (map (lambda (x) (eval x env)) expr))
+                             (proc (car vals))
+                             (args (cdr vals)))
+                        (apply proc args)))))))
 
-(define (apply proc vals)
+(define (apply proc args)
   (if (builtin? proc)
-      (builtin-apply (builtin-impl proc) vals)
+      (builtin-apply (builtin-impl proc) args)
       (eval-list (closure-body proc)
                  (subst (closure-vars proc)
-                        vals
+                        args
                         (closure-env proc)))))
 
 (define (literal? expr)
