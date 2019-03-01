@@ -24,6 +24,7 @@
                 ('if (analyze-if expr))
                 ('begin (analyze-list (cdr expr)))
                 ('cond (analyze (cond->if expr)))
+                ('let (analyze (let->lambda expr)))
                 (else (analyze-apply expr))))))
 
 (define (apply proc args)
@@ -109,6 +110,13 @@
   (if (null? (cdr l))
       (car l)
       (cons 'begin l)))
+
+(define (let->lambda expr)
+  (let* ((bindings (cadr expr))
+         (vars (map car bindings))
+         (exprs (map cadr bindings))
+         (body (cddr expr)))
+    (cons (cons 'lambda (cons vars body)) exprs)))
 
 (define (analyze-apply expr)
   (let ((l (map analyze expr)))
