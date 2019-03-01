@@ -10,7 +10,7 @@
 
 (struct closure (vars body env))
 
-(struct promise (forced result expr env) #:mutable)
+(struct promise (forced val expr env) #:mutable)
 
 (struct stream (proc))
 
@@ -44,17 +44,17 @@
 (define (value expr env)
   (force (eval expr env)))
 
-(define (force val)
-  (if (promise? val)
-      (if (promise-forced val)
-          (promise-result val)
-          (let ((result (value (promise-expr val) (promise-env val))))
-            (set-promise-forced! val #t)
-            (set-promise-result! val result)
-            (set-promise-expr! val (void))
-            (set-promise-env! val (void))
-            result))
-      val))
+(define (force obj)
+  (if (promise? obj)
+      (if (promise-forced obj)
+          (promise-val obj)
+          (let ((val (value (promise-expr obj) (promise-env obj))))
+            (set-promise-forced! obj #t)
+            (set-promise-val! obj val)
+            (set-promise-expr! obj (void))
+            (set-promise-env! obj (void))
+            val))
+      obj))
 
 (define (delay expr env)
   (promise #f (void) expr env))
@@ -63,12 +63,6 @@
   (or (boolean? expr)
       (number? expr)
       (string? expr)))
-
-(define (eval-list exprs env)
-  (let ((val (eval (car exprs) env)))
-    (if (null? (cdr exprs))
-        val
-        (eval-list (cdr exprs) env))))
 
 (define (eval-define expr env)
   (let ((var (if (symbol? (cadr expr))
@@ -94,6 +88,12 @@
         (eval consequent env)
         (eval alternative env))))
 
+(define (eval-list l env)
+  (let ((obj (eval (car l) env)))
+    (if (null? (cdr l))
+        obj
+        (eval-list (cdr l) env))))
+
 (define (cond->if expr) (expand (cdr expr)))
 
 (define (expand clauses)
@@ -114,18 +114,18 @@
       (car l)
       (cons 'begin l)))
 
-(define (subst vars vals env)
-  (cons (make-frame vars vals) env))
+(define (subst vars objs env)
+  (cons (make-frame vars objs) env))
 
-(define (make-frame vars vals)
-  (if (not (= (length vars) (length vals)))
-      (error "arity mismatch:" vars vals)
-      (let ((assocs (map cons vars vals)))
+(define (make-frame vars objs)
+  (if (not (= (length vars) (length objs)))
+      (error "arity mismatch:" vars objs)
+      (let ((assocs (map cons vars objs)))
         (make-hash assocs))))
 
-(define (define-var var val env)
+(define (define-var var obj env)
   (let ((frame (car env)))
-    (hash-set! frame var val)))
+    (hash-set! frame var obj)))
 
 (define (lookup-var var env)
   (if (null? env)
@@ -135,13 +135,13 @@
             (hash-ref frame var)
             (lookup-var var (cdr env))))))
 
-(define (assign-var var val env)
+(define (assign-var var obj env)
   (if (null? env)
       (error "undefined:" var)
       (let ((frame (car env)))
         (if (hash-has-key? frame var)
-            (hash-set! frame var val)
-            (assign-var var val (cdr env))))))
+            (hash-set! frame var obj)
+            (assign-var var obj (cdr env))))))
 
 (define (stream-cons x y)
   (stream
