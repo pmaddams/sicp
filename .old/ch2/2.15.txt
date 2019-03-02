@@ -1,4 +1,0 @@
-Eva is correct. When performing interval operations on uncertain numbers, the
-error increases for the result of the calculation. When performing operations on
-[1, 1], however, the error does not increase. The second procedure only
-increases the overall error once. The first procedure increases the error twice.

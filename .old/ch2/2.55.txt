@@ -1,3 +1,0 @@
-Because the quotes are nested, the inner quote is quoted. The display
-representation for the quote symbol is quote. Therefore, (car ''abracadabra)
-displays the quoted quote as quote.

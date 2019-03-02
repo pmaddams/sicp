@@ -1,5 +1,0 @@
-The procedure a-plus-abs-b evaluates a combination where the first element, the
-operator, is itself the result of an if expression. This operator is then
-applied to the arguments a and b. If b is positive, we use the + operator.
-Otherwise, we use the - operator. Therefore, we are evaluating either (+ a b) or
-(- a b) depending on whether b is positive or negative.
