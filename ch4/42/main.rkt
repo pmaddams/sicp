@@ -4,14 +4,15 @@
 
 (provide (all-defined-out))
 
-(require (only-in racket (apply builtin-apply)))
+(require racket/function
+         (only-in racket (apply builtin-apply)))
 
 (struct builtin (impl))
 
 (struct closure (vars unev env))
 
-(define (eval expr env)
-  ((analyze expr) env))
+(define (eval expr env succeed fail)
+  ((analyze expr) env succeed fail))
 
 (define (analyze expr)
   (cond ((literal? expr) (analyze-literal expr))
@@ -25,32 +26,38 @@
                 ('begin (analyze-list (cdr expr)))
                 ('cond (analyze (cond->if expr)))
                 ('let (analyze (let->lambda expr)))
+                ('amb (analyze-amb expr))
                 (else (analyze-apply expr))))))
 
-(define (apply proc args)
+(define (apply proc args succeed fail)
   (if (builtin? proc)
-      (builtin-apply (builtin-impl proc) args)
+      (succeed (builtin-apply (builtin-impl proc) args) fail)
       ((closure-unev proc)
        (subst (closure-vars proc)
               args
-              (closure-env proc)))))
+              (closure-env proc))
+       succeed
+       fail)))
 
 (define (literal? expr)
   (or (boolean? expr)
       (number? expr)
       (string? expr)))
 
-(define ((analyze-literal expr) env) expr)
+(define ((analyze-literal expr) env succeed fail)
+  (succeed expr fail))
 
-(define ((analyze-symbol expr) env) (lookup-var expr env))
+(define ((analyze-symbol expr) env succeed fail)
+  (succeed (lookup-var expr env) fail))
 
-(define ((analyze-quote expr) env) (cadr expr))
+(define ((analyze-quote expr) env succeed fail)
+  (succeed (cadr expr) fail))
 
 (define (analyze-lambda expr)
   (let ((vars (cadr expr))
         (unev (analyze-list (cddr expr))))
-    (lambda (env)
-      (closure vars unev env))))
+    (lambda (env succeed fail)
+      (succeed (closure vars unev env) fail))))
 
 (define (analyze-define expr)
   (let ((var (if (symbol? (cadr expr))
@@ -62,28 +69,46 @@
                    (let ((vars (cdadr expr))
                          (body (cddr expr)))
                      (cons 'lambda (cons vars body)))))))
-    (lambda (env)
-      (define-var var (unev env) env))))
+    (lambda (env succeed fail)
+      (unev
+       env
+       (lambda (val fail*)
+         (succeed (define-var var val env) fail*))
+       fail))))
 
 (define (analyze-set expr)
   (let ((var (cadr expr))
         (unev (analyze (caddr expr))))
-    (lambda (env)
-      (assign-var var (unev env) env))))
+    (lambda (env succeed fail)
+      (unev
+       env
+       (lambda (val fail*)
+         (let ((old-val (lookup-var var env)))
+           (succeed (assign-var var val env)
+                    (thunk (assign-var var old-val env)
+                           (fail*)))))
+       fail))))
 
 (define (analyze-if expr)
   (let ((unev-predicate (analyze (cadr expr)))
         (unev-consequent (analyze (caddr expr)))
         (unev-alternative (analyze (cadddr expr))))
-    (lambda (env)
-      (if ((unev-predicate) env)
-          ((unev-consequent) env)
-          ((unev-alternative) env)))))
+    (lambda (env succeed fail)
+      (unev-predicate
+       env
+       (lambda (val fail*)
+         (if val
+             (unev-consequent env succeed fail*)
+             (unev-alternative env succeed fail*)))
+       fail))))
 
 (define (analyze-list exprs)
-  (define ((sequence u1 u2) env)
-    (u1 env)
-    (u2 env))
+  (define ((sequence u1 u2) env succeed fail)
+    (u1
+     env
+     (lambda (val fail*)
+       (u2 env succeed fail*))
+     fail))
 
   (let ((analyzed (map analyze exprs)))
     (let loop ((first (car analyzed)) (rest (cdr analyzed)))
@@ -118,13 +143,43 @@
          (body (cddr expr)))
     (cons (cons 'lambda (cons vars body)) exprs)))
 
+(define (analyze-amb expr)
+  (let ((unev-choices (analyze (cdr expr))))
+    (lambda (env succeed fail)
+      (let loop ((l unev-choices))
+        (if (null? l)
+            (fail)
+            ((car l)
+             env
+             succeed
+             (loop (cdr l))))))))
+
 (define (analyze-apply expr)
-  (let ((l (map analyze expr)))
-    (lambda (env)
-      (let* ((vals (map (lambda (u) (u env)) l))
-             (proc (car vals))
-             (args (cdr vals)))
-        (apply proc args)))))
+  (let ((unev-proc (analyze (car expr)))
+        (unev-args (map analyze (cdr expr))))
+    (lambda (env succeed fail)
+      (unev-proc
+       env
+       (lambda (proc fail*)
+         (get-args unev-args
+                   env
+                   (lambda (args fail**)
+                     (apply proc args succeed fail**))
+                   fail*))
+       fail))))
+
+(define (get-args unev-args env succeed fail)
+  (if (null? unev-args)
+      (succeed '() fail)
+      ((car unev-args)
+       env
+       (lambda (arg fail*)
+         (get-args (cdr unev-args)
+                   env
+                   (lambda (args fail**)
+                     (succeed (cons arg args) fail**))
+                   fail*))
+       fail)))
 
 (define (subst vars vals env)
   (cons (make-frame vars vals) env))
@@ -180,6 +235,13 @@
 (define (interpret code)
   (let ((env (make-env)))
     (for ((expr code))
-      (let ((val (eval expr env)))
-        (unless (void? val)
-          (displayln val))))))
+      (let loop ((next void))
+        (if (eq? expr 'next)
+            (next)
+            (eval expr
+                  env
+                  (lambda (val next*)
+                    (unless (void? val)
+                      (displayln val))
+                    (next*))
+                  void))))))
