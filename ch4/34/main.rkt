@@ -186,7 +186,7 @@
 
 (define (interpret code)
   (let ((env (make-env)))
-    (for ((expr code))
+    (for ((expr (in-list code)))
       (let ((val (value expr env)))
         (unless (void? val)
           (displayln val))))))
