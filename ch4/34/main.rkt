@@ -165,12 +165,7 @@
        x)))
 
 (define builtins
-  `((cons . ,stream-cons)
-    (car . ,stream-first)
-    (cdr . ,stream-rest)
-    (pair? . ,stream?)
-    (null? . ,null?)
-    (+ . ,+)
+  `((+ . ,+)
     (- . ,-)
     (* . ,*)
     (/ . ,/)
@@ -178,6 +173,11 @@
     (> . ,>)
     (= . ,=)
     (eq? . ,eq?)
+    (null? . ,null?)
+    (pair? . ,stream?)
+    (cons . ,stream-cons)
+    (car . ,stream-first)
+    (cdr . ,stream-rest)
     (display . ,stream-display)
     (newline . ,newline)))
 

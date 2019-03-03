@@ -131,12 +131,7 @@
             (assign-var var val (cdr env))))))
 
 (define builtins
-  `((cons . ,cons)
-    (car . ,car)
-    (cdr . ,cdr)
-    (pair? . ,pair?)
-    (null? . ,null?)
-    (+ . ,+)
+  `((+ . ,+)
     (- . ,-)
     (* . ,*)
     (/ . ,/)
@@ -144,6 +139,12 @@
     (> . ,>)
     (= . ,=)
     (eq? . ,eq?)
+    (null? . ,null?)
+    (pair? . ,pair?)
+    (cons . ,cons)
+    (car . ,car)
+    (cdr . ,cdr)
+    (list . ,list)
     (display . ,display)
     (newline . ,newline)))
 
