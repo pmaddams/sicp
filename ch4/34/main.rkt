@@ -90,11 +90,11 @@
         (eval consequent env)
         (eval alternative env))))
 
-(define (eval-list l env)
-  (let ((obj (eval (car l) env)))
-    (if (null? (cdr l))
-        obj
-        (eval-list (cdr l) env))))
+(define (eval-list exprs env)
+  (let ((val (eval (car exprs) env)))
+    (if (null? (cdr exprs))
+        val
+        (eval-list (cdr exprs) env))))
 
 (define (cond->if expr) (expand (cdr expr)))
 
@@ -111,10 +111,10 @@
                 (error "else clause must be last"))
             (list 'if predicate (list->expr actions) (expand rest))))))
 
-(define (list->expr l)
-  (if (null? (cdr l))
-      (car l)
-      (cons 'begin l)))
+(define (list->expr exprs)
+  (if (null? (cdr exprs))
+      (car exprs)
+      (cons 'begin exprs)))
 
 (define (subst vars objs env)
   (cons (make-frame vars objs) env))
