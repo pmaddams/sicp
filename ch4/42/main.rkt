@@ -234,14 +234,16 @@
 
 (define (interpret code)
   (let ((env (make-env)))
-    (for ((expr code))
-      (let loop ((next void))
-        (if (eq? expr 'next)
-            (next)
-            (eval expr
-                  env
-                  (lambda (val next*)
-                    (unless (void? val)
-                      (displayln val))
-                    (next*))
-                  void))))))
+    (let loop ((next void))
+      (unless (null? code)
+        (let ((expr (car code)))
+          (set! code (cdr code))
+          (if (eq? expr 'next)
+              (next)
+              (eval expr
+                    env
+                    (lambda (val next*)
+                      (unless (void? val)
+                        (displayln val))
+                      (loop next*))
+                    void)))))))
