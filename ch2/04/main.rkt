@@ -31,12 +31,12 @@
 
 (define (member x l)
   (cond ((null? l) #f)
-        ((equal? (car l) x) l)
+        ((equal? x (car l)) l)
         (else (member x (cdr l)))))
 
 (define (remove x l)
   (cond ((null? l) '())
-        ((equal? (car l) x) (cdr l))
+        ((equal? x (car l)) (cdr l))
         (else (cons (car l) (remove x (cdr l))))))
 
 (define (length l)
