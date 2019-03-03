@@ -60,15 +60,15 @@
       (succeed (closure vars unev env) fail))))
 
 (define (analyze-define expr)
-  (let ((var (if (symbol? (cadr expr))
-                 (cadr expr)
-                 (caadr expr)))
-        (unev (analyze
-               (if (symbol? (cadr expr))
-                   (caddr expr)
-                   (let ((vars (cdadr expr))
-                         (body (cddr expr)))
-                     (cons 'lambda (cons vars body)))))))
+  (let* ((var (if (symbol? (cadr expr))
+                  (cadr expr)
+                  (caadr expr)))
+         (x (if (symbol? (cadr expr))
+                (caddr expr)
+                (let ((vars (cdadr expr))
+                      (body (cddr expr)))
+                  (cons 'lambda (cons vars body)))))
+         (unev (analyze x)))
     (lambda (env succeed fail)
       (unev
        env
@@ -77,8 +77,9 @@
        fail))))
 
 (define (analyze-set expr)
-  (let ((var (cadr expr))
-        (unev (analyze (caddr expr))))
+  (let* ((var (cadr expr))
+         (x (caddr expr))
+         (unev (analyze x)))
     (lambda (env succeed fail)
       (unev
        env
