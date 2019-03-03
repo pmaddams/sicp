@@ -91,24 +91,24 @@
        fail))))
 
 (define (analyze-if expr)
-  (let ((exec-predicate (analyze (cadr expr)))
-        (exec-consequent (analyze (caddr expr)))
-        (exec-alternative (analyze (cadddr expr))))
+  (let ((predicate-exec (analyze (cadr expr)))
+        (consequent-exec (analyze (caddr expr)))
+        (alternative-exec (analyze (cadddr expr))))
     (lambda (env succeed fail)
-      (exec-predicate
+      (predicate-exec
        env
        (lambda (val fail*)
          (if val
-             (exec-consequent env succeed fail*)
-             (exec-alternative env succeed fail*)))
+             (consequent-exec env succeed fail*)
+             (alternative-exec env succeed fail*)))
        fail))))
 
 (define (analyze-list exprs)
-  (define ((sequence u1 u2) env succeed fail)
-    (u1
+  (define ((sequence e1 e2) env succeed fail)
+    (e1
      env
      (lambda (val fail*)
-       (u2 env succeed fail*))
+       (e2 env succeed fail*))
      fail))
 
   (let ((analyzed (map analyze exprs)))
@@ -132,10 +132,10 @@
                 (error "else clause must be last"))
             (list 'if predicate (list->expr actions) (expand rest))))))
 
-(define (list->expr l)
-  (if (null? (cdr l))
-      (car l)
-      (cons 'begin l)))
+(define (list->expr exprs)
+  (if (null? (cdr exprs))
+      (car exprs)
+      (cons 'begin exprs)))
 
 (define (let->lambda expr)
   (let* ((bindings (cadr expr))
@@ -145,37 +145,37 @@
     (cons (cons 'lambda (cons vars body)) exprs)))
 
 (define (analyze-amb expr)
-  (let ((exec-choices (map analyze (cdr expr))))
+  (let ((choice-execs (map analyze (cdr expr))))
     (lambda (env succeed fail)
-      (let loop ((l exec-choices))
-        (if (null? l)
+      (let loop ((execs choice-execs))
+        (if (null? execs)
             (fail)
-            ((car l)
+            ((car execs)
              env
              succeed
-             (thunk (loop (cdr l)))))))))
+             (thunk (loop (cdr execs)))))))))
 
 (define (analyze-apply expr)
-  (let ((exec-proc (analyze (car expr)))
-        (exec-args (map analyze (cdr expr))))
+  (let ((proc-exec (analyze (car expr)))
+        (arg-execs (map analyze (cdr expr))))
     (lambda (env succeed fail)
-      (exec-proc
+      (proc-exec
        env
        (lambda (proc fail*)
-         (get-args exec-args
+         (get-args arg-execs
                    env
                    (lambda (args fail**)
                      (apply proc args succeed fail**))
                    fail*))
        fail))))
 
-(define (get-args exec-args env succeed fail)
-  (if (null? exec-args)
+(define (get-args arg-execs env succeed fail)
+  (if (null? arg-execs)
       (succeed '() fail)
-      ((car exec-args)
+      ((car arg-execs)
        env
        (lambda (arg fail*)
-         (get-args (cdr exec-args)
+         (get-args (cdr arg-execs)
                    env
                    (lambda (args fail**)
                      (succeed (cons arg args) fail**))
