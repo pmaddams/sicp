@@ -145,7 +145,7 @@
     (cons (cons 'lambda (cons vars body)) exprs)))
 
 (define (analyze-amb expr)
-  (let ((exec-choices (analyze (cdr expr))))
+  (let ((exec-choices (map analyze (cdr expr))))
     (lambda (env succeed fail)
       (let loop ((l exec-choices))
         (if (null? l)
@@ -153,7 +153,7 @@
             ((car l)
              env
              succeed
-             (loop (cdr l))))))))
+             (thunk (loop (cdr l)))))))))
 
 (define (analyze-apply expr)
   (let ((exec-proc (analyze (car expr)))
