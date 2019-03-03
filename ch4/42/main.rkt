@@ -9,7 +9,7 @@
 
 (struct builtin (impl))
 
-(struct closure (vars unev env))
+(struct closure (vars exec env))
 
 (define (eval expr env succeed fail)
   ((analyze expr) env succeed fail))
@@ -32,7 +32,7 @@
 (define (apply proc args succeed fail)
   (if (builtin? proc)
       (succeed (builtin-apply (builtin-impl proc) args) fail)
-      ((closure-unev proc)
+      ((closure-exec proc)
        (subst (closure-vars proc)
               args
               (closure-env proc))
@@ -55,9 +55,9 @@
 
 (define (analyze-lambda expr)
   (let ((vars (cadr expr))
-        (unev (analyze-list (cddr expr))))
+        (exec (analyze-list (cddr expr))))
     (lambda (env succeed fail)
-      (succeed (closure vars unev env) fail))))
+      (succeed (closure vars exec env) fail))))
 
 (define (analyze-define expr)
   (let* ((var (if (symbol? (cadr expr))
@@ -68,9 +68,9 @@
                 (let ((vars (cdadr expr))
                       (body (cddr expr)))
                   (cons 'lambda (cons vars body)))))
-         (unev (analyze x)))
+         (exec (analyze x)))
     (lambda (env succeed fail)
-      (unev
+      (exec
        env
        (lambda (val fail*)
          (succeed (define-var var val env) fail*))
@@ -79,9 +79,9 @@
 (define (analyze-set expr)
   (let* ((var (cadr expr))
          (x (caddr expr))
-         (unev (analyze x)))
+         (exec (analyze x)))
     (lambda (env succeed fail)
-      (unev
+      (exec
        env
        (lambda (val fail*)
          (let ((old-val (lookup-var var env)))
@@ -91,16 +91,16 @@
        fail))))
 
 (define (analyze-if expr)
-  (let ((unev-predicate (analyze (cadr expr)))
-        (unev-consequent (analyze (caddr expr)))
-        (unev-alternative (analyze (cadddr expr))))
+  (let ((exec-predicate (analyze (cadr expr)))
+        (exec-consequent (analyze (caddr expr)))
+        (exec-alternative (analyze (cadddr expr))))
     (lambda (env succeed fail)
-      (unev-predicate
+      (exec-predicate
        env
        (lambda (val fail*)
          (if val
-             (unev-consequent env succeed fail*)
-             (unev-alternative env succeed fail*)))
+             (exec-consequent env succeed fail*)
+             (exec-alternative env succeed fail*)))
        fail))))
 
 (define (analyze-list exprs)
@@ -145,9 +145,9 @@
     (cons (cons 'lambda (cons vars body)) exprs)))
 
 (define (analyze-amb expr)
-  (let ((unev-choices (analyze (cdr expr))))
+  (let ((exec-choices (analyze (cdr expr))))
     (lambda (env succeed fail)
-      (let loop ((l unev-choices))
+      (let loop ((l exec-choices))
         (if (null? l)
             (fail)
             ((car l)
@@ -156,26 +156,26 @@
              (loop (cdr l))))))))
 
 (define (analyze-apply expr)
-  (let ((unev-proc (analyze (car expr)))
-        (unev-args (map analyze (cdr expr))))
+  (let ((exec-proc (analyze (car expr)))
+        (exec-args (map analyze (cdr expr))))
     (lambda (env succeed fail)
-      (unev-proc
+      (exec-proc
        env
        (lambda (proc fail*)
-         (get-args unev-args
+         (get-args exec-args
                    env
                    (lambda (args fail**)
                      (apply proc args succeed fail**))
                    fail*))
        fail))))
 
-(define (get-args unev-args env succeed fail)
-  (if (null? unev-args)
+(define (get-args exec-args env succeed fail)
+  (if (null? exec-args)
       (succeed '() fail)
-      ((car unev-args)
+      ((car exec-args)
        env
        (lambda (arg fail*)
-         (get-args (cdr unev-args)
+         (get-args (cdr exec-args)
                    env
                    (lambda (args fail**)
                      (succeed (cons arg args) fail**))
@@ -234,17 +234,18 @@
     (subst vars vals '())))
 
 (define (interpret code)
-  (let ((env (make-env)))
-    (let loop ((next void))
+  (let ((env (make-env))
+        (start void))
+    (let loop ((fail start))
       (unless (null? code)
         (let ((expr (car code)))
           (set! code (cdr code))
           (if (eq? expr 'next)
-              (next)
+              (fail)
               (eval expr
                     env
-                    (lambda (val next*)
+                    (lambda (val fail*)
                       (unless (void? val)
                         (displayln val))
-                      (loop next*))
-                    void)))))))
+                      (loop fail*))
+                    (thunk (loop start)))))))))
