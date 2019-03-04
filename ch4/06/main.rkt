@@ -22,7 +22,9 @@
                 ('set! (eval-set expr env))
                 ('if (eval-if expr env))
                 ('begin (eval-list (cdr expr) env))
-                ('cond (eval-if (cond->if expr) env))
+                ('cond (eval (cond->if expr) env))
+                ('and (eval (and->if expr) env))
+                ('or (eval (or->if expr) env))
                 ('let (eval (let->lambda expr) env))
                 (else (let* ((vals (map (lambda (x) (eval x env)) expr))
                              (proc (car vals))
@@ -74,25 +76,52 @@
         val
         (eval-list (cdr exprs) env))))
 
-(define (cond->if expr) (expand (cdr expr)))
+(define (cond->if expr) (expand-cond (cdr expr)))
 
-(define (expand clauses)
+(define (expand-cond clauses)
   (if (null? clauses)
-      'false
+      #f
       (let* ((first (car clauses))
              (predicate (car first))
-             (actions (cdr first))
+             (consequent (list->expr (cdr first)))
              (rest (cdr clauses)))
         (if (eq? predicate 'else)
             (if (null? rest)
-                (list->expr actions)
+                consequent
                 (error "else clause must be last"))
-            (list 'if predicate (list->expr actions) (expand rest))))))
+            (let ((alternative (expand-cond rest)))
+              (list 'if predicate consequent alternative))))))
 
 (define (list->expr exprs)
   (if (null? (cdr exprs))
       (car exprs)
       (cons 'begin exprs)))
+
+(define (and->if expr) (expand-and (cdr expr)))
+
+(define (expand-and exprs)
+  (if (null? exprs)
+      #t
+      (let loop ((exprs exprs))
+        (if (null? (cdr exprs))
+            (car exprs)
+            (let ((predicate (car exprs))
+                  (consequent (loop (cdr exprs)))
+                  (alternative #f))
+              (list 'if predicate consequent alternative))))))
+
+(define (or->if expr) (expand-or (cdr expr)))
+
+(define (expand-or exprs)
+  (if (null? exprs)
+      #f
+      (let loop ((exprs exprs))
+        (if (null? (cdr exprs))
+            (car exprs)
+            (let ((predicate (car exprs))
+                  (consequent (car exprs))
+                  (alternative (loop (cdr exprs))))
+              (list 'if predicate consequent alternative))))))
 
 (define (let->lambda expr)
   (let* ((bindings (cadr expr))
@@ -139,6 +168,7 @@
     (> . ,>)
     (= . ,=)
     (eq? . ,eq?)
+    (not . ,not)
     (null? . ,null?)
     (pair? . ,pair?)
     (cons . ,cons)

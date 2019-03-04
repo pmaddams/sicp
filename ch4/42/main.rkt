@@ -25,6 +25,8 @@
                 ('if (analyze-if expr))
                 ('begin (analyze-list (cdr expr)))
                 ('cond (analyze (cond->if expr)))
+                ('and (analyze (and->if expr)))
+                ('or (analyze (or->if expr)))
                 ('let (analyze (let->lambda expr)))
                 ('amb (analyze-amb expr))
                 (else (analyze-apply expr))))))
@@ -117,25 +119,52 @@
           first
           (loop (sequence first (car rest)) (cdr rest))))))
 
-(define (cond->if expr) (expand (cdr expr)))
+(define (cond->if expr) (expand-cond (cdr expr)))
 
-(define (expand clauses)
+(define (expand-cond clauses)
   (if (null? clauses)
-      'false
+      #f
       (let* ((first (car clauses))
              (predicate (car first))
-             (actions (cdr first))
+             (consequent (list->expr (cdr first)))
              (rest (cdr clauses)))
         (if (eq? predicate 'else)
             (if (null? rest)
-                (list->expr actions)
+                consequent
                 (error "else clause must be last"))
-            (list 'if predicate (list->expr actions) (expand rest))))))
+            (let ((alternative (expand-cond rest)))
+              (list 'if predicate consequent alternative))))))
 
 (define (list->expr exprs)
   (if (null? (cdr exprs))
       (car exprs)
       (cons 'begin exprs)))
+
+(define (and->if expr) (expand-and (cdr expr)))
+
+(define (expand-and exprs)
+  (if (null? exprs)
+      #t
+      (let loop ((exprs exprs))
+        (if (null? (cdr exprs))
+            (car exprs)
+            (let ((predicate (car exprs))
+                  (consequent (loop (cdr exprs)))
+                  (alternative #f))
+              (list 'if predicate consequent alternative))))))
+
+(define (or->if expr) (expand-or (cdr expr)))
+
+(define (expand-or exprs)
+  (if (null? exprs)
+      #f
+      (let loop ((exprs exprs))
+        (if (null? (cdr exprs))
+            (car exprs)
+            (let ((predicate (car exprs))
+                  (consequent (car exprs))
+                  (alternative (loop (cdr exprs))))
+              (list 'if predicate consequent alternative))))))
 
 (define (let->lambda expr)
   (let* ((bindings (cadr expr))
@@ -220,6 +249,7 @@
     (> . ,>)
     (= . ,=)
     (eq? . ,eq?)
+    (not . ,not)
     (null? . ,null?)
     (pair? . ,pair?)
     (cons . ,cons)
@@ -252,17 +282,18 @@
                     (thunk (loop start)))))))))
 
 (define liars
-  '((define (require p) (if p #t (amb)))
+  '((define (require p) (or p (amb)))
 
     (define (distinct? l)
-      (cond ((null? l) #t)
-            ((memq (car l) (cdr l)) #f)
-            (else (distinct? (cdr l)))))
+      (or (null? l)
+          (and (not (memq (car l) (cdr l)))
+               (distinct? (cdr l)))))
 
     (define (memq x l)
-      (cond ((null? l) #f)
-            ((eq? x (car l)) l)
-            (else (memq x (cdr l)))))
+      (and (not (null? l))
+           (if (eq? x (car l))
+               l
+               (memq x (cdr l)))))
 
     (let ((betty (amb 1 2 3 4 5))
           (ethel (amb 1 2 3 4 5))
@@ -270,11 +301,11 @@
           (kitty (amb 1 2 3 4 5))
           (mary (amb 1 2 3 4 5)))
       (require (distinct? (list betty ethel joan kitty mary)))
-      (require (if (= kitty 2) #t (= betty 3)))
-      (require (if (= ethel 1) #t (= joan 2)))
-      (require (if (= joan 3) #t (= ethel 5)))
-      (require (if (= kitty 2) #t (= mary 4)))
-      (require (if (= mary 4) #t (= betty 1)))
+      (require (or (= kitty 2) (= betty 3)))
+      (require (or (= ethel 1) (= joan 2)))
+      (require (or (= joan 3) (= ethel 5)))
+      (require (or (= kitty 2) (= mary 4)))
+      (require (or (= mary 4) (= betty 1)))
       (list (list 'betty betty)
             (list 'ethel ethel)
             (list 'joan joan)
