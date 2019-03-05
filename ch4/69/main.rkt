@@ -15,6 +15,45 @@
 
 (define (get k) (hash-ref table k))
 
+(define (type expr)
+  (if (pair? expr)
+      (car expr)
+      (error "syntax error:" expr)))
+
+(define (body expr)
+  (if (pair? expr)
+      (cdr expr)
+      (error "syntax error:" expr)))
+
+(define (instantiate expr frame handler)
+  (let loop ((expr expr))
+    (cond ((variable? expr)
+           (let ((binding (assoc expr frame)))
+             (if binding
+                 (let ((val (cdr binding)))
+                   (loop val))
+                 (handler expr frame))))
+          ((pair? expr)
+           (cons (loop (car expr))
+                 (loop (cdr expr))))
+          (else expr))))
+
+(define (eval query s)
+  (let ((proc (get (cons (type query) 'eval))))
+    (if proc
+        (proc (body query) s)
+        (ask query s))))
+
+(define (variable? expr)
+  (tagged-list? expr '?))
+
+(define (rule? stmt)
+  (tagged-list? stmt 'rule))
+
+(define (tagged-list? x tag)
+  (and (pair? x)
+       (eq? tag (car x))))
+
 (define (stream-append-map f s)
   (stream-flatten (stream-map f s)))
 
