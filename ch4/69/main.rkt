@@ -5,7 +5,8 @@
 (provide (all-defined-out))
 
 (require racket/promise
-         racket/stream)
+         racket/stream
+         (only-in racket (eval builtin-eval)))
 
 (struct database (assertions rules) #:mutable)
 
@@ -77,10 +78,28 @@
 (define (value expr s)
   (stream-append-map
    (lambda (frame)
-     (if (execute (instantiate query frame (lambda (v f) (error "undefined:" v))))
+     (if (execute (instantiate expr frame (lambda (v f) (error "undefined:" v))))
          (stream frame)
          empty-stream))
    s))
+
+(define (execute expr)
+  (let ((proc (car expr))
+        (args (cdr expr))
+        (ns (make-base-namespace)))
+    (apply (eval proc ns) args)))
+
+(define (find-assertions pattern frame)
+  (stream-append-map
+   (lambda (datum)
+     (check-assertion datum pattern frame))
+   (fetch-assertions pattern frame)))
+
+(define (check-assertion assertion query frame)
+  (let ((frame* (match query assertion frame)))
+    (if (void? frame*)
+        empty-stream
+        (stream frame*))))
 
 (define (match pattern datum frame)
   (cond ((void? frame) (void))
@@ -98,11 +117,39 @@
         (match (cdr binding) datum frame)
         (extend var datum frame))))
 
+(define (apply-rules pattern frame)
+  (stream-append-map
+   (lambda (rule)
+     (apply-rule rule pattern frame))
+   (fetch-rules pattern frame)))
+
+(define (apply-rule rule pattern frame)
+  (let* ((rule* (rename-variables rule))
+         (frame* (unify pattern (conclusion rule) frame)))
+    (if (void? frame*)
+        empty-stream
+        (eval (rule-body rule*) (stream frame*)))))
+
+(define (rename-variables rule)
+  (let ((id (gensym)))
+    (let walk ((expr rule))
+      (cond ((variable? expr) (make-variable expr id))
+            ((pair? expr) (cons (walk (car expr))
+                                (walk (cdr expr))))
+            (else expr)))))
+
 (define (variable? expr)
   (tagged-list? expr '?))
 
 (define (rule? stmt)
   (tagged-list? stmt 'rule))
+
+(define (conclusion rule) (cadr rule))
+
+(define (rule-body rule)
+  (if (null? (cddr rule))
+      '(always-true)
+      (caddr rule)))
 
 (define (tagged-list? x tag)
   (and (pair? x)
