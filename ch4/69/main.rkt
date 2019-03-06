@@ -43,7 +43,28 @@
   (let ((proc (get (cons (type query) 'eval))))
     (if proc
         (proc (body query) s)
-        (ask query s))))
+        (simple-query query s))))
+
+(define (simple-query query s)
+  (stream-append-map
+   (lambda (frame)
+     (stream-append-delayed
+      (find-assertions query frame)
+      (delay (apply-rules query frame))))
+   s))
+
+(define (and-query clauses s)
+  (if (null? clauses)
+      s
+      (and-query (cdr clauses)
+               (eval (car clauses) s))))
+
+(define (or-query clauses s)
+  (if (null? clauses)
+      empty-stream
+      (interleave-delayed
+       (eval (car clauses) s)
+       (delay (or-query (cdr clauses) s)))))
 
 (define (match pattern datum frame)
   (cond ((void? frame) (void))
