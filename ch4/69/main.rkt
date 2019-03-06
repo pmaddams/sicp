@@ -83,6 +83,8 @@
          empty-stream))
    s))
 
+(define (true expr s) s)
+
 (define (execute expr)
   (let ((proc (car expr))
         (args (cdr expr))
@@ -134,9 +136,47 @@
   (let ((id (gensym)))
     (let walk ((expr rule))
       (cond ((variable? expr) (make-variable expr id))
-            ((pair? expr) (cons (walk (car expr))
-                                (walk (cdr expr))))
+            ((pair? expr)
+             (cons (walk (car expr))
+                   (walk (cdr expr))))
             (else expr)))))
+
+(define (unify p1 p2 frame)
+  (cond ((void? frame) (void))
+        ((equal? p1 p2) frame)
+        ((variable? p1) (extend-if-possible p1 p2 frame))
+        ((variable? p2) (extend-if-possible p2 p1 frame))
+        ((and (pair? p1) (pair? p2))
+         (let ((frame* (unify (car p1) (car p2) frame)))
+           (unify (cdr p1) (cdr p2) frame*)))
+        (else (void))))
+
+(define (extend-if-possible var val frame)
+  (let ((binding (assoc var frame)))
+    (if binding
+        (unify (cdr binding) val frame)
+        (if (variable? val)
+            (let ((binding* (assoc val frame)))
+              (if binding*
+                  (unify var (cdr binding*) frame)
+                  (extend var val frame)))
+            (if (dependent? val var frame)
+                (void)
+                (extend var val frame))))))
+
+(define (dependent? expr var frame)
+  (let walk ((expr expr))
+    (cond ((variable? expr)
+           (if (equal? var expr)
+               #t
+               (let ((binding (assoc expr frame)))
+                 (if binding
+                     (walk (cdr binding))
+                     #f))))
+          ((pair? expr)
+           (or (walk (car expr))
+               (walk (cdr expr))))
+          (else #f))))
 
 (define (variable? expr)
   (tagged-list? expr '?))
@@ -148,7 +188,7 @@
 
 (define (rule-body rule)
   (if (null? (cddr rule))
-      '(always-true)
+      '(true)
       (caddr rule)))
 
 (define (tagged-list? x tag)
