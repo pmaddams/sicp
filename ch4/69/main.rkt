@@ -57,7 +57,7 @@
   (if (null? clauses)
       s
       (and-query (cdr clauses)
-               (eval (car clauses) s))))
+                 (eval (car clauses) s))))
 
 (define (or-query clauses s)
   (if (null? clauses)
@@ -65,6 +65,22 @@
       (interleave-delayed
        (eval (car clauses) s)
        (delay (or-query (cdr clauses) s)))))
+
+(define (not-query query s)
+  (stream-append-map
+   (lambda (frame)
+     (if (stream-empty? (eval (car query) (stream frame)))
+         (stream frame)
+         empty-stream))
+   s))
+
+(define (value expr s)
+  (stream-append-map
+   (lambda (frame)
+     (if (execute (instantiate query frame (lambda (v f) (error "undefined:" v))))
+         (stream frame)
+         empty-stream))
+   s))
 
 (define (match pattern datum frame)
   (cond ((void? frame) (void))
