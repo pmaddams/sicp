@@ -7,7 +7,9 @@
 (require racket/promise
          racket/stream)
 
-(struct expr (type val))
+(struct database (assertions rules) #:mutable)
+
+(define db (database empty-stream empty-stream))
 
 (define table (make-hash))
 
@@ -25,17 +27,16 @@
       (cdr expr)
       (error "syntax error:" expr)))
 
-(define (instantiate expr frame handler)
-  (let loop ((expr expr))
+(define (instantiate expr frame fail)
+  (let copy ((expr expr))
     (cond ((variable? expr)
            (let ((binding (assoc expr frame)))
              (if binding
-                 (let ((val (cdr binding)))
-                   (loop val))
-                 (handler expr frame))))
+                 (copy (cdr binding))
+                 (fail expr frame))))
           ((pair? expr)
-           (cons (loop (car expr))
-                 (loop (cdr expr))))
+           (cons (copy (car expr))
+                 (copy (cdr expr))))
           (else expr))))
 
 (define (eval query s)
@@ -43,6 +44,22 @@
     (if proc
         (proc (body query) s)
         (ask query s))))
+
+(define (match pattern datum frame)
+  (cond ((void? frame) (void))
+        ((equal? pattern datum) frame)
+        ((var? pattern) (extend-if-consistent pattern datum frame))
+        ((and (pair? pattern)
+              (pair? datum))
+         (let ((frame* (match (car pattern) (car datum) frame)))
+           (match (cdr pattern) (cdr datum) frame*)))
+        (else (void))))
+
+(define (extend-if-consistent var datum frame)
+  (let ((binding (assoc var frame)))
+    (if binding
+        (match (cdr binding) datum frame)
+        (extend var datum frame))))
 
 (define (variable? expr)
   (tagged-list? expr '?))
