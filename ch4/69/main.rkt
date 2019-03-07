@@ -200,6 +200,36 @@
    (get-stream (cons (index-key pattern) 'rule-stream))
    (get-stream '(? rule-stream))))
 
+(define (add-rule-or-assertion assertion)
+  (if (rule? assertion)
+      (add-rule assertion)
+      (add-assertion assertion)))
+
+(define (add-assertion assertion)
+  (store-assertion-in-index assertion)
+  (set-database-assertions!
+   db
+   (stream-cons assertion (database-assertions db))))
+
+(define (add-rule rule)
+  (store-rule-in-index rule)
+  (set-database-rules!
+   db
+   (stream-cons rule (database-rules db))))
+
+(define (store-assertion-in-index assertion)
+  (when (indexable? assertion)
+    (let* ((k (index-key assertion))
+           (s (get-stream (cons k 'assertion-stream))))
+      (put '(cons k 'assertion-stream) (stream-cons assertion s)))))
+
+(define (store-rule-in-index rule)
+  (let ((pattern (conclusion rule)))
+    (when (indexable? pattern)
+      (let* ((k (index-key pattern))
+             (s (get-stream (cons k 'rule-stream))))
+        (put (cons k 'rule-stream) (stream-cons rule s))))))
+
 (define (index-key pattern)
   (let ((key (car pattern)))
     (if (variable? key)
