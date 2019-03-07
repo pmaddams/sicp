@@ -22,9 +22,11 @@
 
 (define table (make-hash))
 
-(define (put k v) (hash-set! table k v))
+(define (put k1 k2 v)
+  (hash-set! table (cons k1 k2) v))
 
-(define (get k) (hash-ref table k))
+(define (get k1 k2)
+  (hash-ref table (cons k1 k2)))
 
 (define (add n m) (apply-generic 'add n m))
 
@@ -36,7 +38,7 @@
 
 (define (apply-generic op . args)
   (let* ((l (coerce args))
-         (f (get (cons op (type (car l))))))
+         (f (get op (type (car l)))))
     (simplify (apply f l))))
 
 (define (coerce args)
@@ -45,10 +47,10 @@
     (map f args)))
 
 (define (super n)
-  ((get `(super . ,(type n))) n))
+  ((get 'super (type n)) n))
 
 (define (simplify n)
-  ((get `(simplify . ,(type n))) n))
+  ((get 'simplify (type n)) n))
 
 (define (make-integer val)
   (number 'integer val))
@@ -57,28 +59,28 @@
   (eq? 'integer (type n)))
 
 (define (install-integer-package)
-  (put '(add . integer)
+  (put 'add 'integer
        (lambda (n m)
          (make-integer
           (+ (value n) (value m)))))
 
-  (put '(sub . integer)
+  (put 'sub 'integer
        (lambda (n m)
          (make-integer
           (- (value n) (value m)))))
 
-  (put '(mul . integer)
+  (put 'mul 'integer
        (lambda (n m)
          (make-integer
           (* (value n) (value m)))))
 
-  (put '(div . integer)
+  (put 'div 'integer
        (lambda (n m)
          (make-rational
           (value n)
           (value m))))
 
-  (put '(super . integer)
+  (put 'super 'integer
        (lambda (n)
          (make-rational
           (value n)
@@ -103,38 +105,38 @@
       (error "type error")))
 
 (define (install-rational-package)
-  (put '(add . rational)
+  (put 'add 'rational
        (lambda (n m)
          (make-rational
           (+ (* (numer n) (denom m))
              (* (denom n) (numer m)))
           (* (denom n) (denom m)))))
 
-  (put '(sub . rational)
+  (put 'sub 'rational
        (lambda (n m)
          (make-rational
           (- (* (numer n) (denom m))
              (* (denom n) (numer m)))
           (* (denom n) (denom m)))))
 
-  (put '(mul . rational)
+  (put 'mul 'rational
        (lambda (n m)
          (make-rational
           (* (numer n) (numer m))
           (* (denom n) (denom m)))))
 
-  (put '(div . rational)
+  (put 'div 'rational
        (lambda (n m)
          (make-rational
           (* (numer n) (denom m))
           (* (denom n) (numer m)))))
 
-  (put '(super . rational)
+  (put 'super 'rational
        (lambda (n)
          (make-real
           (/ (numer n) (denom n)))))
 
-  (put '(simplify . rational)
+  (put 'simplify 'rational
        (lambda (n)
          (let* ((g (gcd (numer n) (denom n)))
                 (nv (quotient (numer n) g))
@@ -152,33 +154,33 @@
   (eq? 'real (type n)))
 
 (define (install-real-package)
-  (put '(add . real)
+  (put 'add 'real
        (lambda (n m)
          (make-real
           (+ (value n) (value m)))))
 
-  (put '(sub . real)
+  (put 'sub 'real
        (lambda (n m)
          (make-real
           (- (value n) (value m)))))
 
-  (put '(mul . real)
+  (put 'mul 'real
        (lambda (n m)
          (make-real
           (* (value n) (value m)))))
 
-  (put '(div . real)
+  (put 'div 'real
        (lambda (n m)
          (make-real
           (/ (value n) (value m)))))
 
-  (put '(super . real)
+  (put 'super 'real
        (lambda (n)
          (make-rectangular
           (value n)
           0.0)))
 
-  (put '(simplify . real)
+  (put 'simplify 'real
        (lambda (n)
          (let ((val (value n)))
            (if (= val (round val))
@@ -225,31 +227,31 @@
         (else (error "type error"))))
 
 (define (install-complex-package)
-  (put '(add . complex)
+  (put 'add 'complex
        (lambda (n m)
          (make-rectangular
           (+ (real-part n) (real-part m))
           (+ (imag-part n) (imag-part m)))))
 
-  (put '(sub . complex)
+  (put 'sub 'complex
        (lambda (n m)
          (make-rectangular
           (- (real-part n) (real-part m))
           (- (imag-part n) (imag-part m)))))
 
-  (put '(mul . complex)
+  (put 'mul 'complex
        (lambda (n m)
          (make-polar
           (* (magnitude n) (magnitude m))
           (+ (angle n) (angle m)))))
 
-  (put '(div . complex)
+  (put 'div 'complex
        (lambda (n m)
          (make-polar
           (/ (magnitude n) (magnitude m))
           (- (angle n) (angle m)))))
 
-  (put '(simplify . complex)
+  (put 'simplify 'complex
        (lambda (n)
          (let ((rv (real-part n))
                (iv (imag-part n)))
