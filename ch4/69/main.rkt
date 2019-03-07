@@ -106,7 +106,7 @@
 (define (match pattern datum frame)
   (cond ((void? frame) (void))
         ((equal? pattern datum) frame)
-        ((var? pattern) (extend-if-consistent pattern datum frame))
+        ((variable? pattern) (extend-if-consistent pattern datum frame))
         ((and (pair? pattern)
               (pair? datum))
          (let ((frame* (match (car pattern) (car datum) frame)))
@@ -177,6 +177,47 @@
            (or (walk (car expr))
                (walk (cdr expr))))
           (else #f))))
+
+(define (fetch-assertions pattern frame)
+  (if (use-index? pattern)
+      (indexed-assertions pattern)
+      (database-assertions db)))
+
+(define (indexed-assertions pattern)
+  (get-stream (cons (index-key pattern) 'assertion-stream)))
+
+(define (get-stream k)
+  (let ((s (get k)))
+    (if s s empty-stream)))
+
+(define (fetch-rules pattern frame)
+  (if (use-index? pattern)
+      (indexed-rules pattern)
+      (database-rules db)))
+
+(define (indexed-rules pattern)
+  (stream-append
+   (get-stream (cons (index-key pattern) 'rule-stream))
+   (get-stream '(? rule-stream))))
+
+(define (index-key pattern)
+  (let ((key (car pattern)))
+    (if (variable? key)
+        '?
+        key)))
+
+(define (indexable? pattern)
+  (or (symbol? (car pattern))
+      (variable? (car pattern))))
+
+(define (use-index? pattern)
+  (symbol? (car pattern)))
+
+(define (extend var val frame)
+  (cons (cons var val) frame))
+
+(define (make-variable var id)
+  (cons '? (cons id (cdr var))))
 
 (define (variable? expr)
   (tagged-list? expr '?))
