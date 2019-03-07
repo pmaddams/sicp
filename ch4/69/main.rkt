@@ -14,9 +14,11 @@
 
 (define table (make-hash))
 
-(define (put k v) (hash-set! table k v))
+(define (put k1 k2 v)
+  (hash-set! table (cons k1 k2) v))
 
-(define (get k) (hash-ref table k))
+(define (get k1 k2)
+  (hash-ref table (cons k1 k2)))
 
 (define (type expr)
   (if (pair? expr)
@@ -41,7 +43,7 @@
           (else expr))))
 
 (define (eval query s)
-  (let ((proc (get (cons (type query) 'eval))))
+  (let ((proc (get (type query) 'eval)))
     (if proc
         (proc (body query) s)
         (simple-query query s))))
@@ -184,10 +186,10 @@
       (database-assertions db)))
 
 (define (indexed-assertions pattern)
-  (get-stream (cons (index-key pattern) 'assertion-stream)))
+  (get-stream (index-key pattern) 'assertion-stream))
 
-(define (get-stream k)
-  (let ((s (get k)))
+(define (get-stream k1 k2)
+  (let ((s (get k1 k2)))
     (if s s empty-stream)))
 
 (define (fetch-rules pattern frame)
@@ -197,8 +199,8 @@
 
 (define (indexed-rules pattern)
   (stream-append
-   (get-stream (cons (index-key pattern) 'rule-stream))
-   (get-stream '(? rule-stream))))
+   (get-stream (index-key pattern) 'rule-stream)
+   (get-stream '? 'rule-stream)))
 
 (define (add-rule-or-assertion assertion)
   (if (rule? assertion)
@@ -220,15 +222,15 @@
 (define (store-assertion-in-index assertion)
   (when (indexable? assertion)
     (let* ((k (index-key assertion))
-           (s (get-stream (cons k 'assertion-stream))))
-      (put '(cons k 'assertion-stream) (stream-cons assertion s)))))
+           (s (get-stream k 'assertion-stream)))
+      (put k 'assertion-stream (stream-cons assertion s)))))
 
 (define (store-rule-in-index rule)
   (let ((pattern (conclusion rule)))
     (when (indexable? pattern)
       (let* ((k (index-key pattern))
-             (s (get-stream (cons k 'rule-stream))))
-        (put (cons k 'rule-stream) (stream-cons rule s))))))
+             (s (get-stream k 'rule-stream)))
+        (put k 'rule-stream (stream-cons rule s))))))
 
 (define (index-key pattern)
   (let ((key (car pattern)))
