@@ -292,3 +292,23 @@
                    (stream-append-delayed
                     (stream-rest s)
                     ds))))
+
+(define (expand-vars expr)
+  (let walk ((expr expr))
+    (cond ((symbol? expr) (expand-var expr))
+          ((pair? expr)
+           (cons (walk (car expr))
+                 (walk (cdr expr))))
+          (else expr))))
+
+(define (expand-var s)
+  (let ((l (symbol->list s)))
+    (if (eq? #\? (car l))
+        (cons '? (list->symbol (cdr l)))
+        s)))
+
+(define (symbol->list s)
+  (string->list (symbol->string s)))
+
+(define (list->symbol l)
+  (string->symbol (list->string l)))
