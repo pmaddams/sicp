@@ -88,10 +88,9 @@
 (define (true expr s) s)
 
 (define (execute expr)
-  (let ((proc (car expr))
-        (args (cdr expr))
-        (ns (make-base-namespace)))
-    (apply (eval proc ns) args)))
+  (let ((proc (builtin-eval (car expr) (make-base-namespace)))
+        (args (cdr expr)))
+    (apply proc args)))
 
 (define (find-assertions pattern frame)
   (stream-append-map
