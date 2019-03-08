@@ -71,7 +71,7 @@
   (if (null? clauses)
       st
       (eval-and (cdr clauses)
-                 (eval (car clauses) st))))
+                (eval (car clauses) st))))
 
 (put 'and 'eval eval-and)
 
@@ -149,7 +149,7 @@
 
 (define (apply-rule rule expr frame)
   (let* ((rule* (rename-vars rule))
-         (frame* (unify expr (conclusion rule) frame)))
+         (frame* (unify expr (conclusion rule*) frame)))
     (if (void? frame*)
         empty-stream
         (eval (rule-body rule*) (stream frame*)))))
