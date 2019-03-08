@@ -54,9 +54,9 @@
   (let ((proc (get (type expr) 'eval)))
     (if proc
         (proc (body expr) st)
-        (simple-query expr st))))
+        (eval-query expr st))))
 
-(define (simple-query expr st)
+(define (eval-query expr st)
   (stream-append-map
    (lambda (frame)
      (stream-append-delayed
@@ -64,26 +64,32 @@
       (delay (apply-rules expr frame))))
    st))
 
-(define (and-query clauses st)
+(define (eval-and clauses st)
   (if (null? clauses)
       st
-      (and-query (cdr clauses)
+      (eval-and (cdr clauses)
                  (eval (car clauses) st))))
 
-(define (or-query clauses st)
+(put 'and 'eval eval-and)
+
+(define (eval-or clauses st)
   (if (null? clauses)
       empty-stream
       (interleave-delayed
        (eval (car clauses) st)
-       (delay (or-query (cdr clauses) st)))))
+       (delay (eval-or (cdr clauses) st)))))
 
-(define (not-query clauses st)
+(put 'or 'eval eval-or)
+
+(define (eval-not clauses st)
   (stream-append-map
    (lambda (frame)
      (if (stream-empty? (eval (car clauses) (stream frame)))
          (stream frame)
          empty-stream))
    st))
+
+(put 'not 'eval eval-not)
 
 (define (value expr st)
   (stream-append-map
@@ -93,7 +99,11 @@
          empty-stream))
    st))
 
+(put 'value 'eval value)
+
 (define (true expr st) st)
+
+(put 'true 'eval true)
 
 (define (execute expr)
   (let ((proc (builtin-eval (car expr) (make-base-namespace)))
