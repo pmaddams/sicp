@@ -20,6 +20,13 @@
 (define (get k1 k2)
   (hash-ref table (cons k1 k2)))
 
+(define counter 0)
+
+(define (make-id)
+  (let ((n counter))
+    (set! counter (add1 n))
+    n))
+
 (define (type expr)
   (if (pair? expr)
       (car expr)
@@ -42,76 +49,76 @@
                  (copy (cdr expr))))
           (else expr))))
 
-(define (eval query s)
-  (let ((proc (get (type query) 'eval)))
+(define (eval expr st)
+  (let ((proc (get (type expr) 'eval)))
     (if proc
-        (proc (body query) s)
-        (simple-query query s))))
+        (proc (body expr) st)
+        (simple-query expr st))))
 
-(define (simple-query query s)
+(define (simple-query expr st)
   (stream-append-map
    (lambda (frame)
      (stream-append-delayed
-      (find-assertions query frame)
-      (delay (apply-rules query frame))))
-   s))
+      (find-assertions expr frame)
+      (delay (apply-rules expr frame))))
+   st))
 
-(define (and-query clauses s)
+(define (and-query clauses st)
   (if (null? clauses)
-      s
+      st
       (and-query (cdr clauses)
-                 (eval (car clauses) s))))
+                 (eval (car clauses) st))))
 
-(define (or-query clauses s)
+(define (or-query clauses st)
   (if (null? clauses)
       empty-stream
       (interleave-delayed
-       (eval (car clauses) s)
-       (delay (or-query (cdr clauses) s)))))
+       (eval (car clauses) st)
+       (delay (or-query (cdr clauses) st)))))
 
-(define (not-query query s)
+(define (not-query clauses st)
   (stream-append-map
    (lambda (frame)
-     (if (stream-empty? (eval (car query) (stream frame)))
+     (if (stream-empty? (eval (car clauses) (stream frame)))
          (stream frame)
          empty-stream))
-   s))
+   st))
 
-(define (value expr s)
+(define (value expr st)
   (stream-append-map
    (lambda (frame)
      (if (execute (instantiate expr frame (lambda (v f) (error "undefined:" v))))
          (stream frame)
          empty-stream))
-   s))
+   st))
 
-(define (true expr s) s)
+(define (true expr st) st)
 
 (define (execute expr)
   (let ((proc (builtin-eval (car expr) (make-base-namespace)))
         (args (cdr expr)))
     (apply proc args)))
 
-(define (find-assertions pattern frame)
+(define (find-assertions expr frame)
   (stream-append-map
    (lambda (datum)
-     (check-assertion datum pattern frame))
-   (fetch-assertions pattern frame)))
+     (check-assertion datum expr frame))
+   (fetch-assertions expr frame)))
 
-(define (check-assertion assertion query frame)
-  (let ((frame* (match query assertion frame)))
+(define (check-assertion assertion expr frame)
+  (let ((frame* (match expr assertion frame)))
     (if (void? frame*)
         empty-stream
         (stream frame*))))
 
-(define (match pattern datum frame)
+(define (match expr datum frame)
   (cond ((void? frame) (void))
-        ((equal? pattern datum) frame)
-        ((variable? pattern) (extend-if-consistent pattern datum frame))
-        ((and (pair? pattern)
+        ((equal? expr datum) frame)
+        ((variable? expr) (extend-if-consistent expr datum frame))
+        ((and (pair? expr)
               (pair? datum))
-         (let ((frame* (match (car pattern) (car datum) frame)))
-           (match (cdr pattern) (cdr datum) frame*)))
+         (let ((frame* (match (car expr) (car datum) frame)))
+           (match (cdr expr) (cdr datum) frame*)))
         (else (void))))
 
 (define (extend-if-consistent var datum frame)
@@ -120,21 +127,21 @@
         (match (cdr binding) datum frame)
         (extend var datum frame))))
 
-(define (apply-rules pattern frame)
+(define (apply-rules expr frame)
   (stream-append-map
    (lambda (rule)
-     (apply-rule rule pattern frame))
-   (fetch-rules pattern frame)))
+     (apply-rule rule expr frame))
+   (fetch-rules expr frame)))
 
-(define (apply-rule rule pattern frame)
-  (let* ((rule* (rename-variables rule))
-         (frame* (unify pattern (conclusion rule) frame)))
+(define (apply-rule rule expr frame)
+  (let* ((rule* (rename-vars rule))
+         (frame* (unify expr (conclusion rule) frame)))
     (if (void? frame*)
         empty-stream
         (eval (rule-body rule*) (stream frame*)))))
 
-(define (rename-variables rule)
-  (let ((id (gensym)))
+(define (rename-vars rule)
+  (let ((id (make-id)))
     (let walk ((expr rule))
       (cond ((variable? expr) (make-variable expr id))
             ((pair? expr)
@@ -142,14 +149,14 @@
                    (walk (cdr expr))))
             (else expr)))))
 
-(define (unify p1 p2 frame)
+(define (unify x1 x2 frame)
   (cond ((void? frame) (void))
-        ((equal? p1 p2) frame)
-        ((variable? p1) (extend-if-possible p1 p2 frame))
-        ((variable? p2) (extend-if-possible p2 p1 frame))
-        ((and (pair? p1) (pair? p2))
-         (let ((frame* (unify (car p1) (car p2) frame)))
-           (unify (cdr p1) (cdr p2) frame*)))
+        ((equal? x1 x2) frame)
+        ((variable? x1) (extend-if-possible x1 x2 frame))
+        ((variable? x2) (extend-if-possible x2 x1 frame))
+        ((and (pair? x1) (pair? x2))
+         (let ((frame* (unify (car x1) (car x2) frame)))
+           (unify (cdr x1) (cdr x2) frame*)))
         (else (void))))
 
 (define (extend-if-possible var val frame)
@@ -179,26 +186,26 @@
                (walk (cdr expr))))
           (else #f))))
 
-(define (fetch-assertions pattern frame)
-  (if (use-index? pattern)
-      (indexed-assertions pattern)
+(define (fetch-assertions expr frame)
+  (if (use-index? expr)
+      (indexed-assertions expr)
       (database-assertions db)))
 
-(define (indexed-assertions pattern)
-  (get-stream (index-key pattern) 'assertion-stream))
+(define (indexed-assertions expr)
+  (get-stream (index-key expr) 'assertion-stream))
 
 (define (get-stream k1 k2)
-  (let ((s (get k1 k2)))
-    (if s s empty-stream)))
+  (let ((st (get k1 k2)))
+    (if st st empty-stream)))
 
-(define (fetch-rules pattern frame)
-  (if (use-index? pattern)
-      (indexed-rules pattern)
+(define (fetch-rules expr frame)
+  (if (use-index? expr)
+      (indexed-rules expr)
       (database-rules db)))
 
-(define (indexed-rules pattern)
+(define (indexed-rules expr)
   (stream-append
-   (get-stream (index-key pattern) 'rule-stream)
+   (get-stream (index-key expr) 'rule-stream)
    (get-stream '? 'rule-stream)))
 
 (define (add-rule-or-assertion assertion)
@@ -221,28 +228,28 @@
 (define (store-assertion-in-index assertion)
   (when (indexable? assertion)
     (let* ((k (index-key assertion))
-           (s (get-stream k 'assertion-stream)))
-      (put k 'assertion-stream (stream-cons assertion s)))))
+           (st (get-stream k 'assertion-stream)))
+      (put k 'assertion-stream (stream-cons assertion st)))))
 
 (define (store-rule-in-index rule)
-  (let ((pattern (conclusion rule)))
-    (when (indexable? pattern)
-      (let* ((k (index-key pattern))
-             (s (get-stream k 'rule-stream)))
-        (put k 'rule-stream (stream-cons rule s))))))
+  (let ((expr (conclusion rule)))
+    (when (indexable? expr)
+      (let* ((k (index-key expr))
+             (st (get-stream k 'rule-stream)))
+        (put k 'rule-stream (stream-cons rule st))))))
 
-(define (index-key pattern)
-  (let ((key (car pattern)))
+(define (index-key expr)
+  (let ((key (car expr)))
     (if (variable? key)
         '?
         key)))
 
-(define (indexable? pattern)
-  (or (symbol? (car pattern))
-      (variable? (car pattern))))
+(define (indexable? expr)
+  (or (symbol? (car expr))
+      (variable? (car expr))))
 
-(define (use-index? pattern)
-  (symbol? (car pattern)))
+(define (use-index? expr)
+  (symbol? (car expr)))
 
 (define (extend var val frame)
   (cons (cons var val) frame))
@@ -267,31 +274,31 @@
   (and (pair? x)
        (eq? tag (car x))))
 
-(define (stream-append-map f s)
-  (stream-flatten (stream-map f s)))
+(define (stream-append-map f st)
+  (stream-flatten (stream-map f st)))
 
-(define (stream-flatten s)
-  (if (stream-empty? s)
+(define (stream-flatten st)
+  (if (stream-empty? st)
       empty-stream
       (interleave-delayed
-       (stream-first s)
-       (delay (stream-flatten (stream-rest s))))))
+       (stream-first st)
+       (delay (stream-flatten (stream-rest st))))))
 
-(define (interleave-delayed s ds)
-  (if (stream-empty? s)
-      (force ds)
-      (stream-cons (stream-first s)
+(define (interleave-delayed st delayed-st)
+  (if (stream-empty? st)
+      (force delayed-st)
+      (stream-cons (stream-first st)
                    (interleave-delayed
-                    (force ds)
-                    (delay (stream-rest s))))))
+                    (force delayed-st)
+                    (delay (stream-rest st))))))
 
-(define (stream-append-delayed s ds)
-  (if (stream-empty? s)
-      (force ds)
-      (stream-cons (stream-first s)
+(define (stream-append-delayed st delayed-st)
+  (if (stream-empty? st)
+      (force delayed-st)
+      (stream-cons (stream-first st)
                    (stream-append-delayed
-                    (stream-rest s)
-                    ds))))
+                    (stream-rest st)
+                    delayed-st))))
 
 (define (expand-vars expr)
   (let walk ((expr expr))
@@ -304,8 +311,14 @@
 (define (expand-var s)
   (let ((l (symbol->list s)))
     (if (eq? #\? (car l))
-        (cons '? (list->symbol (cdr l)))
+        (list '? (list->symbol (cdr l)))
         s)))
+
+(define (contract-var var)
+  (string->symbol
+   (if (number? (cadr var))
+       (format "?~a-~a" (caddr var) (cadr var))
+       (format "?~a" (cadr var)))))
 
 (define (symbol->list s)
   (string->list (symbol->string s)))
