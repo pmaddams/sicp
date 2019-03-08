@@ -8,7 +8,7 @@
          racket/stream
          (only-in racket (eval builtin-eval)))
 
-(struct database (assertions rules) #:mutable)
+(struct database (facts rules) #:mutable)
 
 (define db (database empty-stream empty-stream))
 
@@ -59,7 +59,7 @@
   (stream-append-map
    (lambda (frame)
      (stream-append-delayed
-      (find-assertions expr frame)
+      (find-facts expr frame)
       (delay (apply-rules expr frame))))
    st))
 
@@ -99,14 +99,14 @@
         (args (cdr expr)))
     (apply proc args)))
 
-(define (find-assertions expr frame)
+(define (find-facts expr frame)
   (stream-append-map
    (lambda (datum)
-     (check-assertion datum expr frame))
-   (fetch-assertions expr frame)))
+     (check-fact datum expr frame))
+   (fetch-facts expr frame)))
 
-(define (check-assertion assertion expr frame)
-  (let ((frame* (match expr assertion frame)))
+(define (check-fact fact expr frame)
+  (let ((frame* (match expr fact frame)))
     (if (void? frame*)
         empty-stream
         (stream frame*))))
@@ -186,13 +186,13 @@
                (walk (cdr expr))))
           (else #f))))
 
-(define (fetch-assertions expr frame)
+(define (fetch-facts expr frame)
   (if (use-index? expr)
-      (indexed-assertions expr)
-      (database-assertions db)))
+      (indexed-facts expr)
+      (database-facts db)))
 
-(define (indexed-assertions expr)
-  (get-stream (index-key expr) 'assertion-stream))
+(define (indexed-facts expr)
+  (get-stream (index-key expr) 'facts))
 
 (define (get-stream k1 k2)
   (let ((st (get k1 k2)))
@@ -205,19 +205,19 @@
 
 (define (indexed-rules expr)
   (stream-append
-   (get-stream (index-key expr) 'rule-stream)
-   (get-stream '? 'rule-stream)))
+   (get-stream (index-key expr) 'rules)
+   (get-stream '? 'rules)))
 
-(define (add-rule-or-assertion assertion)
-  (if (rule? assertion)
-      (add-rule assertion)
-      (add-assertion assertion)))
+(define (add-rule-or-fact expr)
+  (if (rule? expr)
+      (add-rule expr)
+      (add-fact expr)))
 
-(define (add-assertion assertion)
-  (store-assertion-in-index assertion)
-  (set-database-assertions!
+(define (add-fact fact)
+  (store-fact-in-index fact)
+  (set-database-facts!
    db
-   (stream-cons assertion (database-assertions db))))
+   (stream-cons fact (database-facts db))))
 
 (define (add-rule rule)
   (store-rule-in-index rule)
@@ -225,18 +225,18 @@
    db
    (stream-cons rule (database-rules db))))
 
-(define (store-assertion-in-index assertion)
-  (when (indexable? assertion)
-    (let* ((k (index-key assertion))
-           (st (get-stream k 'assertion-stream)))
-      (put k 'assertion-stream (stream-cons assertion st)))))
+(define (store-fact-in-index fact)
+  (when (indexable? fact)
+    (let* ((k (index-key fact))
+           (st (get-stream k 'facts)))
+      (put k 'facts (stream-cons fact st)))))
 
 (define (store-rule-in-index rule)
   (let ((expr (conclusion rule)))
     (when (indexable? expr)
       (let* ((k (index-key expr))
-             (st (get-stream k 'rule-stream)))
-        (put k 'rule-stream (stream-cons rule st))))))
+             (st (get-stream k 'rules)))
+        (put k 'rules (stream-cons rule st))))))
 
 (define (index-key expr)
   (let ((key (car expr)))
@@ -325,3 +325,8 @@
 
 (define (list->symbol l)
   (string->symbol (list->string l)))
+
+(define (interpret code)
+  (for ((expr (in-list code)))
+    (let ((x (expand-vars expr)))
+      (void))))
