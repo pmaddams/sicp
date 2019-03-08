@@ -4,7 +4,8 @@
 
 (provide (all-defined-out))
 
-(require racket/promise
+(require racket/list
+         racket/promise
          racket/stream
          (only-in racket (eval builtin-eval)))
 
@@ -260,8 +261,11 @@
 (define (variable? expr)
   (tagged-list? expr '?))
 
-(define (rule? stmt)
-  (tagged-list? stmt 'rule))
+(define (rule-or-fact? expr)
+  (or (rule? expr) (fact? expr)))
+
+(define (rule? expr)
+  (tagged-list? expr 'rule))
 
 (define (conclusion rule) (cadr rule))
 
@@ -273,6 +277,10 @@
 (define (tagged-list? x tag)
   (and (pair? x)
        (eq? tag (car x))))
+
+(define (fact? expr)
+  (let ((l (flatten expr)))
+    (not (memq '? l))))
 
 (define (stream-append-map f st)
   (stream-flatten (stream-map f st)))
@@ -299,6 +307,9 @@
                    (stream-append-delayed
                     (stream-rest st)
                     delayed-st))))
+
+(define (stream-display st)
+  (stream-for-each displayln st))
 
 (define (expand-vars expr)
   (let walk ((expr expr))
@@ -329,4 +340,10 @@
 (define (interpret code)
   (for ((expr (in-list code)))
     (let ((x (expand-vars expr)))
-      (void))))
+      (if (rule-or-fact? x)
+          (add-rule-or-fact x)
+          (stream-display
+           (stream-map
+            (lambda (frame)
+              (instantiate x frame (lambda (v f) (contract-var v))))
+            (eval x (stream '()))))))))
