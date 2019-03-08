@@ -13,13 +13,16 @@
 
 (define db (database empty-stream empty-stream))
 
-(define table (make-hash))
+(define index (make-hash))
 
 (define (put k1 k2 v)
-  (hash-set! table (cons k1 k2) v))
+  (hash-set! index (cons k1 k2) v))
 
 (define (get k1 k2)
-  (hash-ref table (cons k1 k2)))
+  (let ((k (cons k1 k2)))
+    (if (hash-has-key? index k)
+        (hash-ref index k)
+        #f)))
 
 (define counter 0)
 
