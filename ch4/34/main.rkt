@@ -181,12 +181,12 @@
    (lambda (m)
      (m x y))))
 
-(define (stream-first s)
-  ((stream-proc s)
+(define (stream-first st)
+  ((stream-proc st)
    (lambda (x y) x)))
 
-(define (stream-rest s)
-  ((stream-proc s)
+(define (stream-rest st)
+  ((stream-proc st)
    (lambda (x y) y)))
 
 (define (stream-display x)

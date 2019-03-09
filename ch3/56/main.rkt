@@ -12,23 +12,23 @@
                         (scale hamming 5))))
 
 (define (merge . args)
-  (letrec ((loop (lambda (s1 s2)
-                   (cond ((stream-empty? s1) s2)
-                         ((stream-empty? s2) s1)
+  (letrec ((loop (lambda (st1 st2)
+                   (cond ((stream-empty? st1) st2)
+                         ((stream-empty? st2) st1)
                          (else
-                          (let ((a (stream-first s1))
-                                (b (stream-first s2)))
-                            (cond ((< a b)
-                                   (stream-cons a (loop (stream-rest s1)
-                                                        s2)))
-                                  ((> a b)
-                                   (stream-cons b (loop s1
-                                                        (stream-rest s2))))
+                          (let ((n (stream-first st1))
+                                (m (stream-first st2)))
+                            (cond ((< n m)
+                                   (stream-cons n (loop (stream-rest st1)
+                                                        st2)))
+                                  ((> n m)
+                                   (stream-cons m (loop st1
+                                                        (stream-rest st2))))
                                   (else
-                                   (stream-cons a (loop (stream-rest s1)
-                                                        (stream-rest s2)))))))))))
+                                   (stream-cons n (loop (stream-rest st1)
+                                                        (stream-rest st2)))))))))))
     (foldr loop empty-stream args)))
 
-(define (scale s n)
-  (for/stream ((i s))
+(define (scale st n)
+  (for/stream ((i st))
     (* n i)))
