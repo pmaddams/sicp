@@ -1,6 +1,6 @@
 #lang racket/base
 
-; Exercise 4.69
+; Exercise 4.63
 
 (provide (all-defined-out))
 
@@ -15,14 +15,14 @@
 
 (define index (make-hash))
 
-(define (put k1 k2 v)
-  (hash-set! index (cons k1 k2) v))
-
-(define (get k1 k2)
+(define (lookup k1 k2)
   (let ((k (cons k1 k2)))
-    (if (hash-has-key? index k)
-        (hash-ref index k)
-        #f)))
+    (and (hash-has-key? index k)
+         (hash-ref index k))))
+
+(define (update k1 k2 v)
+  (let ((k (cons k1 k2)))
+    (hash-set! index k v)))
 
 (define counter 0)
 
@@ -54,7 +54,7 @@
           (else expr))))
 
 (define (eval expr st)
-  (let ((proc (get (type expr) 'eval)))
+  (let ((proc (lookup (type expr) 'eval)))
     (if proc
         (proc (body expr) st)
         (eval-query expr st))))
@@ -73,16 +73,12 @@
       (eval-and (cdr clauses)
                 (eval (car clauses) st))))
 
-(put 'and 'eval eval-and)
-
 (define (eval-or clauses st)
   (if (null? clauses)
       empty-stream
       (interleave-delayed
        (eval (car clauses) st)
        (delay (eval-or (cdr clauses) st)))))
-
-(put 'or 'eval eval-or)
 
 (define (eval-not clauses st)
   (stream-append-map
@@ -92,8 +88,6 @@
          empty-stream))
    st))
 
-(put 'not 'eval eval-not)
-
 (define (value expr st)
   (stream-append-map
    (lambda (frame)
@@ -102,11 +96,7 @@
          empty-stream))
    st))
 
-(put 'value 'eval value)
-
 (define (true expr st) st)
-
-(put 'true 'eval true)
 
 (define (execute expr)
   (let ((proc (builtin-eval (car expr) (make-base-namespace)))
@@ -209,7 +199,7 @@
   (get-stream (key expr) 'facts))
 
 (define (get-stream k1 k2)
-  (let ((st (get k1 k2)))
+  (let ((st (lookup k1 k2)))
     (if st st empty-stream)))
 
 (define (get-rules expr frame)
@@ -243,14 +233,14 @@
   (when (indexable? fact)
     (let* ((k (key fact))
            (st (get-stream k 'facts)))
-      (put k 'facts (stream-cons fact st)))))
+      (update k 'facts (stream-cons fact st)))))
 
 (define (store-rule-in-index rule)
   (let ((expr (conclusion rule)))
     (when (indexable? expr)
       (let* ((k (key expr))
              (st (get-stream k 'rules)))
-        (put k 'rules (stream-cons rule st))))))
+        (update k 'rules (stream-cons rule st))))))
 
 (define (key expr)
   (let ((k (car expr)))
@@ -350,7 +340,15 @@
 (define (list->symbol l)
   (string->symbol (list->string l)))
 
+(define (initialize)
+  (update 'and 'eval eval-and)
+  (update 'or 'eval eval-or)
+  (update 'not 'eval eval-not)
+  (update 'value 'eval value)
+  (update 'true 'eval true))
+
 (define (interpret code)
+  (initialize)
   (for ((expr (in-list code)))
     (let ((x (expand-vars expr)))
       (if (rule-or-fact? x)
