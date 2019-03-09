@@ -22,11 +22,15 @@
 
 (define table (make-hash))
 
-(define (put k1 k2 v)
-  (hash-set! table (cons k1 k2) v))
-
 (define (get k1 k2)
-  (hash-ref table (cons k1 k2)))
+  (let ((k (cons k1 k2)))
+    (hash-ref table k)))
+
+(define (put k1 k2 v)
+  (let ((k (cons k1 k2)))
+    (if (hash-has-key? table k)
+        (error "key exists:" k)
+        (hash-set! table k v))))
 
 (define (add n m) (apply-generic 'add n m))
 
