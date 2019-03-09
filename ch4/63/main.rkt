@@ -360,3 +360,27 @@
             (lambda (frame)
               (instantiate x frame (lambda (v f) (contract-var v))))
             (eval x (stream '()))))))))
+
+(define bible
+  '((son Adam Cain)
+    (son Cain Enoch)
+    (son Enoch Irad)
+    (son Irad Mehujael)
+    (son Mehujael Methushael)
+    (son Methushael Lamech)
+    (wife Lamech Ada)
+    (son Ada Jabal)
+    (son Ada Jubal)
+
+    (rule (father ?son ?father)
+          (or (son ?father ?son)
+              (and (son ?mother ?son)
+                   (wife ?father ?mother))))
+
+    (rule (grandfather ?grandson ?grandfather)
+          (and (father ?father ?grandfather)
+               (father ?grandson ?father)))
+
+    (grandfather ?x Cain)
+    (father ?x Lamech)
+    (grandfather ?x Methushael)))
