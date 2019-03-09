@@ -63,7 +63,7 @@
   (stream-append-map
    (lambda (frame)
      (stream-append-delayed
-      (find-facts expr frame)
+      (match-facts expr frame)
       (delay (apply-rules expr frame))))
    st))
 
@@ -113,39 +113,39 @@
         (args (cdr expr)))
     (apply proc args)))
 
-(define (find-facts expr frame)
+(define (match-facts expr frame)
   (stream-append-map
-   (lambda (datum)
-     (check-fact datum expr frame))
-   (fetch-facts expr frame)))
+   (lambda (dat)
+     (match-fact expr dat frame))
+   (get-facts expr frame)))
 
-(define (check-fact fact expr frame)
+(define (match-fact expr fact frame)
   (let ((frame* (match expr fact frame)))
     (if (void? frame*)
         empty-stream
         (stream frame*))))
 
-(define (match expr datum frame)
+(define (match expr dat frame)
   (cond ((void? frame) (void))
-        ((equal? expr datum) frame)
-        ((variable? expr) (extend-if-consistent expr datum frame))
+        ((equal? expr dat) frame)
+        ((variable? expr) (extend-if-consistent expr dat frame))
         ((and (pair? expr)
-              (pair? datum))
-         (let ((frame* (match (car expr) (car datum) frame)))
-           (match (cdr expr) (cdr datum) frame*)))
+              (pair? dat))
+         (let ((frame* (match (car expr) (car dat) frame)))
+           (match (cdr expr) (cdr dat) frame*)))
         (else (void))))
 
-(define (extend-if-consistent var datum frame)
+(define (extend-if-consistent var dat frame)
   (let ((binding (assoc var frame)))
     (if binding
-        (match (cdr binding) datum frame)
-        (extend var datum frame))))
+        (match (cdr binding) dat frame)
+        (extend var dat frame))))
 
 (define (apply-rules expr frame)
   (stream-append-map
    (lambda (rule)
      (apply-rule rule expr frame))
-   (fetch-rules expr frame)))
+   (get-rules expr frame)))
 
 (define (apply-rule rule expr frame)
   (let* ((rule* (rename-vars rule))
@@ -200,26 +200,26 @@
                (walk (cdr expr))))
           (else #f))))
 
-(define (fetch-facts expr frame)
+(define (get-facts expr frame)
   (if (use-index? expr)
       (indexed-facts expr)
       (database-facts db)))
 
 (define (indexed-facts expr)
-  (get-stream (index-key expr) 'facts))
+  (get-stream (key expr) 'facts))
 
 (define (get-stream k1 k2)
   (let ((st (get k1 k2)))
     (if st st empty-stream)))
 
-(define (fetch-rules expr frame)
+(define (get-rules expr frame)
   (if (use-index? expr)
       (indexed-rules expr)
       (database-rules db)))
 
 (define (indexed-rules expr)
   (stream-append
-   (get-stream (index-key expr) 'rules)
+   (get-stream (key expr) 'rules)
    (get-stream '? 'rules)))
 
 (define (add-rule-or-fact expr)
@@ -241,22 +241,22 @@
 
 (define (store-fact-in-index fact)
   (when (indexable? fact)
-    (let* ((k (index-key fact))
+    (let* ((k (key fact))
            (st (get-stream k 'facts)))
       (put k 'facts (stream-cons fact st)))))
 
 (define (store-rule-in-index rule)
   (let ((expr (conclusion rule)))
     (when (indexable? expr)
-      (let* ((k (index-key expr))
+      (let* ((k (key expr))
              (st (get-stream k 'rules)))
         (put k 'rules (stream-cons rule st))))))
 
-(define (index-key expr)
-  (let ((key (car expr)))
-    (if (variable? key)
+(define (key expr)
+  (let ((k (car expr)))
+    (if (variable? k)
         '?
-        key)))
+        k)))
 
 (define (indexable? expr)
   (or (symbol? (car expr))
