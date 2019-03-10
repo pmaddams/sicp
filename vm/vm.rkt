@@ -51,3 +51,30 @@
     ('goto (generate-goto vm expr labels))
     ('save (generate-save vm expr))
     ('restore (generate-restore vm expr))))
+
+(define (generate-assign vm expr labels)
+  (let* ((reg (cadr expr))
+         (expr* (cddr expr))
+         (exec (if (op-expr? expr*)
+                   (generate-op-expr vm expr* labels)
+                   (generate-val-expr vm (car expr*) labels))))
+    (thunk (send vm set reg (exec))
+           (send vm step))))
+
+(define (generate-op-expr vm expr labels)
+  (let* ((proc (send vm op (cadar expr)))
+         (execs (map (lambda (x)
+                       (generate-val-expr vm x labels))
+                     (cdr expr))))
+    (thunk (apply proc (map run execs)))))
+
+(define (generate-val-expr vm expr labels)
+  (case (car expr)
+    ('const (thunk (cadr expr)))
+    ('reg (thunk (send vm get (cadr expr))))
+    ('label (thunk (hash-ref labels (cadr expr))))))
+
+(define (op-expr? expr)
+  (eq? 'op (caar expr)))
+
+(define (run exec) (exec))
