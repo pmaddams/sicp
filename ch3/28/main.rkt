@@ -11,22 +11,20 @@
   (class object%
     (super-new)
 
-    (struct node (val next) #:mutable)
-
     (field (front '()) (back '()))
 
     (define/public (push val)
-      (let ((elem (node val '())))
+      (let ((elem (mcons val '())))
         (if (empty?)
             (set! front elem)
-            (set-node-next! back elem))
+            (set-mcdr! back elem))
         (set! back elem)))
 
     (define/public (pop)
       (if (empty?)
           (error "empty queue")
-          (let ((val (node-val front)))
-            (set! front (node-next front))
+          (let ((val (mcar front)))
+            (set! front (mcdr front))
             val)))
 
     (define/public (empty?)
