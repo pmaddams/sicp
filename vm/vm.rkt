@@ -30,23 +30,22 @@
   (class stack%
     (super-new)
 
-    (init registers operations)
+    (init regs ops)
 
-    (define register-table
+    (define reg-table
       (make-hash
-       (for/list ((reg (append registers '(pc flag))))
+       (for/list ((reg (append regs '(pc flag))))
          (cons reg (register '())))))
 
-    (define operation-table (make-hash operations))
+    (define op-table (make-hash ops))
 
     (define/public (get reg)
-      (register-val (hash-ref register-table reg)))
+      (register-val (hash-ref reg-table reg)))
 
     (define/public (set reg val)
-      (set-register-val! (hash-ref register-table reg) val))
+      (set-register-val! (hash-ref reg-table reg) val))
 
-    (define/public (op name)
-      (hash-ref operation-table name))
+    (define/public (op name) (hash-ref op-table name))
 
     (define/public (execute)
       (let ((insts (send this get 'pc)))
