@@ -7,7 +7,7 @@
 
 (struct register (val) #:mutable)
 
-(struct instruction (expr exec) #:mutable)
+(struct instruction (expr proc) #:mutable)
 
 (define stack%
   (class object%
@@ -48,12 +48,12 @@
     (define/public (op name)
       (hash-ref operation-table name))
 
-    (define/public (run)
+    (define/public (execute)
       (let ((insts (send this get 'pc)))
         (unless (null? insts)
-          (let ((exec (instruction-exec (car insts))))
-            (exec)
-            (run)))))
+          (let ((proc (instruction-proc (car insts))))
+            (proc)
+            (execute)))))
 
     (define/public (step)
       (let ((insts (send this get 'pc)))
@@ -67,7 +67,7 @@
   (define (update insts labels)
     (for ((inst (in-list insts)))
       (let ((expr (instruction-expr inst)))
-        (set-instruction-exec! inst (generate vm expr labels))))
+        (set-instruction-proc! inst (generate vm expr labels))))
     insts)
 
   (let loop ((code code) (k update))
@@ -97,22 +97,22 @@
 (define (generate-assign vm expr labels)
   (let* ((reg (cadr expr))
          (x (cddr expr))
-         (exec (case (caar x)
+         (proc (case (caar x)
                  ('op (generate-op-expr vm x labels))
                  (else (generate-val-expr vm (car x) labels)))))
-    (thunk (send vm set reg (exec))
+    (thunk (send vm set reg (proc))
            (send vm step))))
 
 ; (perform (op <op-name>) <val-expr> ...)
 (define (generate-perform vm expr labels)
-  (let ((exec (generate-op-expr vm (cdr expr) labels)))
-    (thunk (exec)
+  (let ((proc (generate-op-expr vm (cdr expr) labels)))
+    (thunk (proc)
            (send vm step))))
 
 ; (test (op <op-name>) <val-expr> ...)
 (define (generate-test vm expr labels)
-  (let ((exec (generate-op-expr vm expr labels)))
-    (thunk (send vm set 'flag (exec))
+  (let ((proc (generate-op-expr vm expr labels)))
+    (thunk (send vm set 'flag (proc))
            (send vm step))))
 
 ; (branch (label <label-name>))
@@ -126,8 +126,8 @@
 ; (goto (reg <reg-name>))
 (define (generate-goto vm expr labels)
   (let* ((x (cadr expr))
-         (exec (generate-val-expr vm x labels)))
-    (thunk (send vm set 'pc (exec)))))
+         (proc (generate-val-expr vm x labels)))
+    (thunk (send vm set 'pc (proc)))))
 
 ; (save <reg-name>)
 (define (generate-save vm expr)
@@ -143,11 +143,11 @@
 
 ; ((op <op-name>) <val-expr> ...)
 (define (generate-op-expr vm expr labels)
-  (let ((proc (send vm op (cadar expr)))
-        (execs (map (lambda (x)
+  (let ((op (send vm op (cadar expr)))
+        (procs (map (lambda (x)
                       (generate-val-expr vm x labels))
                     (cdr expr))))
-    (thunk (apply proc (map run execs)))))
+    (thunk (apply op (map run procs)))))
 
 ; (const <const-val>)
 ; (label <label-name>)
@@ -161,4 +161,4 @@
     ('reg (let ((reg (cadr expr)))
             (thunk (send vm get reg))))))
 
-(define (run exec) (exec))
+(define (run proc) (proc))

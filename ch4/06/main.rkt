@@ -6,7 +6,7 @@
 
 (require (only-in racket (apply builtin-apply)))
 
-(struct builtin (impl))
+(struct builtin (proc))
 
 (struct closure (vars body env))
 
@@ -27,17 +27,17 @@
                 ('or (eval (or->if expr) env))
                 ('let (eval (let->lambda expr) env))
                 (else (let* ((vals (map (lambda (x) (eval x env)) expr))
-                             (proc (car vals))
+                             (op (car vals))
                              (args (cdr vals)))
-                        (apply proc args)))))))
+                        (apply op args)))))))
 
-(define (apply proc args)
-  (if (builtin? proc)
-      (builtin-apply (builtin-impl proc) args)
-      (eval-list (closure-body proc)
-                 (subst (closure-vars proc)
+(define (apply op args)
+  (if (builtin? op)
+      (builtin-apply (builtin-proc op) args)
+      (eval-list (closure-body op)
+                 (subst (closure-vars op)
                         args
-                        (closure-env proc)))))
+                        (closure-env op)))))
 
 (define (literal? expr)
   (or (boolean? expr)

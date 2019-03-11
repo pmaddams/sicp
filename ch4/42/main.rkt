@@ -7,9 +7,9 @@
 (require racket/function
          (only-in racket (apply builtin-apply)))
 
-(struct builtin (impl))
+(struct builtin (proc))
 
-(struct closure (vars exec env))
+(struct closure (vars proc env))
 
 (define (eval expr env succeed fail)
   ((analyze expr) env succeed fail))
@@ -31,13 +31,13 @@
                 ('amb (analyze-amb expr))
                 (else (analyze-apply expr))))))
 
-(define (apply proc args succeed fail)
-  (if (builtin? proc)
-      (succeed (builtin-apply (builtin-impl proc) args) fail)
-      ((closure-exec proc)
-       (subst (closure-vars proc)
+(define (apply op args succeed fail)
+  (if (builtin? op)
+      (succeed (builtin-apply (builtin-proc op) args) fail)
+      ((closure-proc op)
+       (subst (closure-vars op)
               args
-              (closure-env proc))
+              (closure-env op))
        succeed
        fail)))
 
@@ -57,9 +57,9 @@
 
 (define (analyze-lambda expr)
   (let ((vars (cadr expr))
-        (exec (analyze-list (cddr expr))))
+        (proc (analyze-list (cddr expr))))
     (lambda (env succeed fail)
-      (succeed (closure vars exec env) fail))))
+      (succeed (closure vars proc env) fail))))
 
 (define (analyze-define expr)
   (let* ((var (if (symbol? (cadr expr))
@@ -70,9 +70,9 @@
                 (let ((vars (cdadr expr))
                       (body (cddr expr)))
                   (cons 'lambda (cons vars body)))))
-         (exec (analyze x)))
+         (proc (analyze x)))
     (lambda (env succeed fail)
-      (exec
+      (proc
        env
        (lambda (val fail*)
          (succeed (define-var var val env) fail*))
@@ -81,9 +81,9 @@
 (define (analyze-set expr)
   (let* ((var (cadr expr))
          (x (caddr expr))
-         (exec (analyze x)))
+         (proc (analyze x)))
     (lambda (env succeed fail)
-      (exec
+      (proc
        env
        (lambda (val fail*)
          (let ((old-val (lookup-var var env)))
@@ -93,16 +93,16 @@
        fail))))
 
 (define (analyze-if expr)
-  (let ((predicate-exec (analyze (cadr expr)))
-        (consequent-exec (analyze (caddr expr)))
-        (alternative-exec (analyze (cadddr expr))))
+  (let ((predicate-proc (analyze (cadr expr)))
+        (consequent-proc (analyze (caddr expr)))
+        (alternative-proc (analyze (cadddr expr))))
     (lambda (env succeed fail)
-      (predicate-exec
+      (predicate-proc
        env
        (lambda (val fail*)
          (if val
-             (consequent-exec env succeed fail*)
-             (alternative-exec env succeed fail*)))
+             (consequent-proc env succeed fail*)
+             (alternative-proc env succeed fail*)))
        fail))))
 
 (define (analyze-list exprs)
@@ -168,37 +168,37 @@
     (cons (cons 'lambda (cons vars body)) exprs)))
 
 (define (analyze-amb expr)
-  (let ((choice-execs (map analyze (cdr expr))))
+  (let ((choice-procs (map analyze (cdr expr))))
     (lambda (env succeed fail)
-      (let loop ((execs choice-execs))
-        (if (null? execs)
+      (let loop ((procs choice-procs))
+        (if (null? procs)
             (fail)
-            ((car execs)
+            ((car procs)
              env
              succeed
-             (thunk (loop (cdr execs)))))))))
+             (thunk (loop (cdr procs)))))))))
 
 (define (analyze-apply expr)
-  (let ((proc-exec (analyze (car expr)))
-        (arg-execs (map analyze (cdr expr))))
+  (let ((op-proc (analyze (car expr)))
+        (arg-procs (map analyze (cdr expr))))
     (lambda (env succeed fail)
-      (proc-exec
+      (op-proc
        env
-       (lambda (proc fail*)
-         (get-args arg-execs
+       (lambda (op fail*)
+         (get-args arg-procs
                    env
                    (lambda (args fail**)
-                     (apply proc args succeed fail**))
+                     (apply op args succeed fail**))
                    fail*))
        fail))))
 
-(define (get-args arg-execs env succeed fail)
-  (if (null? arg-execs)
+(define (get-args arg-procs env succeed fail)
+  (if (null? arg-procs)
       (succeed '() fail)
-      ((car arg-execs)
+      ((car arg-procs)
        env
        (lambda (arg fail*)
-         (get-args (cdr arg-execs)
+         (get-args (cdr arg-procs)
                    env
                    (lambda (args fail**)
                      (succeed (cons arg args) fail**))

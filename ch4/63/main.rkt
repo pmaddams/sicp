@@ -99,9 +99,9 @@
 (define (true expr st) st)
 
 (define (execute expr)
-  (let ((proc (builtin-eval (car expr) (make-base-namespace)))
+  (let ((op (builtin-eval (car expr) (make-base-namespace)))
         (args (cdr expr)))
-    (apply proc args)))
+    (apply op args)))
 
 (define (match-facts expr frame)
   (stream-append-map
