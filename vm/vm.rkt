@@ -27,13 +27,13 @@
       (null? l))))
 
 (define (assemble vm code)
-  (define (augment insts labels)
+  (define (update insts labels)
     (for ((inst (in-list insts)))
       (let ((expr (instruction-text inst)))
         (set-instruction-proc! inst (generate vm expr labels))))
     insts)
 
-  (let loop ((code code) (k augment))
+  (let loop ((code code) (k update))
     (if (null? code)
         (k '() #hash())
         (loop (cdr code)
@@ -57,32 +57,28 @@
 ; (assign <reg-name> (const <const-val>))
 ; (assign <reg-name> (label <label-name>))
 ; (assign <reg-name> (reg <reg-name>))
-
 (define (generate-assign vm expr labels)
   (let* ((reg (cadr expr))
-         (expr* (cddr expr))
-         (exec (if (eq? 'op (caar expr*))
-                   (generate-op-expr vm expr* labels)
-                   (generate-val-expr vm (car expr*) labels))))
+         (x (cddr expr))
+         (exec (case (caar x)
+                 ('op (generate-op-expr vm x labels))
+                 (else (generate-val-expr vm (car x) labels)))))
     (thunk (send vm set reg (exec))
            (send vm step))))
 
 ; (perform (op <op-name>) <val-expr> ...)
-
 (define (generate-perform vm expr labels)
   (let ((exec (generate-op-expr vm (cdr expr) labels)))
     (thunk (exec)
            (send vm step))))
 
 ; (test (op <op-name>) <val-expr> ...)
-
 (define (generate-test vm expr labels)
   (let ((exec (generate-op-expr vm expr labels)))
     (thunk (send vm set 'flag (exec))
            (send vm step))))
 
 ; (branch (label <label-name>))
-
 (define (generate-branch vm expr labels)
   (let ((insts (hash-ref labels (cadadr expr))))
     (thunk (if (send vm get 'flag)
@@ -91,29 +87,24 @@
 
 ; (goto (label <label-name>))
 ; (goto (reg <reg-name>))
-
 (define (generate-goto vm expr labels)
-  (let ((expr* (cadr expr)))
-    (case (car expr*)
-      ('label (thunk (hash-ref labels (cadr expr*))))
-      ('reg (thunk (send vm get (cadr expr*)))))))
+  (let* ((x (cadr expr))
+         (exec (generate-val-expr vm x labels)))
+    (thunk (send vm set 'pc (exec)))))
 
 ; (save <reg-name>)
-
 (define (generate-save vm expr)
   (let ((reg (cadadr expr)))
     (thunk (send vm push (send vm get reg))
            (send vm step))))
 
 ; (restore <reg-name>)
-
 (define (generate-restore vm expr)
   (let ((reg (cadadr expr)))
     (thunk (send vm set reg (send vm pop))
            (send vm step))))
 
 ; ((op <op-name>) <val-expr> ...)
-
 (define (generate-op-expr vm expr labels)
   (let ((proc (send vm op (cadar expr)))
         (execs (map (lambda (x)
@@ -124,11 +115,13 @@
 ; (const <const-val>)
 ; (label <label-name>)
 ; (reg <reg-name>)
-
 (define (generate-val-expr vm expr labels)
   (case (car expr)
-    ('const (thunk (cadr expr)))
-    ('label (thunk (hash-ref labels (cadr expr))))
-    ('reg (thunk (send vm get (cadr expr))))))
+    ('const (let ((val (cadr expr)))
+              (thunk val)))
+    ('label (let ((insts (hash-ref labels (cadr expr))))
+              (thunk insts)))
+    ('reg (let ((reg (cadr expr)))
+            (thunk (send vm get reg))))))
 
 (define (run exec) (exec))
