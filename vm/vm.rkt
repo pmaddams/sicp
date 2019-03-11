@@ -7,7 +7,7 @@
 
 (struct register (val) #:mutable)
 
-(struct instruction (text proc) #:mutable)
+(struct instruction (expr exec) #:mutable)
 
 (define stack%
   (class object%
@@ -26,22 +26,59 @@
     (define/public (empty?)
       (null? l))))
 
+(define vm%
+  (class stack%
+    (super-new)
+
+    (init registers operations)
+
+    (define register-table
+      (make-hash
+       (for/list ((reg (append registers '(pc flag))))
+         (cons reg (register '())))))
+
+    (define operation-table (make-hash operations))
+
+    (define/public (get reg)
+      (register-val (hash-ref register-table reg)))
+
+    (define/public (set reg val)
+      (set-register-val! (hash-ref register-table reg) val))
+
+    (define/public (op name)
+      (hash-ref operation-table name))
+
+    (define/public (run)
+      (let ((insts (send this get 'pc)))
+        (unless (null? insts)
+          (let ((exec (instruction-exec (car insts))))
+            (exec)
+            (run)))))
+
+    (define/public (step)
+      (let ((insts (send this get 'pc)))
+        (send this set 'pc (cdr insts))))
+
+    (define/public (install code)
+      (let ((insts (assemble this code)))
+        (send this set 'pc insts)))))
+
 (define (assemble vm code)
   (define (update insts labels)
     (for ((inst (in-list insts)))
-      (let ((expr (instruction-text inst)))
-        (set-instruction-proc! inst (generate vm expr labels))))
+      (let ((expr (instruction-expr inst)))
+        (set-instruction-exec! inst (generate vm expr labels))))
     insts)
 
   (let loop ((code code) (k update))
     (if (null? code)
         (k '() #hash())
         (loop (cdr code)
-              (let ((text (car code)))
+              (let ((expr (car code)))
                 (lambda (insts labels)
-                  (if (symbol? text)
-                      (k insts (hash-set labels text insts))
-                      (k (cons (instruction text (void)) insts) labels))))))))
+                  (if (symbol? expr)
+                      (k insts (hash-set labels expr insts))
+                      (k (cons (instruction expr (void)) insts) labels))))))))
 
 (define (generate vm expr labels)
   (case (car expr)
