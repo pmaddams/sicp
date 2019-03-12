@@ -44,7 +44,7 @@
      (apply point l))))
 
 (define ((segments->painter l) fr)
-  (for ((s l))
+  (for ((s (in-list l)))
     (let ((p1 ((coordinate-map fr) (segment-start s)))
           (p2 ((coordinate-map fr) (segment-end s))))
       (send dc draw-line

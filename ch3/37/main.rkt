@@ -22,7 +22,7 @@
             (error "contradiction:" val new-val))
           (begin (set! val new-val)
                  (set! informant setter)
-                 (for ((constraint constraints))
+                 (for ((constraint (in-list constraints)))
                    (unless (or (eq? constraint setter)
                                (eq? constraint 'user))
                      (send constraint inform))))))
@@ -30,7 +30,7 @@
     (define/public (forget retractor)
       (when (eq? informant retractor)
         (begin (set! informant #f)
-               (for ((constraint constraints))
+               (for ((constraint (in-list constraints)))
                  (unless (eq? constraint retractor)
                    (send constraint retract))))))
 

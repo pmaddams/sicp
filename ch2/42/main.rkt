@@ -52,6 +52,6 @@
         (cons i state))))
 
 (define (return state)
-  (for ((i state))
+  (for ((i (in-list state)))
     (printf "~a " i))
   (newline))

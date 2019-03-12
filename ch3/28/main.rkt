@@ -50,7 +50,7 @@
         (error "invalid signal:" signal))
       (unless (= current-signal signal)
         (set! current-signal signal)
-        (for ((action actions))
+        (for ((action (in-list actions)))
           (action))))
 
     (define/public (add action)
@@ -64,7 +64,7 @@
     (field (current-time 0) (segments '()))
 
     (define/public (propagate)
-      (for ((segment segments))
+      (for ((segment (in-list segments)))
         (set! current-time (get-field time segment))
         (let loop ()
           (unless (send segment empty?)
