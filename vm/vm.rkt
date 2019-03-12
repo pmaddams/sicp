@@ -3,7 +3,8 @@
 (provide (all-defined-out))
 
 (require racket/class
-         racket/function)
+         racket/function
+         racket/list)
 
 (struct register (val) #:mutable)
 
@@ -62,6 +63,26 @@
       (let ((insts (assemble this code)))
         (send this set 'pc insts)))))
 
+(define (make-vm code (ops '()))
+  (let ((vm (make-object vm%
+              (needed-regs code)
+              (needed-ops code ops))))
+    (send vm install code)
+    vm))
+
+(define (needed-regs code)
+  (remove-duplicates
+   (append (used-in code 'assign)
+           (used-in code 'reg))))
+
+(define (needed-ops code ops)
+  (let* ((ns (make-base-namespace))
+         (provided (map car ops))
+         (required (remove-duplicates (used-in code 'op)))
+         (builtins (for/list ((name (remove* provided required)))
+                     (cons name (eval name ns)))))
+    (append ops builtins)))
+
 (define (assemble vm code)
   (define (update insts labels)
     (for ((inst (in-list insts)))
@@ -110,7 +131,7 @@
 
 ; (test (op <op-name>) <val-expr> ...)
 (define (generate-test vm expr labels)
-  (let ((proc (generate-op-expr vm expr labels)))
+  (let ((proc (generate-op-expr vm (cdr expr) labels)))
     (thunk (send vm set 'flag (proc))
            (send vm step))))
 
@@ -146,7 +167,7 @@
         (procs (map (lambda (x)
                       (generate-val-expr vm x labels))
                     (cdr expr))))
-    (thunk (apply op (map run procs)))))
+    (thunk (apply op (map call procs)))))
 
 ; (const <const-val>)
 ; (label <label-name>)
@@ -160,4 +181,10 @@
     ('reg (let ((reg (cadr expr)))
             (thunk (send vm get reg))))))
 
-(define (run proc) (proc))
+(define (used-in code type)
+  (let loop ((l (flatten code)) (acc '()))
+    (cond ((null? l) acc)
+          ((eq? type (car l)) (loop (cddr l) (cons (cadr l) acc)))
+          (else (loop (cdr l) acc)))))
+
+(define (call proc) (proc))
