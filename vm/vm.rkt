@@ -66,13 +66,13 @@
 
 (define (valid? code)
   (for/and ((x (in-list code)))
-    (or (symbol? x) (expr? x))))
+    (or (symbol? x) (valid-expr? x))))
 
 (define (vm? x) (is-a? x vm%))
 
-(define/contract (make-vm code (ops '()))
-  (->* (valid?) ((listof (cons/c symbol? procedure?))) vm?)
-  (let ((vm (make-object vm%
+(define/contract (make-vm code #:ops (ops '()) #:type (type vm%))
+  (->* (valid?) (#:ops (listof (cons/c symbol? procedure?)) #:type class?) vm?)
+  (let ((vm (make-object type
               (needed-regs code)
               (needed-ops code ops))))
     (send vm install code)
@@ -108,15 +108,15 @@
                       (k insts (hash-set labels expr insts))
                       (k (cons (instruction expr (void)) insts) labels))))))))
 
-(define (expr? expr)
+(define (valid-expr? expr)
   (case (car expr)
-    ('assign (assign? expr))
-    ('perform (perform? expr))
-    ('test (test? expr))
-    ('branch (branch? expr))
-    ('goto (goto? expr))
-    ('save (save? expr))
-    ('restore (restore? expr))
+    ('assign (valid-assign? expr))
+    ('perform (valid-perform? expr))
+    ('test (valid-test? expr))
+    ('branch (valid-branch? expr))
+    ('goto (valid-goto? expr))
+    ('save (valid-save? expr))
+    ('restore (valid-restore? expr))
     (else #f)))
 
 (define (generate vm expr labels)
@@ -133,13 +133,13 @@
 ; (assign <reg-name> (const <const-val>))
 ; (assign <reg-name> (label <label-name>))
 ; (assign <reg-name> (reg <reg-name>))
-(define (assign? expr)
+(define (valid-assign? expr)
   (let* ((reg (cadr expr))
          (x (cddr expr)))
     (and (symbol? reg)
          (case (caar x)
-           ('op (op-expr? x))
-           (else (val-expr? (car x)))))))
+           ('op (valid-op-expr? x))
+           (else (valid-val-expr? (car x)))))))
 
 (define (generate-assign vm expr labels)
   (let* ((reg (cadr expr))
@@ -151,8 +151,8 @@
            (send vm step))))
 
 ; (perform (op <op-name>) <val-expr> ...)
-(define (perform? expr)
-  (op-expr? (cdr expr)))
+(define (valid-perform? expr)
+  (valid-op-expr? (cdr expr)))
 
 (define (generate-perform vm expr labels)
   (let ((proc (generate-op-expr vm (cdr expr) labels)))
@@ -160,8 +160,8 @@
            (send vm step))))
 
 ; (test (op <op-name>) <val-expr> ...)
-(define (test? expr)
-  (op-expr? (cdr expr)))
+(define (valid-test? expr)
+  (valid-op-expr? (cdr expr)))
 
 (define (generate-test vm expr labels)
   (let ((proc (generate-op-expr vm (cdr expr) labels)))
@@ -169,9 +169,9 @@
            (send vm step))))
 
 ; (branch (label <label-name>))
-(define (branch? expr)
+(define (valid-branch? expr)
   (and (eq? 'label (caadr expr))
-       (val-expr? (cadr expr))
+       (valid-val-expr? (cadr expr))
        (null? (cddr expr))))
 
 (define (generate-branch vm expr labels)
@@ -182,11 +182,11 @@
 
 ; (goto (label <label-name>))
 ; (goto (reg <reg-name>))
-(define (goto? expr)
+(define (valid-goto? expr)
   (let ((x (cadr expr)))
     (and (or (eq? 'label (car x))
              (eq? 'reg (car x)))
-         (val-expr? x)
+         (valid-val-expr? x)
          (null? (cddr expr)))))
 
 (define (generate-goto vm expr labels)
@@ -195,7 +195,7 @@
     (thunk (send vm set 'pc (proc)))))
 
 ; (save <reg-name>)
-(define (save? expr)
+(define (valid-save? expr)
   (and (symbol? (cadr expr))
        (null? (cddr expr))))
 
@@ -205,7 +205,7 @@
            (send vm step))))
 
 ; (restore <reg-name>)
-(define (restore? expr)
+(define (valid-restore? expr)
   (and (symbol? (cadr expr))
        (null? (cddr expr))))
 
@@ -215,11 +215,11 @@
            (send vm step))))
 
 ; ((op <op-name>) <val-expr> ...)
-(define (op-expr? expr)
+(define (valid-op-expr? expr)
   (and (eq? 'op (caar expr))
        (symbol? (cadar expr))
        (null? (cddar expr))
-       (andmap val-expr? (cdr expr))))
+       (andmap valid-val-expr? (cdr expr))))
 
 (define (generate-op-expr vm expr labels)
   (let ((op (send vm op (cadar expr)))
@@ -231,7 +231,7 @@
 ; (const <const-val>)
 ; (label <label-name>)
 ; (reg <reg-name>)
-(define (val-expr? expr)
+(define (valid-val-expr? expr)
   (and (case (car expr)
          ('const (let ((val (cadr expr)))
                    (or (boolean? val)
