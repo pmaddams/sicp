@@ -7,6 +7,20 @@
          racket/function
          racket/list)
 
+(define (valid? code)
+  (for/and ((x (in-list code)))
+    (or (symbol? x) (valid-expr? x))))
+
+(define (vm? x) (is-a? x vm%))
+
+(define/contract (make-vm code #:ops (ops '()) #:type (type vm%))
+  (->* (valid?) (#:ops (listof (cons/c symbol? procedure?)) #:type class?) vm?)
+  (let ((vm (make-object type
+              (needed-regs code)
+              (needed-ops code ops))))
+    (send vm install code)
+    vm))
+
 (struct register (val) #:mutable)
 
 (struct instruction (expr proc) #:mutable)
@@ -56,40 +70,13 @@
             (proc)
             (execute)))))
 
-    (define/public (step)
+    (define/public (advance)
       (let ((insts (send this get 'pc)))
         (send this set 'pc (cdr insts))))
 
     (define/public (install code)
       (let ((insts (assemble this code)))
         (send this set 'pc insts)))))
-
-(define (valid? code)
-  (for/and ((x (in-list code)))
-    (or (symbol? x) (valid-expr? x))))
-
-(define (vm? x) (is-a? x vm%))
-
-(define/contract (make-vm code #:ops (ops '()) #:type (type vm%))
-  (->* (valid?) (#:ops (listof (cons/c symbol? procedure?)) #:type class?) vm?)
-  (let ((vm (make-object type
-              (needed-regs code)
-              (needed-ops code ops))))
-    (send vm install code)
-    vm))
-
-(define (needed-regs code)
-  (remove-duplicates
-   (append (used-in code 'assign)
-           (used-in code 'reg))))
-
-(define (needed-ops code ops)
-  (let* ((ns (make-base-namespace))
-         (provided (map car ops))
-         (required (remove-duplicates (used-in code 'op)))
-         (builtins (for/list ((name (remove* provided required)))
-                     (cons name (eval name ns)))))
-    (append ops builtins)))
 
 (define (assemble vm code)
   (define (update insts labels)
@@ -148,7 +135,7 @@
                  ('op (generate-op-expr vm (cddr expr) labels))
                  (else (generate-val-expr vm x labels)))))
     (thunk (send vm set reg (proc))
-           (send vm step))))
+           (send vm advance))))
 
 ; (perform (op <op-name>) <val-expr> ...)
 (define (valid-perform? expr)
@@ -158,7 +145,7 @@
 (define (generate-perform vm expr labels)
   (let ((proc (generate-op-expr vm (cdr expr) labels)))
     (thunk (proc)
-           (send vm step))))
+           (send vm advance))))
 
 ; (test (op <op-name>) <val-expr> ...)
 (define (valid-test? expr)
@@ -168,7 +155,7 @@
 (define (generate-test vm expr labels)
   (let ((proc (generate-op-expr vm (cdr expr) labels)))
     (thunk (send vm set 'flag (proc))
-           (send vm step))))
+           (send vm advance))))
 
 ; (branch (label <label-name>))
 (define (valid-branch? expr)
@@ -183,7 +170,7 @@
          (insts (hash-ref labels (cadr x))))
     (thunk (if (send vm get 'flag)
                (send vm set 'pc insts)
-               (send vm step)))))
+               (send vm advance)))))
 
 ; (goto (label <label-name>))
 ; (goto (reg <reg-name>))
@@ -209,7 +196,7 @@
 (define (generate-save vm expr)
   (let ((reg (cadr expr)))
     (thunk (send vm push (send vm get reg))
-           (send vm step))))
+           (send vm advance))))
 
 ; (restore <reg-name>)
 (define (valid-restore? expr)
@@ -220,7 +207,7 @@
 (define (generate-restore vm expr)
   (let ((reg (cadr expr)))
     (thunk (send vm set reg (send vm pop))
-           (send vm step))))
+           (send vm advance))))
 
 ; ((op <op-name>) <val-expr> ...)
 (define (valid-op-expr? expr)
@@ -258,6 +245,19 @@
               (thunk insts)))
     ('reg (let ((reg (cadr expr)))
             (thunk (send vm get reg))))))
+
+(define (needed-regs code)
+  (remove-duplicates
+   (append (used-in code 'assign)
+           (used-in code 'reg))))
+
+(define (needed-ops code ops)
+  (let* ((ns (make-base-namespace))
+         (provided (map car ops))
+         (required (remove-duplicates (used-in code 'op)))
+         (builtins (for/list ((name (remove* provided required)))
+                     (cons name (eval name ns)))))
+    (append ops builtins)))
 
 (define (used-in code type)
   (let loop ((l (flatten code)) (acc '()))
