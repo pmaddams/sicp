@@ -7,32 +7,24 @@
 (require racket/class
          racket/draw)
 
+(define size 300)
+
 (struct point (x y))
 
 (struct segment (start end))
 
-(struct frame (origin e1 e2))
-
-(define size 300)
-
-(define bitmap (make-bitmap size size))
-
-(define dc (make-object bitmap-dc% bitmap))
-
-(define unit-frame
-  (frame (point 0.0 size)
-         (point size 0.0)
-         (point 0.0 (- size))))
+(struct frame (origin e1 e2 dc))
 
 (define (paint painter)
-  (painter unit-frame)
-  (let ((output bitmap))
-    (reset)
-    output))
-
-(define (reset)
-  (set! bitmap (make-bitmap size size))
-  (set! dc (make-object bitmap-dc% bitmap)))
+  (let* ((bitmap (make-bitmap size size))
+         (dc (make-object bitmap-dc% bitmap))
+         (unit-frame
+          (frame (point 0 size)
+                 (point size 0)
+                 (point 0 (- size))
+                 dc)))
+    (painter unit-frame)
+    bitmap))
 
 (define (make-painter . segment-coordinates)
   (segments->painter
@@ -47,7 +39,7 @@
   (for ((s (in-list l)))
     (let ((p1 ((coordinate-map fr) (segment-start s)))
           (p2 ((coordinate-map fr) (segment-end s))))
-      (send dc draw-line
+      (send (frame-dc fr) draw-line
             (point-x p1) (point-y p1)
             (point-x p2) (point-y p2)))))
 
@@ -84,7 +76,8 @@
          (new-origin (cm origin)))
     (frame new-origin
            (point-sub (cm e1) new-origin)
-           (point-sub (cm e2) new-origin))))
+           (point-sub (cm e2) new-origin)
+           (frame-dc fr))))
 
 (define (square-limit painter n)
   (let* ((quarter (corner-split painter n))
