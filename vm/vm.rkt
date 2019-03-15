@@ -34,7 +34,7 @@
     (define/public (push val)
       (set! l (cons val l)))
 
-    (define/public (pop val)
+    (define/public (pop)
       (let ((val (car l)))
         (set! l (cdr l))
         val))
