@@ -51,7 +51,7 @@
     (define reg-table
       (make-hash
        (for/list ((reg (append regs '(pc flag))))
-         (cons reg (register '())))))
+         (cons reg (register (void))))))
 
     (define op-table (make-hash ops))
 
