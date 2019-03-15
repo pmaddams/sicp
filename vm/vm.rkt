@@ -47,13 +47,10 @@
     (super-new)
 
     (init regs ops)
-
-    (define reg-table
-      (make-hash
-       (for/list ((reg (append regs '(pc flag))))
-         (cons reg (register (void))))))
-
-    (define op-table (make-hash ops))
+    (field (reg-table (make-hash
+                       (for/list ((reg (append regs '(pc flag))))
+                         (cons reg (register (void))))))
+           (op-table (make-hash ops)))
 
     (define/public (get reg)
       (register-val (hash-ref reg-table reg)))
