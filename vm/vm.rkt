@@ -249,7 +249,7 @@
            (used-in code 'reg))))
 
 (define (needed-ops code ops)
-  (let* ((ns (make-base-namespace))
+  (let* ((ns (current-namespace))
          (provided (map car ops))
          (required (remove-duplicates (used-in code 'op)))
          (builtins (for/list ((name (remove* provided required)))
