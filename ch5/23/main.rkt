@@ -17,29 +17,29 @@
       (number? expr)
       (string? expr)))
 
-(define (quoted? expr)
+(define (quote? expr)
   (tagged-list? expr 'quote))
 
 (define (tagged-list? x tag)
   (and (pair? x)
        (eq? tag (car x))))
 
-(define (assignment? expr)
+(define (set? expr)
   (tagged-list? expr 'set!))
 
-(define assignment-var cadr)
+(define set-expr-var cadr)
 
-(define assignment-val caddr)
+(define set-expr-val caddr)
 
-(define (definition? expr)
+(define (define? expr)
   (tagged-list? expr 'define))
 
-(define (definition-var expr)
+(define (define-expr-var expr)
   (if (symbol? (cadr expr))
       (cadr expr)
       (caadr expr)))
 
-(define (definition-val expr)
+(define (define-expr-val expr)
   (if (symbol? (cadr expr))
       (caddr expr)
       (closure (cdadr expr)
@@ -51,16 +51,14 @@
 (define (if? expr)
   (tagged-list? expr 'if))
 
-(define if-predicate cadr)
+(define if-expr-predicate cadr)
 
-(define if-consequent caddr)
+(define if-expr-consequent caddr)
 
-(define if-alternative cadddr)
+(define if-expr-alternative cadddr)
 
 (define (begin? expr)
   (tagged-list? expr 'begin))
-
-(define begin-actions cdr)
 
 (define (last-expr? seq) (null? (cdr seq)))
 (define first-expr car)
@@ -144,7 +142,6 @@
 
 (define interpreter
   '(loop
-    ; clear stack
     (assign expr (op read))
     (assign env (op get-global-environment))
     (assign continue (label print-result))
@@ -152,31 +149,27 @@
     print-result
     (perform (op displayln) (reg val))
     (goto (label loop))
-
     unknown-expression-type
     (assign val (const "error: unknown expression type"))
     (goto (label signal-error))
-
     unknown-procedure-type
     (restore continue)
     (assign val (const "error: unknown procedure type"))
     (goto (label signal-error))
-
     signal-error
     (perform (op displayln) (reg val))
     (goto (label loop))
-
     eval
     (test (op literal?) (reg expr))
     (branch (label eval-self-eval))
     (test (op symbol?) (reg expr))
     (branch (label eval-variable))
-    (test (op quoted?) (reg expr))
+    (test (op quote?) (reg expr))
     (branch (label eval-quoted))
-    (test (op assignment?) (reg expr))
-    (branch (label eval-assignment))
-    (test (op definition?) (reg expr))
-    (branch (label eval-definition))
+    (test (op set?) (reg expr))
+    (branch (label eval-set))
+    (test (op define?) (reg expr))
+    (branch (label eval-define))
     (test (op if?) (reg expr))
     (branch (label eval-if))
     (test (op lambda?) (reg expr))
@@ -186,7 +179,6 @@
     (test (op application?) (reg expr))
     (branch (label eval-application))
     (goto (label unknown-expression-type))
-
     eval-self-eval
     (assign val (reg expr))
     (goto (reg continue))
@@ -199,10 +191,8 @@
     eval-lambda
     (assign unev (op closure-vars) (reg expr))
     (assign expr (op closure-body) (reg expr))
-    (assign val (op closure)
-            (reg unev) (reg expr) (reg env))
+    (assign val (op closure) (reg unev) (reg expr) (reg env))
     (goto (reg continue))
-
     eval-application
     (save continue)
     (save env)
@@ -249,27 +239,20 @@
     (test (op closure?) (reg proc))
     (branch (label compound-apply))
     (goto (label unknown-procedure-type))
-
     primitive-apply
-    (assign val (op builtin-apply)
-            (reg proc)
-            (reg args))
+    (assign val (op builtin-apply) (reg proc) (reg args))
     (restore continue)
     (goto (reg continue))
-
     compound-apply
     (assign unev (op closure-vars) (reg proc))
     (assign env (op closure-env) (reg proc))
-    (assign env (op subst)
-            (reg unev) (reg args) (reg env))
+    (assign env (op subst) (reg unev) (reg args) (reg env))
     (assign unev (op closure-body) (reg proc))
     (goto (label eval-sequence))
-
     eval-begin
-    (assign unev (op begin-actions) (reg expr))
+    (assign unev (op cdr) (reg expr))
     (save continue)
     (goto (label eval-sequence))
-
     eval-sequence
     (assign expr (op first-expr) (reg unev))
     (test (op last-expr?) (reg unev))
@@ -286,13 +269,12 @@
     eval-sequence-last-expr
     (restore continue)
     (goto (label eval))
-
     eval-if
     (save expr)
     (save env)
     (save continue)
     (assign continue (label eval-if-decide))
-    (assign expr (op if-predicate) (reg expr))
+    (assign expr (op if-expr-predicate) (reg expr))
     (goto (label eval))
     eval-if-decide
     (restore continue)
@@ -301,42 +283,38 @@
     (test (op true?) (reg val))
     (branch (label eval-if-consequent))
     eval-if-alternative
-    (assign expr (op if-alternative) (reg expr))
+    (assign expr (op if-expr-alternative) (reg expr))
     (goto (label eval))
     eval-if-consequent
-    (assign expr (op if-consequent) (reg expr))
+    (assign expr (op if-expr-consequent) (reg expr))
     (goto (label eval))
-
-    eval-assignment
-    (assign unev (op assignment-var) (reg expr))
+    eval-set
+    (assign unev (op set-expr-var) (reg expr))
     (save unev)
-    (assign expr (op assignment-val) (reg expr))
+    (assign expr (op set-expr-val) (reg expr))
     (save env)
     (save continue)
-    (assign continue (label eval-assignment-1))
+    (assign continue (label eval-set-1))
     (goto (label eval))
-    eval-assignment-1
+    eval-set-1
     (restore continue)
     (restore env)
     (restore unev)
-    (perform
-     (op set-var) (reg unev) (reg val) (reg env))
+    (perform (op set-var) (reg unev) (reg val) (reg env))
     (assign val (const "ok"))
     (goto (reg continue))
-
-    eval-definition
-    (assign unev (op definition-var) (reg expr))
+    eval-define
+    (assign unev (op define-expr-var) (reg expr))
     (save unev)
-    (assign expr (op definition-val) (reg expr))
+    (assign expr (op define-expr-val) (reg expr))
     (save env)
     (save continue)
-    (assign continue (label eval-definition-1))
+    (assign continue (label eval-define-1))
     (goto (label eval))
-    eval-definition-1
+    eval-define-1
     (restore continue)
     (restore env)
     (restore unev)
-    (perform
-     (op define-var) (reg unev) (reg val) (reg env))
+    (perform (op define-var) (reg unev) (reg val) (reg env))
     (assign val (const "ok"))
     (goto (reg continue))))
