@@ -15,12 +15,12 @@
 
 (define index (make-hash))
 
-(define (lookup k1 k2)
+(define (get k1 k2)
   (let ((k (cons k1 k2)))
     (and (hash-has-key? index k)
          (hash-ref index k))))
 
-(define (update k1 k2 v)
+(define (put k1 k2 v)
   (let ((k (cons k1 k2)))
     (hash-set! index k v)))
 
@@ -54,7 +54,7 @@
           (else expr))))
 
 (define (eval expr st)
-  (let ((proc (lookup (type expr) 'eval)))
+  (let ((proc (get (type expr) 'eval)))
     (if proc
         (proc (body expr) st)
         (eval-query expr st))))
@@ -199,7 +199,7 @@
   (get-stream (key expr) 'facts))
 
 (define (get-stream k1 k2)
-  (let ((st (lookup k1 k2)))
+  (let ((st (get k1 k2)))
     (if st st empty-stream)))
 
 (define (get-rules expr frame)
@@ -233,14 +233,14 @@
   (when (indexable? fact)
     (let* ((k (key fact))
            (st (get-stream k 'facts)))
-      (update k 'facts (stream-cons fact st)))))
+      (put k 'facts (stream-cons fact st)))))
 
 (define (store-rule-in-index rule)
   (let ((expr (conclusion rule)))
     (when (indexable? expr)
       (let* ((k (key expr))
              (st (get-stream k 'rules)))
-        (update k 'rules (stream-cons rule st))))))
+        (put k 'rules (stream-cons rule st))))))
 
 (define (key expr)
   (let ((k (car expr)))
@@ -341,11 +341,11 @@
   (string->symbol (list->string l)))
 
 (define (initialize)
-  (update 'and 'eval eval-and)
-  (update 'or 'eval eval-or)
-  (update 'not 'eval eval-not)
-  (update 'value 'eval value)
-  (update 'true 'eval true))
+  (put 'and 'eval eval-and)
+  (put 'or 'eval eval-or)
+  (put 'not 'eval eval-not)
+  (put 'value 'eval value)
+  (put 'true 'eval true))
 
 (define (interpret code)
   (initialize)

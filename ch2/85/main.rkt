@@ -29,7 +29,7 @@
 (define (put k1 k2 v)
   (let ((k (cons k1 k2)))
     (if (hash-has-key? table k)
-        (error "key exists:" k)
+        (error "duplicate key:" k)
         (hash-set! table k v))))
 
 (define (add n m) (apply-generic 'add n m))
