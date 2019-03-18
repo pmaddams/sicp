@@ -50,7 +50,7 @@
   (succeed expr fail))
 
 (define ((analyze-symbol expr) env succeed fail)
-  (succeed (lookup-var expr env) fail))
+  (succeed (get-var expr env) fail))
 
 (define ((analyze-quote expr) env succeed fail)
   (succeed (cadr expr) fail))
@@ -86,9 +86,9 @@
       (proc
        env
        (lambda (val fail*)
-         (let ((old-val (lookup-var var env)))
-           (succeed (assign-var var val env)
-                    (thunk (assign-var var old-val env)
+         (let ((old-val (get-var var env)))
+           (succeed (set-var var val env)
+                    (thunk (set-var var old-val env)
                            (fail*)))))
        fail))))
 
@@ -218,21 +218,21 @@
   (let ((frame (car env)))
     (hash-set! frame var val)))
 
-(define (lookup-var var env)
+(define (get-var var env)
   (if (null? env)
       (error "undefined:" var)
       (let ((frame (car env)))
         (if (hash-has-key? frame var)
             (hash-ref frame var)
-            (lookup-var var (cdr env))))))
+            (get-var var (cdr env))))))
 
-(define (assign-var var val env)
+(define (set-var var val env)
   (if (null? env)
       (error "undefined:" var)
       (let ((frame (car env)))
         (if (hash-has-key? frame var)
             (hash-set! frame var val)
-            (assign-var var val (cdr env))))))
+            (set-var var val (cdr env))))))
 
 (define builtins
   `((+ . ,+)

@@ -12,7 +12,7 @@
 
 (define (eval expr env)
   (cond ((literal? expr) expr)
-        ((symbol? expr) (lookup-var expr env))
+        ((symbol? expr) (get-var expr env))
         (else (case (car expr)
                 ('quote (cadr expr))
                 ('lambda (let ((vars (cadr expr))
@@ -60,7 +60,7 @@
   (let* ((var (cadr expr))
          (x (caddr expr))
          (val (eval x env)))
-    (assign-var var val env)))
+    (set-var var val env)))
 
 (define (eval-if expr env)
   (let ((predicate (cadr expr))
@@ -137,21 +137,21 @@
   (let ((frame (car env)))
     (hash-set! frame var val)))
 
-(define (lookup-var var env)
+(define (get-var var env)
   (if (null? env)
       (error "undefined:" var)
       (let ((frame (car env)))
         (if (hash-has-key? frame var)
             (hash-ref frame var)
-            (lookup-var var (cdr env))))))
+            (get-var var (cdr env))))))
 
-(define (assign-var var val env)
+(define (set-var var val env)
   (if (null? env)
       (error "undefined:" var)
       (let ((frame (car env)))
         (if (hash-has-key? frame var)
             (hash-set! frame var val)
-            (assign-var var val (cdr env))))))
+            (set-var var val (cdr env))))))
 
 (define builtins
   `((+ . ,+)

@@ -91,21 +91,21 @@
   (let ((frame (car env)))
     (hash-set! frame var val)))
 
-(define (lookup-var var env)
+(define (get-var var env)
   (if (null? env)
       (error "undefined:" var)
       (let ((frame (car env)))
         (if (hash-has-key? frame var)
             (hash-ref frame var)
-            (lookup-var var (cdr env))))))
+            (get-var var (cdr env))))))
 
-(define (assign-var var val env)
+(define (set-var var val env)
   (if (null? env)
       (error "undefined:" var)
       (let ((frame (car env)))
         (if (hash-has-key? frame var)
             (hash-set! frame var val)
-            (assign-var var val (cdr env))))))
+            (set-var var val (cdr env))))))
 
 (define builtins
   `((+ . ,+)
@@ -191,7 +191,7 @@
     (assign val (reg expr))
     (goto (reg continue))
     eval-variable
-    (assign val (op lookup-var) (reg expr) (reg env))
+    (assign val (op get-var) (reg expr) (reg env))
     (goto (reg continue))
     eval-quoted
     (assign val (op cadr) (reg expr))
@@ -320,7 +320,7 @@
     (restore env)
     (restore unev)
     (perform
-     (op assign-var) (reg unev) (reg val) (reg env))
+     (op set-var) (reg unev) (reg val) (reg env))
     (assign val (const "ok"))
     (goto (reg continue))
 
