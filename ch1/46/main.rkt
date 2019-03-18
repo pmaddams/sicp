@@ -32,7 +32,7 @@
 
 (define (repeated f n)
   (for/fold ((acc identity))
-            ((i n))
+            ((i (in-range n)))
     (compose f acc)))
 
 (define (average . args)
