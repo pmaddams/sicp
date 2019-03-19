@@ -4,7 +4,8 @@
 
 (provide (all-defined-out))
 
-(require "../../vm/vm.rkt")
+(require racket/class
+         "../../vm/vm.rkt")
 
 (require (only-in racket (apply apply-builtin)))
 
@@ -57,8 +58,8 @@
     (assign val (op cadr) (reg expr))
     (goto (reg continue))
     eval-lambda
-    (assign unev (op closure-vars) (reg expr))
-    (assign expr (op closure-body) (reg expr))
+    (assign unev (op lambda-expr-vars) (reg expr))
+    (assign expr (op lambda-expr-body) (reg expr))
     (assign val (op closure) (reg unev) (reg expr) (reg env))
     (goto (reg continue))
     eval-define
@@ -177,7 +178,8 @@
     (branch (label apply-closure))
     (goto (label unknown-procedure-type))
     apply-builtin
-    (assign val (op apply-builtin) (reg proc) (reg args))
+    (assign val (op builtin-proc) (reg proc))
+    (assign val (op apply-builtin) (reg val) (reg args))
     (restore continue)
     (goto (reg continue))
     apply-closure
@@ -202,6 +204,10 @@
 (define (lambda? expr)
   (tagged-list? expr 'lambda))
 
+(define lambda-expr-vars cadr)
+
+(define lambda-expr-body cddr)
+
 (define (define? expr)
   (tagged-list? expr 'define))
 
@@ -213,8 +219,9 @@
 (define (define-expr-val expr)
   (if (symbol? (cadr expr))
       (caddr expr)
-      (closure (cdadr expr)
-               (cddr expr))))
+      (cons 'lambda
+            (cons (cdadr expr)
+                  (cddr expr)))))
 
 (define (set? expr)
   (tagged-list? expr 'set!))
