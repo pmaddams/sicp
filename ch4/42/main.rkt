@@ -5,7 +5,7 @@
 (provide (all-defined-out))
 
 (require racket/function
-         (only-in racket (apply builtin-apply)))
+         (only-in racket (apply apply-builtin)))
 
 (struct builtin (proc))
 
@@ -33,7 +33,7 @@
 
 (define (apply op args succeed fail)
   (if (builtin? op)
-      (succeed (builtin-apply (builtin-proc op) args) fail)
+      (succeed (apply-builtin (builtin-proc op) args) fail)
       ((closure-proc op)
        (subst (closure-vars op)
               args

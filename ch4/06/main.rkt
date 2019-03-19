@@ -4,7 +4,7 @@
 
 (provide (all-defined-out))
 
-(require (only-in racket (apply builtin-apply)))
+(require (only-in racket (apply apply-builtin)))
 
 (struct builtin (proc))
 
@@ -33,7 +33,7 @@
 
 (define (apply op args)
   (if (builtin? op)
-      (builtin-apply (builtin-proc op) args)
+      (apply-builtin (builtin-proc op) args)
       (eval-list (closure-body op)
                  (subst (closure-vars op)
                         args

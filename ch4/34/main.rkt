@@ -4,7 +4,7 @@
 
 (provide (all-defined-out))
 
-(require (only-in racket (apply builtin-apply)))
+(require (only-in racket (apply apply-builtin)))
 
 (struct builtin (proc))
 
@@ -37,7 +37,7 @@
 (define (apply op args env)
   (if (builtin? op)
       (let ((vals (map (lambda (x) (value x env)) args)))
-        (builtin-apply (builtin-proc op) vals))
+        (apply-builtin (builtin-proc op) vals))
       (let ((promises (map (lambda (x) (delay x env)) args)))
         (eval-list (closure-body op)
                    (subst (closure-vars op)

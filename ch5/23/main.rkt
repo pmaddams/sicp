@@ -6,7 +6,7 @@
 
 (require "../../vm/vm.rkt")
 
-(require (only-in racket (apply builtin-apply)))
+(require (only-in racket (apply apply-builtin)))
 
 (define interpreter
   '(loop
@@ -108,7 +108,7 @@
     (branch (label apply-closure))
     (goto (label unknown-procedure-type))
     apply-builtin
-    (assign val (op builtin-apply) (reg proc) (reg args))
+    (assign val (op apply-builtin) (reg proc) (reg args))
     (restore continue)
     (goto (reg continue))
     apply-closure
