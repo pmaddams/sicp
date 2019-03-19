@@ -8,7 +8,7 @@
 
 (require (only-in racket (apply apply-builtin)))
 
-(define interpreter
+(define lisp
   '(loop
     (assign expr (op read))
     (assign env (op get-global-env))
@@ -61,6 +61,75 @@
     (assign expr (op closure-body) (reg expr))
     (assign val (op closure) (reg unev) (reg expr) (reg env))
     (goto (reg continue))
+    eval-define
+    (assign unev (op define-expr-var) (reg expr))
+    (save unev)
+    (assign expr (op define-expr-val) (reg expr))
+    (save env)
+    (save continue)
+    (assign continue (label eval-define-1))
+    (goto (label eval))
+    eval-define-1
+    (restore continue)
+    (restore env)
+    (restore unev)
+    (perform (op define-var) (reg unev) (reg val) (reg env))
+    (assign val (const ""))
+    (goto (reg continue))
+    eval-set
+    (assign unev (op set-expr-var) (reg expr))
+    (save unev)
+    (assign expr (op set-expr-val) (reg expr))
+    (save env)
+    (save continue)
+    (assign continue (label eval-set-1))
+    (goto (label eval))
+    eval-set-1
+    (restore continue)
+    (restore env)
+    (restore unev)
+    (perform (op set-var) (reg unev) (reg val) (reg env))
+    (assign val (const ""))
+    (goto (reg continue))
+    eval-if
+    (save expr)
+    (save env)
+    (save continue)
+    (assign continue (label eval-if-decide))
+    (assign expr (op if-expr-predicate) (reg expr))
+    (goto (label eval))
+    eval-if-decide
+    (restore continue)
+    (restore env)
+    (restore expr)
+    (test (op true?) (reg val))
+    (branch (label eval-if-consequent))
+    eval-if-alternative
+    (assign expr (op if-expr-alternative) (reg expr))
+    (goto (label eval))
+    eval-if-consequent
+    (assign expr (op if-expr-consequent) (reg expr))
+    (goto (label eval))
+    eval-begin
+    (assign unev (op cdr) (reg expr))
+    (save continue)
+    (goto (label eval-list))
+    eval-list
+    (assign expr (op car) (reg unev))
+    (test (op singleton?) (reg unev))
+    (branch (label eval-list-last))
+    (save unev)
+    (save env)
+    (assign continue (label eval-list-continue))
+    (goto (label eval))
+    eval-list-continue
+    (restore env)
+    (restore unev)
+    (assign unev (op cdr) (reg unev))
+    (goto (label eval-list))
+    eval-list-last
+    (restore continue)
+    (goto (label eval))
     eval-application
     (save continue)
     (save env)
@@ -116,76 +185,7 @@
     (assign env (op closure-env) (reg proc))
     (assign env (op subst) (reg unev) (reg args) (reg env))
     (assign unev (op closure-body) (reg proc))
-    (goto (label eval-list))
-    eval-begin
-    (assign unev (op cdr) (reg expr))
-    (save continue)
-    (goto (label eval-list))
-    eval-list
-    (assign expr (op car) (reg unev))
-    (test (op singleton?) (reg unev))
-    (branch (label eval-list-last))
-    (save unev)
-    (save env)
-    (assign continue (label eval-list-continue))
-    (goto (label eval))
-    eval-list-continue
-    (restore env)
-    (restore unev)
-    (assign unev (op cdr) (reg unev))
-    (goto (label eval-list))
-    eval-list-last
-    (restore continue)
-    (goto (label eval))
-    eval-if
-    (save expr)
-    (save env)
-    (save continue)
-    (assign continue (label eval-if-decide))
-    (assign expr (op if-expr-predicate) (reg expr))
-    (goto (label eval))
-    eval-if-decide
-    (restore continue)
-    (restore env)
-    (restore expr)
-    (test (op true?) (reg val))
-    (branch (label eval-if-consequent))
-    eval-if-alternative
-    (assign expr (op if-expr-alternative) (reg expr))
-    (goto (label eval))
-    eval-if-consequent
-    (assign expr (op if-expr-consequent) (reg expr))
-    (goto (label eval))
-    eval-set
-    (assign unev (op set-expr-var) (reg expr))
-    (save unev)
-    (assign expr (op set-expr-val) (reg expr))
-    (save env)
-    (save continue)
-    (assign continue (label eval-set-1))
-    (goto (label eval))
-    eval-set-1
-    (restore continue)
-    (restore env)
-    (restore unev)
-    (perform (op set-var) (reg unev) (reg val) (reg env))
-    (assign val (const ""))
-    (goto (reg continue))
-    eval-define
-    (assign unev (op define-expr-var) (reg expr))
-    (save unev)
-    (assign expr (op define-expr-val) (reg expr))
-    (save env)
-    (save continue)
-    (assign continue (label eval-define-1))
-    (goto (label eval))
-    eval-define-1
-    (restore continue)
-    (restore env)
-    (restore unev)
-    (perform (op define-var) (reg unev) (reg val) (reg env))
-    (assign val (const ""))
-    (goto (reg continue))))
+    (goto (label eval-list))))
 
 (struct builtin (proc))
 
