@@ -12,7 +12,7 @@
 (define lisp
   '(loop
     (assign expr (op read))
-    (assign env (op get-global-env))
+    (assign env (op get-env))
     (assign continue (label print))
     (goto (label eval))
     print
@@ -33,28 +33,28 @@
     (branch (label eval-literal))
     (test (op symbol?) (reg expr))
     (branch (label eval-variable))
-    (test (op quote?) (reg expr))
+    (test (op quote-expr?) (reg expr))
     (branch (label eval-quote))
-    (test (op lambda?) (reg expr))
+    (test (op lambda-expr?) (reg expr))
     (branch (label eval-lambda))
-    (test (op define?) (reg expr))
+    (test (op define-expr?) (reg expr))
     (branch (label eval-define))
-    (test (op set?) (reg expr))
+    (test (op set-expr?) (reg expr))
     (branch (label eval-set))
-    (test (op if?) (reg expr))
+    (test (op if-expr?) (reg expr))
     (branch (label eval-if))
-    (test (op begin?) (reg expr))
+    (test (op begin-expr?) (reg expr))
     (branch (label eval-begin))
-    (test (op cond?) (reg expr))
+    (test (op cond-expr?) (reg expr))
     (branch (label eval-cond))
-    (test (op and?) (reg expr))
+    (test (op and-expr?) (reg expr))
     (branch (label eval-and))
-    (test (op or?) (reg expr))
+    (test (op or-expr?) (reg expr))
     (branch (label eval-or))
-    (test (op let?) (reg expr))
+    (test (op let-expr?) (reg expr))
     (branch (label eval-let))
     (test (op pair?) (reg expr))
-    (branch (label eval-application))
+    (branch (label eval-call))
     (goto (label unknown-expression-type))
     eval-literal
     (assign val (reg expr))
@@ -104,16 +104,15 @@
     (save expr)
     (save env)
     (save continue)
-    (assign continue (label eval-if-decide))
+    (assign continue (label eval-if-1))
     (assign expr (op if-expr-predicate) (reg expr))
     (goto (label eval))
-    eval-if-decide
+    eval-if-1
     (restore continue)
     (restore env)
     (restore expr)
     (test (op true?) (reg val))
     (branch (label eval-if-consequent))
-    eval-if-alternative
     (assign expr (op if-expr-alternative) (reg expr))
     (goto (label eval))
     eval-if-consequent
@@ -151,15 +150,15 @@
     eval-let
     (assign expr (op let->lambda) (reg expr))
     (goto (label eval))
-    eval-application
+    eval-call
     (save continue)
     (save env)
     (assign unev (op cdr) (reg expr))
     (save unev)
     (assign expr (op car) (reg expr))
-    (assign continue (label eval-appl-did-operator))
+    (assign continue (label eval-call-after-operator))
     (goto (label eval))
-    eval-appl-did-operator
+    eval-call-after-operator
     (restore unev)
     (restore env)
     (assign args (op empty-list))
@@ -167,26 +166,26 @@
     (test (op null?) (reg unev))
     (branch (label apply))
     (save proc)
-    eval-appl-operand-loop
+    eval-call-loop
     (save args)
     (assign expr (op car) (reg unev))
     (test (op singleton?) (reg unev))
-    (branch (label eval-appl-last-arg))
+    (branch (label eval-call-after-loop))
     (save env)
     (save unev)
-    (assign continue (label eval-appl-accumulate-arg))
+    (assign continue (label eval-call-accumulate))
     (goto (label eval))
-    eval-appl-accumulate-arg
+    eval-call-accumulate
     (restore unev)
     (restore env)
     (restore args)
     (assign args (op adjoin) (reg val) (reg args))
     (assign unev (op cdr) (reg unev))
-    (goto (label eval-appl-operand-loop))
-    eval-appl-last-arg
-    (assign continue (label eval-appl-accum-last-arg))
+    (goto (label eval-call-loop))
+    eval-call-after-loop
+    (assign continue (label eval-call-accumulate-last))
     (goto (label eval))
-    eval-appl-accum-last-arg
+    eval-call-accumulate-last
     (restore args)
     (assign args (op adjoin) (reg val) (reg args))
     (restore proc)
@@ -218,17 +217,17 @@
       (number? expr)
       (string? expr)))
 
-(define (quote? expr)
+(define (quote-expr? expr)
   (tagged-list? expr 'quote))
 
-(define (lambda? expr)
+(define (lambda-expr? expr)
   (tagged-list? expr 'lambda))
 
 (define lambda-expr-vars cadr)
 
 (define lambda-expr-body cddr)
 
-(define (define? expr)
+(define (define-expr? expr)
   (tagged-list? expr 'define))
 
 (define (define-expr-var expr)
@@ -243,14 +242,14 @@
             (cons (cdadr expr)
                   (cddr expr)))))
 
-(define (set? expr)
+(define (set-expr? expr)
   (tagged-list? expr 'set!))
 
 (define set-expr-var cadr)
 
 (define set-expr-val caddr)
 
-(define (if? expr)
+(define (if-expr? expr)
   (tagged-list? expr 'if))
 
 (define if-expr-predicate cadr)
@@ -259,10 +258,10 @@
 
 (define if-expr-alternative cadddr)
 
-(define (begin? expr)
+(define (begin-expr? expr)
   (tagged-list? expr 'begin))
 
-(define (cond? expr)
+(define (cond-expr? expr)
   (tagged-list? expr 'cond))
 
 (define (cond->if expr) (expand-cond (cdr expr)))
@@ -286,7 +285,7 @@
       (car exprs)
       (cons 'begin exprs)))
 
-(define (and? expr)
+(define (and-expr? expr)
   (tagged-list? expr 'and))
 
 (define (and->if expr) (expand-and (cdr expr)))
@@ -299,7 +298,7 @@
                     (alternative #f))
                 (list 'if predicate consequent alternative)))))
 
-(define (or? expr)
+(define (or-expr? expr)
   (tagged-list? expr 'or))
 
 (define (or->if expr) (expand-or (cdr expr)))
@@ -312,7 +311,7 @@
                     (alternative (expand-or (cdr exprs))))
                 (list 'if predicate consequent alternative)))))
 
-(define (let? expr)
+(define (let-expr? expr)
   (tagged-list? expr 'let))
 
 (define (let->lambda expr)
@@ -390,6 +389,6 @@
         (vals (map builtin (map cdr builtins))))
     (subst vars vals '())))
 
-(define global-env (make-env))
+(define env (make-env))
 
-(define (get-global-env) global-env)
+(define (get-env) env)
