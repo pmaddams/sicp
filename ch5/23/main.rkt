@@ -54,7 +54,7 @@
     (test (op let-expr?) (reg expr))
     (branch (label eval-let))
     (test (op pair?) (reg expr))
-    (branch (label eval-call))
+    (branch (label eval-application))
     (goto (label unknown-expression-type))
     eval-literal
     (assign val (reg expr))
@@ -150,15 +150,15 @@
     eval-let
     (assign expr (op let->lambda) (reg expr))
     (goto (label eval))
-    eval-call
+    eval-application
     (save continue)
     (save env)
     (assign unev (op cdr) (reg expr))
     (save unev)
     (assign expr (op car) (reg expr))
-    (assign continue (label eval-call-after-operator))
+    (assign continue (label eval-application-after-operator))
     (goto (label eval))
-    eval-call-after-operator
+    eval-application-after-operator
     (restore unev)
     (restore env)
     (assign args (op empty-list))
@@ -166,26 +166,26 @@
     (test (op null?) (reg unev))
     (branch (label apply))
     (save proc)
-    eval-call-loop
+    eval-application-loop
     (save args)
     (assign expr (op car) (reg unev))
     (test (op singleton?) (reg unev))
-    (branch (label eval-call-after-loop))
+    (branch (label eval-application-after-loop))
     (save env)
     (save unev)
-    (assign continue (label eval-call-accumulate))
+    (assign continue (label eval-application-accumulate))
     (goto (label eval))
-    eval-call-accumulate
+    eval-application-accumulate
     (restore unev)
     (restore env)
     (restore args)
     (assign args (op adjoin) (reg val) (reg args))
     (assign unev (op cdr) (reg unev))
-    (goto (label eval-call-loop))
-    eval-call-after-loop
-    (assign continue (label eval-call-accumulate-last))
+    (goto (label eval-application-loop))
+    eval-application-after-loop
+    (assign continue (label eval-application-accumulate-last))
     (goto (label eval))
-    eval-call-accumulate-last
+    eval-application-accumulate-last
     (restore args)
     (assign args (op adjoin) (reg val) (reg args))
     (restore proc)
