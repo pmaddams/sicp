@@ -13,8 +13,14 @@
 
 (define (vm? x) (is-a? x vm%))
 
-(define/contract (make-vm code #:ops (ops '()) #:type (type vm%))
-  (->* (valid?) (#:ops (listof (cons/c symbol? procedure?)) #:type class?) vm?)
+(define/contract
+  (make-vm code
+           #:ops (ops '())
+           #:type (type vm%))
+  (->* (valid?)
+       (#:ops (listof (cons/c symbol? procedure?))
+        #:type class?)
+       vm?)
   (let ((vm (make-object type
               (needed-regs code)
               (needed-ops code ops))))
