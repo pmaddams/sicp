@@ -45,6 +45,14 @@
     (branch (label eval-if))
     (test (op begin?) (reg expr))
     (branch (label eval-begin))
+    (test (op cond?) (reg expr))
+    (branch (label eval-cond))
+    (test (op and?) (reg expr))
+    (branch (label eval-and))
+    (test (op or?) (reg expr))
+    (branch (label eval-or))
+    (test (op let?) (reg expr))
+    (branch (label eval-let))
     (test (op pair?) (reg expr))
     (branch (label eval-application))
     (goto (label unknown-expression-type))
@@ -130,6 +138,18 @@
     (goto (label eval-list))
     eval-list-last
     (restore continue)
+    (goto (label eval))
+    eval-cond
+    (assign expr (op cond->if) (reg expr))
+    (goto (label eval))
+    eval-and
+    (assign expr (op and->if) (reg expr))
+    (goto (label eval))
+    eval-or
+    (assign expr (op or->if) (reg expr))
+    (goto (label eval))
+    eval-let
+    (assign expr (op let->lambda) (reg expr))
     (goto (label eval))
     eval-application
     (save continue)
@@ -239,23 +259,83 @@
 
 (define if-expr-alternative cadddr)
 
-(define (true? x) (not (false? x)))
-
-(define (false? x) (eq? x #f))
-
 (define (begin? expr)
   (tagged-list? expr 'begin))
 
-(define (empty-list) '())
+(define (cond? expr)
+  (tagged-list? expr 'cond))
 
-(define (adjoin x l)
-  (append l (list x)))
+(define (cond->if expr) (expand-cond (cdr expr)))
 
-(define (singleton? l) (null? (cdr l)))
+(define (expand-cond clauses)
+  (if (null? clauses)
+      #f
+      (let* ((first (car clauses))
+             (predicate (car first))
+             (consequent (list->expr (cdr first)))
+             (rest (cdr clauses)))
+        (if (eq? predicate 'else)
+            (if (null? rest)
+                consequent
+                (error "else clause must be last"))
+            (let ((alternative (expand-cond rest)))
+              (list 'if predicate consequent alternative))))))
+
+(define (list->expr exprs)
+  (if (null? (cdr exprs))
+      (car exprs)
+      (cons 'begin exprs)))
+
+(define (and? expr)
+  (tagged-list? expr 'and))
+
+(define (and->if expr) (expand-and (cdr expr)))
+
+(define (expand-and exprs)
+  (cond ((null? exprs) #t)
+        ((null? (cdr exprs)) (car exprs))
+        (else (let ((predicate (car exprs))
+                    (consequent (expand-and (cdr exprs)))
+                    (alternative #f))
+                (list 'if predicate consequent alternative)))))
+
+(define (or? expr)
+  (tagged-list? expr 'or))
+
+(define (or->if expr) (expand-or (cdr expr)))
+
+(define (expand-or exprs)
+  (cond ((null? exprs) #f)
+        ((null? (cdr exprs)) (car exprs))
+        (else (let ((predicate (car exprs))
+                    (consequent (car exprs))
+                    (alternative (expand-or (cdr exprs))))
+                (list 'if predicate consequent alternative)))))
+
+(define (let? expr)
+  (tagged-list? expr 'let))
+
+(define (let->lambda expr)
+  (let* ((bindings (cadr expr))
+         (vars (map car bindings))
+         (exprs (map cadr bindings))
+         (body (cddr expr)))
+    (cons (cons 'lambda (cons vars body)) exprs)))
 
 (define (tagged-list? x tag)
   (and (pair? x)
        (eq? tag (car x))))
+
+(define (singleton? l) (null? (cdr l)))
+
+(define (adjoin x l)
+  (append l (list x)))
+
+(define (empty-list) '())
+
+(define (true? x) (not (false? x)))
+
+(define (false? x) (eq? x #f))
 
 (define (subst vars vals env)
   (cons (make-frame vars vals) env))
