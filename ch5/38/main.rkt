@@ -7,7 +7,7 @@
 (require racket/set
          (only-in racket (apply apply-builtin)))
 
-(struct output (needed modified statements))
+(struct output (needed modified text))
 
 (struct builtin (proc))
 
@@ -287,8 +287,8 @@
 (define (modified s)
   (if (symbol? s) '() (output-modified s)))
 
-(define (statements s)
-  (if (symbol? s) (list s) (output-statements s)))
+(define (text s)
+  (if (symbol? s) (list s) (output-text s)))
 
 (define (needs? out reg)
   (memq reg (needed out)))
@@ -303,7 +303,7 @@
                                      (modified out1)))
             (set-union (modified out1)
                        (modified out2))
-            (append (statements out1) (statements out2))))
+            (append (text out1) (text out2))))
 
   (let loop ((l args))
     (if (null? l)
@@ -324,7 +324,7 @@
               (set-subtract (modified out1)
                             (list first-reg))
               (append `((save ,first-reg))
-                      (statements out1)
+                      (text out1)
                       `((restore ,first-reg))))
              out2)
             (output-preserving (cdr regs) out1 out2)))))
@@ -333,7 +333,7 @@
   (output
    (needed out)
    (modified out)
-   (append (statements out) (statements body-out))))
+   (append (text out) (text body-out))))
 
 (define (parallel-output out1 out2)
   (output
@@ -341,7 +341,7 @@
               (needed out2))
    (set-union (modified out1)
               (modified out2))
-   (append (statements out1) (statements out2))))
+   (append (text out1) (text out2))))
 
 (define (subst vars vals env)
   (cons (make-frame vars vals) env))
