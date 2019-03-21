@@ -4,8 +4,8 @@
 
 (provide (all-defined-out))
 
-(require racket/set
-         (only-in racket (apply apply-builtin)))
+(require (only-in racket (apply apply-builtin)))
+         racket/set)
 
 (struct output (needed modified text))
 

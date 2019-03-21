@@ -4,10 +4,10 @@
 
 (provide (all-defined-out))
 
-(require racket/list
+(require (only-in racket (eval eval-lisp))
+         racket/list
          racket/promise
-         racket/stream
-         (only-in racket (eval builtin-eval)))
+         racket/stream)
 
 (struct database (facts rules) #:mutable)
 
@@ -99,7 +99,7 @@
 (define (true expr st) st)
 
 (define (execute expr)
-  (let ((op (builtin-eval (car expr) (make-base-namespace)))
+  (let ((op (eval-lisp (car expr) (make-base-namespace)))
         (args (cdr expr)))
     (apply op args)))
 

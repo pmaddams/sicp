@@ -4,8 +4,8 @@
 
 (provide (all-defined-out))
 
-(require racket/function
-         (only-in racket (apply apply-builtin)))
+(require (only-in racket (apply apply-builtin))
+         racket/function)
 
 (struct builtin (proc))
 
