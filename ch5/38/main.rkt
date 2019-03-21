@@ -4,14 +4,14 @@
 
 (provide (all-defined-out))
 
-(require (only-in racket (apply apply-builtin)))
+(require (only-in racket (apply apply-builtin))
          racket/set)
 
 (struct output (needed modified text))
 
 (struct builtin (proc))
 
-(struct compiled-closure (entry env))
+(struct subroutine (label env))
 
 (define (compile expr target linkage)
   (cond ((literal? expr) (compile-literal expr target linkage))
@@ -50,23 +50,23 @@
                     `((assign ,target (const ,(cadr expr)))))))
 
 (define (compile-lambda expr target linkage)
-  (let ((entry (gensym 'entry))
-        (after-lambda (gensym 'after-lambda)))
+  (let ((label (gensym 'lambda-))
+        (after-lambda (gensym 'after-lambda-)))
     (let ((linkage* (if (eq? linkage 'next) after-lambda linkage)))
       (append-output
        (embed-output (end-with linkage*
                                (output '(env) (list target)
-                                       `((assign ,target (op compiled-closure) (label ,entry) (reg env)))))
-                     (compile-lambda-body expr entry))
+                                       `((assign ,target (op subroutine) (label ,label) (reg env)))))
+                     (compile-lambda-body expr label))
        after-lambda))))
 
-(define (compile-lambda-body expr entry)
+(define (compile-lambda-body expr label)
   (let ((vars (cadr expr))
         (body (cddr expr)))
     (append-output
      (output '(env proc args) '(env)
-             `(,entry
-               (assign env (op compiled-closure-env) (reg proc))
+             `(,label
+               (assign env (op subroutine-env) (reg proc))
                (assign env (op subst) (const ,vars) (reg args) (reg env))))
      (compile-list body 'val 'return))))
 
@@ -103,9 +103,9 @@
   (let ((predicate (cadr expr))
         (consequent (caddr expr))
         (alternative (cadddr expr))
-        (then-branch (gensym 'then))
-        (else-branch (gensym 'else))
-        (after-if (gensym 'after-if)))
+        (then-branch (gensym 'then-))
+        (else-branch (gensym 'else-))
+        (after-if (gensym 'after-if-)))
     (let ((consequent-linkage
            (if (eq? linkage 'next) after-if linkage)))
       (let ((predicate-out (compile predicate 'val 'next))
@@ -187,7 +187,7 @@
      (output-preserving
       '(proc continue)
       (construct-arglist args-out)
-      (compile-procedure-call target linkage)))))
+      (compile-call target linkage)))))
 
 (define (construct-arglist operand-codes)
   (let ((operand-codes (reverse operand-codes)))
@@ -218,22 +218,22 @@
                            code-for-next-arg
                            (code-to-get-rest-args (cdr operand-codes))))))
 
-(define (compile-procedure-call target linkage)
-  (let ((primitive-branch (gensym 'primitive-branch))
-        (compiled-branch (gensym 'compiled-branch))
-        (after-call (gensym 'after-call)))
-    (let ((compiled-linkage
+(define (compile-call target linkage)
+  (let ((builtin-branch (gensym 'builtin-))
+        (subroutine-branch (gensym 'subroutine-))
+        (after-call (gensym 'after-call-)))
+    (let ((subroutine-linkage
            (if (eq? linkage 'next) after-call linkage)))
       (append-output
        (output '(proc) '()
                `((test (op builtin?) (reg proc))
-                 (branch (label ,primitive-branch))))
+                 (branch (label ,builtin-branch))))
        (parallel-output
         (append-output
-         compiled-branch
-         (compile-closure-application target compiled-linkage))
+         subroutine-branch
+         (compile-closure-application target subroutine-linkage))
         (append-output
-         primitive-branch
+         builtin-branch
          (end-with linkage
                    (output '(proc args) (list target)
                            `((assign ,target (op builtin-proc) (reg proc))
@@ -244,21 +244,21 @@
   (cond ((and (eq? target 'val) (not (eq? linkage 'return)))
          (output '(proc) all-regs
                  `((assign continue (label ,linkage))
-                   (assign val (op compiled-closure-entry) (reg proc))
+                   (assign val (op subroutine-label) (reg proc))
                    (goto (reg val)))))
         ((and (not (eq? target 'val))
               (not (eq? linkage 'return)))
-         (let ((proc-return (gensym 'proc-return)))
+         (let ((proc-return (gensym 'proc-return-)))
            (output '(proc) all-regs
                    `((assign continue (label ,proc-return))
-                     (assign val (op compiled-closure-entry) (reg proc))
+                     (assign val (op subroutine-label) (reg proc))
                      (goto (reg val))
                      ,proc-return
                      (assign ,target (reg val))
                      (goto (label ,linkage))))))
         ((and (eq? target 'val) (eq? linkage 'return))
          (output '(proc continue) all-regs
-                 '((assign val (op compiled-closure-entry) (reg proc))
+                 '((assign val (op subroutine-label) (reg proc))
                    (goto (reg val)))))
         ((and (not (eq? target 'val)) (eq? linkage 'return))
          (error "return linkage, target not val -- COMPILE" target))))
