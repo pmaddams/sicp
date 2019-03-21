@@ -31,7 +31,7 @@
     (define/override (set reg val)
       (let ((r (hash-ref (get-field reg-table this) reg)))
         (when (memq reg trace-regs)
-          (printf "~a: ~a -> ~a\n" reg (register-val r) val))
+          (printf "\t~a: ~a -> ~a\n" reg (register-val r) val))
         (set-register-val! r val)))
 
     (define/override (advance)
@@ -44,13 +44,13 @@
             (let ((insts (send this get 'pc)))
               (unless (null? insts)
                 (let ((inst (car insts)))
-                  (displayln (instruction-expr inst))
+                  (displayln (instruction-stmt inst))
                   ((instruction-proc inst))
                   (loop)))))
           (super execute)))
 
     (define/public (print-stats)
-      (printf "pushes: ~a\nmax depth: ~a\nsteps: ~a\n"
+      (printf "---\npushes: ~a\nmax depth: ~a\nsteps: ~a\n---\n"
               pushes max-depth steps))
 
     (define/public (reset-stats)
@@ -71,33 +71,3 @@
 
     (define/public (inst-trace-off)
       (set! trace-insts #f))))
-
-(define (expt-rec a n)
-  (define code
-    '((assign continue (label done))
-      loop
-      (test (op zero?) (reg n))
-      (branch (label base-case))
-      (assign n (op sub1) (reg n))
-      (save continue)
-      (assign continue (label after-loop))
-      (goto (label loop))
-      after-loop
-      (restore continue)
-      (assign val (op *) (reg val) (reg a))
-      (goto (reg continue))
-      base-case
-      (assign val (const 1))
-      (goto (reg continue))
-      done))
-
-  (let ((vm (make-vm code #:type (tracing vm%))))
-    (send vm set 'a a)
-    (send vm set 'n n)
-    (send vm inst-trace-on)
-    (send vm reg-trace-on 'a)
-    (send vm reg-trace-on 'n)
-    (send vm reg-trace-on 'val)
-    (send vm execute)
-    (send vm print-stats)
-    (send vm get 'val)))
