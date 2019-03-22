@@ -9,6 +9,42 @@
          racket/promise
          racket/stream)
 
+(define bible
+  '((son Adam Cain)
+    (son Cain Enoch)
+    (son Enoch Irad)
+    (son Irad Mehujael)
+    (son Mehujael Methushael)
+    (son Methushael Lamech)
+    (wife Lamech Ada)
+    (son Ada Jabal)
+    (son Ada Jubal)
+
+    (rule (father ?son ?father)
+          (or (son ?father ?son)
+              (and (son ?mother ?son)
+                   (wife ?father ?mother))))
+
+    (rule (grandfather ?grandson ?grandfather)
+          (and (father ?father ?grandfather)
+               (father ?grandson ?father)))
+
+    (grandfather ?x Cain)
+    (father ?x Lamech)
+    (grandfather ?x Methushael)))
+
+(define (interpret code)
+  (initialize)
+  (for ((expr (in-list code)))
+    (let ((x (expand-vars expr)))
+      (if (rule-or-fact? x)
+          (add-rule-or-fact x)
+          (stream-display
+           (stream-map
+            (lambda (frame)
+              (instantiate x frame (lambda (v f) (contract-var v))))
+            (eval x (stream '()))))))))
+
 (struct database (facts rules) #:mutable)
 
 (define db (database empty-stream empty-stream))
@@ -346,39 +382,3 @@
   (put 'not 'eval eval-not)
   (put 'value 'eval value)
   (put 'true 'eval true))
-
-(define (interpret code)
-  (initialize)
-  (for ((expr (in-list code)))
-    (let ((x (expand-vars expr)))
-      (if (rule-or-fact? x)
-          (add-rule-or-fact x)
-          (stream-display
-           (stream-map
-            (lambda (frame)
-              (instantiate x frame (lambda (v f) (contract-var v))))
-            (eval x (stream '()))))))))
-
-(define bible
-  '((son Adam Cain)
-    (son Cain Enoch)
-    (son Enoch Irad)
-    (son Irad Mehujael)
-    (son Mehujael Methushael)
-    (son Methushael Lamech)
-    (wife Lamech Ada)
-    (son Ada Jabal)
-    (son Ada Jubal)
-
-    (rule (father ?son ?father)
-          (or (son ?father ?son)
-              (and (son ?mother ?son)
-                   (wife ?father ?mother))))
-
-    (rule (grandfather ?grandson ?grandfather)
-          (and (father ?father ?grandfather)
-               (father ?grandson ?father)))
-
-    (grandfather ?x Cain)
-    (father ?x Lamech)
-    (grandfather ?x Methushael)))

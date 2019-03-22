@@ -6,6 +6,13 @@
 
 (require (only-in racket (apply apply-builtin)))
 
+(define (interpret code)
+  (let ((env (make-env)))
+    (for ((expr (in-list code)))
+      (let ((val (eval expr env)))
+        (unless (void? val)
+          (displayln val))))))
+
 (struct builtin (proc))
 
 (struct closure (vars body env))
@@ -176,10 +183,3 @@
   (let ((vars (map car builtins))
         (vals (map builtin (map cdr builtins))))
     (subst vars vals '())))
-
-(define (interpret code)
-  (let ((env (make-env)))
-    (for ((expr (in-list code)))
-      (let ((val (eval expr env)))
-        (unless (void? val)
-          (displayln val))))))

@@ -7,6 +7,54 @@
 (require (only-in racket (apply apply-builtin))
          racket/function)
 
+(define liars
+  '((define (require p) (or p (amb)))
+
+    (define (distinct? l)
+      (or (null? l)
+          (and (not (memq (car l) (cdr l)))
+               (distinct? (cdr l)))))
+
+    (define (memq x l)
+      (and (not (null? l))
+           (if (eq? x (car l))
+               l
+               (memq x (cdr l)))))
+
+    (let ((betty (amb 1 2 3 4 5))
+          (ethel (amb 1 2 3 4 5))
+          (joan (amb 1 2 3 4 5))
+          (kitty (amb 1 2 3 4 5))
+          (mary (amb 1 2 3 4 5)))
+      (require (distinct? (list betty ethel joan kitty mary)))
+      (require (or (= kitty 2) (= betty 3)))
+      (require (or (= ethel 1) (= joan 2)))
+      (require (or (= joan 3) (= ethel 5)))
+      (require (or (= kitty 2) (= mary 4)))
+      (require (or (= mary 4) (= betty 1)))
+      (list (list 'betty betty)
+            (list 'ethel ethel)
+            (list 'joan joan)
+            (list 'kitty kitty)
+            (list 'mary mary)))))
+
+(define (interpret code)
+  (let ((env (make-env))
+        (start void))
+    (let loop ((fail start))
+      (unless (null? code)
+        (let ((expr (car code)))
+          (set! code (cdr code))
+          (if (eq? expr 'next)
+              (fail)
+              (eval expr
+                    env
+                    (lambda (val fail*)
+                      (unless (void? val)
+                        (displayln val))
+                      (loop fail*))
+                    (thunk (loop start)))))))))
+
 (struct builtin (proc))
 
 (struct closure (vars proc env))
@@ -257,51 +305,3 @@
   (let ((vars (map car builtins))
         (vals (map builtin (map cdr builtins))))
     (subst vars vals '())))
-
-(define (interpret code)
-  (let ((env (make-env))
-        (start void))
-    (let loop ((fail start))
-      (unless (null? code)
-        (let ((expr (car code)))
-          (set! code (cdr code))
-          (if (eq? expr 'next)
-              (fail)
-              (eval expr
-                    env
-                    (lambda (val fail*)
-                      (unless (void? val)
-                        (displayln val))
-                      (loop fail*))
-                    (thunk (loop start)))))))))
-
-(define liars
-  '((define (require p) (or p (amb)))
-
-    (define (distinct? l)
-      (or (null? l)
-          (and (not (memq (car l) (cdr l)))
-               (distinct? (cdr l)))))
-
-    (define (memq x l)
-      (and (not (null? l))
-           (if (eq? x (car l))
-               l
-               (memq x (cdr l)))))
-
-    (let ((betty (amb 1 2 3 4 5))
-          (ethel (amb 1 2 3 4 5))
-          (joan (amb 1 2 3 4 5))
-          (kitty (amb 1 2 3 4 5))
-          (mary (amb 1 2 3 4 5)))
-      (require (distinct? (list betty ethel joan kitty mary)))
-      (require (or (= kitty 2) (= betty 3)))
-      (require (or (= ethel 1) (= joan 2)))
-      (require (or (= joan 3) (= ethel 5)))
-      (require (or (= kitty 2) (= mary 4)))
-      (require (or (= mary 4) (= betty 1)))
-      (list (list 'betty betty)
-            (list 'ethel ethel)
-            (list 'joan joan)
-            (list 'kitty kitty)
-            (list 'mary mary)))))
