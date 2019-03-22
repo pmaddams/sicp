@@ -5,9 +5,20 @@
 (provide (all-defined-out))
 
 (require (only-in racket (apply apply-builtin))
-         racket/set)
+         racket/class
+         racket/set
+         "../../vm/vm.rkt")
 
-(struct output (needed modified text))
+(define (execute code)
+  (let ((vm (make-vm (compile* code) #:regs all-regs)))
+    (send vm set 'env (make-env))
+    (send vm execute)
+    (send vm get 'val)))
+
+(define (compile* code)
+  (text (compile-list code 'val 'next)))
+
+(struct output (needs modifies text))
 
 (struct builtin (proc))
 
@@ -51,14 +62,15 @@
 
 (define (compile-lambda expr target linkage)
   (let ((label (gensym 'lambda-))
-        (after-lambda (gensym 'after-lambda-)))
-    (let ((linkage* (if (eq? linkage 'next) after-lambda linkage)))
+        (after-label (gensym 'after-lambda-)))
+    (let ((linkage* (if (eq? linkage 'next) after-label linkage)))
       (append-output
-       (embed-output (end-with linkage*
-                               (output '(env) (list target)
-                                       `((assign ,target (op subroutine) (label ,label) (reg env)))))
-                     (compile-lambda-body expr label))
-       after-lambda))))
+       (embed-output
+        (end-with linkage*
+                  (output '(env) (list target)
+                          `((assign ,target (op subroutine) (label ,label) (reg env)))))
+        (compile-lambda-body expr label))
+       after-label))))
 
 (define (compile-lambda-body expr label)
   (let ((vars (cadr expr))
@@ -81,53 +93,57 @@
                   (cons 'lambda (cons vars body)))))
          (out (compile x 'val 'next)))
     (end-with linkage
-              (output-preserving '(env)
-                                 out
-                                 (output
-                                  '(env val) (list target)
-                                  `((perform (op define-var) (const ,var) (reg val) (reg env))
-                                    (assign ,target (const ok))))))))
+              (output-preserving
+               '(env)
+               out
+               (output
+                '(env val) (list target)
+                `((perform (op define-var) (const ,var) (reg val) (reg env))
+                  (assign ,target (const ok))))))))
 
 (define (compile-set expr target linkage)
   (let ((var (cadr expr))
         (out (compile (caddr expr expr) 'val 'next)))
     (end-with linkage
-              (output-preserving '(env)
-                                 out
-                                 (output
-                                  '(env val) (list target)
-                                  `((perform (op set-var) (const ,var) (reg val) (reg env))
-                                    (assign ,target (const ok))))))))
+              (output-preserving
+               '(env)
+               out
+               (output
+                '(env val) (list target)
+                `((perform (op set-var) (const ,var) (reg val) (reg env))
+                  (assign ,target (const ok))))))))
 
 (define (compile-if expr target linkage)
   (let ((predicate (cadr expr))
         (consequent (caddr expr))
         (alternative (cadddr expr))
-        (then-branch (gensym 'then-))
-        (else-branch (gensym 'else-))
-        (after-if (gensym 'after-if-)))
+        (then-label (gensym 'then-))
+        (else-label (gensym 'else-))
+        (after-label (gensym 'after-if-)))
     (let ((consequent-linkage
-           (if (eq? linkage 'next) after-if linkage)))
+           (if (eq? linkage 'next) after-label linkage)))
       (let ((predicate-out (compile predicate 'val 'next))
             (consequent-out (compile consequent target consequent-linkage))
             (alternative-out (compile alternative target linkage)))
-        (output-preserving '(env continue)
-                           predicate-out
-                           (append-output
-                            (output '(val) '()
-                                    `((test (op false?) (reg val))
-                                      (branch (label ,else-branch))))
-                            (parallel-output
-                             (append-output then-branch consequent-out)
-                             (append-output else-branch alternative-out))
-                            after-if))))))
+        (output-preserving
+         '(env continue)
+         predicate-out
+         (append-output
+          (output '(val) '()
+                  `((test (op false?) (reg val))
+                    (branch (label ,else-label))))
+          (parallel-output
+           (append-output then-label consequent-out)
+           (append-output else-label alternative-out))
+          after-label))))))
 
 (define (compile-list exprs target linkage)
   (if (null? (cdr exprs))
       (compile (car exprs) target linkage)
-      (output-preserving '(env continue)
-                         (compile (car exprs) target 'next)
-                         (compile-list (cdr exprs) target linkage))))
+      (output-preserving
+       '(env continue)
+       (compile (car exprs) target 'next)
+       (compile-list (cdr exprs) target linkage))))
 
 (define (cond->if expr) (expand-cond (cdr expr)))
 
@@ -179,68 +195,69 @@
 
 (define (compile-application expr target linkage)
   (let ((proc-out (compile (car expr) 'proc 'next))
-        (args-out (map (lambda (x) (compile x 'val 'next))
-                       (cdr expr))))
+        (compiled-vals (reverse (map (lambda (x) (compile x 'val 'next))
+                                     (cdr expr)))))
     (output-preserving
      '(env continue)
      proc-out
      (output-preserving
       '(proc continue)
-      (construct-arglist args-out)
+      (construct-args compiled-vals)
       (compile-call target linkage)))))
 
-(define (construct-arglist operand-codes)
-  (let ((operand-codes (reverse operand-codes)))
-    (if (null? operand-codes)
-        (output '() '(args)
-                '((assign args (const ()))))
-        (let ((code-to-get-last-arg
-               (append-output
-                (car operand-codes)
-                (output '(val) '(args)
-                        '((assign args (op list) (reg val)))))))
-          (if (null? (cdr operand-codes))
-              code-to-get-last-arg
-              (output-preserving '(env)
-                                 code-to-get-last-arg
-                                 (code-to-get-rest-args
-                                  (cdr operand-codes))))))))
+(define (construct-args compiled-vals)
+  (if (null? compiled-vals)
+      (output '() '(args)
+              '((assign args (const ()))))
+      (let ((last-out
+             (append-output
+              (car compiled-vals)
+              (output '(val) '(args)
+                      '((assign args (op list) (reg val)))))))
+        (if (null? (cdr compiled-vals))
+            last-out
+            (output-preserving
+             '(env)
+             last-out
+             (construct-init-args
+              (cdr compiled-vals)))))))
 
-(define (code-to-get-rest-args operand-codes)
-  (let ((code-for-next-arg
-         (output-preserving '(args)
-                            (car operand-codes)
-                            (output '(val args) '(args)
-                                    '((assign args (op cons) (reg val) (reg args)))))))
-    (if (null? (cdr operand-codes))
-        code-for-next-arg
-        (output-preserving '(env)
-                           code-for-next-arg
-                           (code-to-get-rest-args (cdr operand-codes))))))
+(define (construct-init-args compiled-vals)
+  (let ((next-out
+         (output-preserving
+          '(args)
+          (car compiled-vals)
+          (output '(val args) '(args)
+                  '((assign args (op cons) (reg val) (reg args)))))))
+    (if (null? (cdr compiled-vals))
+        next-out
+        (output-preserving
+         '(env)
+         next-out
+         (construct-init-args (cdr compiled-vals))))))
 
 (define (compile-call target linkage)
-  (let ((builtin-branch (gensym 'builtin-))
-        (subroutine-branch (gensym 'subroutine-))
-        (after-call (gensym 'after-call-)))
-    (let ((subroutine-linkage
-           (if (eq? linkage 'next) after-call linkage)))
+  (let ((builtin-label (gensym 'builtin-))
+        (subroutine-label (gensym 'subroutine-))
+        (after-label (gensym 'after-call-)))
+    (let ((subroutine-linkage (if (eq? linkage 'next) after-label linkage)))
       (append-output
        (output '(proc) '()
                `((test (op builtin?) (reg proc))
-                 (branch (label ,builtin-branch))))
+                 (branch (label ,builtin-label))))
        (parallel-output
         (append-output
-         subroutine-branch
-         (compile-closure-application target subroutine-linkage))
+         subroutine-label
+         (compile-subroutine-call target subroutine-linkage))
         (append-output
-         builtin-branch
+         builtin-label
          (end-with linkage
                    (output '(proc args) (list target)
                            `((assign ,target (op builtin-proc) (reg proc))
                              (assign ,target (op apply-builtin) (reg ,target) (reg args)))))))
-       after-call))))
+       after-label))))
 
-(define (compile-closure-application target linkage)
+(define (compile-subroutine-call target linkage)
   (cond ((and (eq? target 'val) (not (eq? linkage 'return)))
          (output '(proc) all-regs
                  `((assign continue (label ,linkage))
@@ -263,52 +280,16 @@
         ((and (not (eq? target 'val)) (eq? linkage 'return))
          (error "return linkage, target not val -- COMPILE" target))))
 
-(define (empty-output)
-  (output '() '() '()))
-
-(define (compile-linkage linkage)
-  (case linkage
-    ('next (empty-output))
-    ('return (output '(continue) '()
-                     '((goto (reg continue)))))
-    (else (output '() '()
-                  `((goto (label ,linkage)))))))
-
 (define (end-with linkage out)
-  (output-preserving '(continue)
-                     out
-                     (compile-linkage linkage)))
-
-(define all-regs '(env proc val args continue))
-
-(define (needed s)
-  (if (symbol? s) '() (output-needed s)))
-
-(define (modified s)
-  (if (symbol? s) '() (output-modified s)))
-
-(define (text s)
-  (if (symbol? s) (list s) (output-text s)))
-
-(define (needs? out reg)
-  (memq reg (needed out)))
-
-(define (modifies? out reg)
-  (memq reg (modified out)))
-
-(define (append-output . args)
-  (define (combine out1 out2)
-    (output (set-union (needed out1)
-                       (set-subtract (needed out2)
-                                     (modified out1)))
-            (set-union (modified out1)
-                       (modified out2))
-            (append (text out1) (text out2))))
-
-  (let loop ((l args))
-    (if (null? l)
-        (empty-output)
-        (combine (car l) (loop (cdr l))))))
+  (output-preserving
+   '(continue)
+   out
+   (case linkage
+     ('next (empty-output))
+     ('return (output '(continue) '()
+                      '((goto (reg continue)))))
+     (else (output '() '()
+                   `((goto (label ,linkage))))))))
 
 (define (output-preserving regs out1 out2)
   (if (null? regs)
@@ -329,12 +310,6 @@
              out2)
             (output-preserving (cdr regs) out1 out2)))))
 
-(define (embed-output out body-out)
-  (output
-   (needed out)
-   (modified out)
-   (append (text out) (text body-out))))
-
 (define (parallel-output out1 out2)
   (output
    (set-union (needed out1)
@@ -342,6 +317,46 @@
    (set-union (modified out1)
               (modified out2))
    (append (text out1) (text out2))))
+
+(define (embed-output out body-out)
+  (output
+   (needed out)
+   (modified out)
+   (append (text out) (text body-out))))
+
+(define (append-output . args)
+  (define (combine out1 out2)
+    (output (set-union (needed out1)
+                       (set-subtract (needed out2)
+                                     (modified out1)))
+            (set-union (modified out1)
+                       (modified out2))
+            (append (text out1) (text out2))))
+
+  (let loop ((l args))
+    (if (null? l)
+        (empty-output)
+        (combine (car l) (loop (cdr l))))))
+
+(define (empty-output)
+  (output '() '() '()))
+
+(define (needed out)
+  (if (symbol? out) '() (output-needs out)))
+
+(define (modified out)
+  (if (symbol? out) '() (output-modifies out)))
+
+(define (text out)
+  (if (symbol? out) (list out) (output-text out)))
+
+(define (needs? out reg)
+  (memq reg (needed out)))
+
+(define (modifies? out reg)
+  (memq reg (modified out)))
+
+(define all-regs '(env proc val args continue))
 
 (define (subst vars vals env)
   (cons (make-frame vars vals) env))
