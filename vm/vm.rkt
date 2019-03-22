@@ -15,14 +15,16 @@
 
 (define/contract
   (make-vm text
+           #:regs (regs '())
            #:ops (ops '())
            #:type (type vm%))
   (->* (valid?)
-       (#:ops (listof (cons/c symbol? procedure?))
+       (#:regs (listof symbol?)
+        #:ops (listof (cons/c symbol? procedure?))
         #:type class?)
        vm?)
   (let ((vm (make-object type
-              (needed-regs text)
+              (needed-regs text regs)
               (needed-ops text ops))))
     (send vm install text)
     vm))
@@ -231,10 +233,7 @@
 ; (reg <reg-name>)
 (define (valid-val-expr? expr)
   (and (case (car expr)
-         ('const (let ((val (cadr expr)))
-                   (or (boolean? val)
-                       (number? val)
-                       (string? val))))
+         ('const #t)
          ('label (symbol? (cadr expr)))
          ('reg (symbol? (cadr expr)))
          (else #f))
@@ -249,9 +248,10 @@
     ('reg (let ((reg (cadr expr)))
             (thunk (send vm get reg))))))
 
-(define (needed-regs text)
+(define (needed-regs text regs)
   (remove-duplicates
-   (append (used-in text 'assign)
+   (append regs
+           (used-in text 'assign)
            (used-in text 'reg))))
 
 (define (needed-ops text ops)
