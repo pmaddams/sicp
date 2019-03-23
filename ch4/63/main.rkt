@@ -298,13 +298,13 @@
   (cons '? (cons id (cdr var))))
 
 (define (variable? expr)
-  (tagged-list? expr '?))
+  (type? '? expr))
 
 (define (rule-or-fact? expr)
   (or (rule? expr) (fact? expr)))
 
 (define (rule? expr)
-  (tagged-list? expr 'rule))
+  (type? 'rule expr))
 
 (define (conclusion rule) (cadr rule))
 
@@ -313,9 +313,9 @@
       '(true)
       (caddr rule)))
 
-(define (tagged-list? x tag)
+(define (type? t x)
   (and (pair? x)
-       (eq? tag (car x))))
+       (eq? t (car x))))
 
 (define (fact? expr)
   (let ((l (flatten expr)))

@@ -218,17 +218,17 @@
       (string? expr)))
 
 (define (quote-expr? expr)
-  (tagged-list? expr 'quote))
+  (type? 'quote expr))
 
 (define (lambda-expr? expr)
-  (tagged-list? expr 'lambda))
+  (type? 'lambda expr))
 
 (define lambda-expr-vars cadr)
 
 (define lambda-expr-body cddr)
 
 (define (define-expr? expr)
-  (tagged-list? expr 'define))
+  (type? 'define expr))
 
 (define (define-expr-var expr)
   (if (symbol? (cadr expr))
@@ -243,14 +243,14 @@
                   (cddr expr)))))
 
 (define (set-expr? expr)
-  (tagged-list? expr 'set!))
+  (type? 'set! expr))
 
 (define set-expr-var cadr)
 
 (define set-expr-val caddr)
 
 (define (if-expr? expr)
-  (tagged-list? expr 'if))
+  (type? 'if expr))
 
 (define if-expr-predicate cadr)
 
@@ -259,10 +259,10 @@
 (define if-expr-alternative cadddr)
 
 (define (begin-expr? expr)
-  (tagged-list? expr 'begin))
+  (type? 'begin expr))
 
 (define (cond-expr? expr)
-  (tagged-list? expr 'cond))
+  (type? 'cond expr))
 
 (define (cond->if expr) (expand-cond (cdr expr)))
 
@@ -286,7 +286,7 @@
       (cons 'begin exprs)))
 
 (define (and-expr? expr)
-  (tagged-list? expr 'and))
+  (type? 'and expr))
 
 (define (and->if expr) (expand-and (cdr expr)))
 
@@ -299,7 +299,7 @@
                 (list 'if predicate consequent alternative)))))
 
 (define (or-expr? expr)
-  (tagged-list? expr 'or))
+  (type? 'or expr))
 
 (define (or->if expr) (expand-or (cdr expr)))
 
@@ -312,7 +312,7 @@
                 (list 'if predicate consequent alternative)))))
 
 (define (let-expr? expr)
-  (tagged-list? expr 'let))
+  (type? 'let expr))
 
 (define (let->lambda expr)
   (let* ((bindings (cadr expr))
@@ -321,9 +321,9 @@
          (body (cddr expr)))
     (cons (cons 'lambda (cons vars body)) exprs)))
 
-(define (tagged-list? x tag)
+(define (type? t x)
   (and (pair? x)
-       (eq? tag (car x))))
+       (eq? t (car x))))
 
 (define (singleton? l) (null? (cdr l)))
 
