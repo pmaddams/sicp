@@ -209,31 +209,31 @@
   (if (null? compiled-vals)
       (output '() '(args)
               '((assign args (const ()))))
-      (let ((last-out
+      (let ((last-arg-out
              (append-output
               (car compiled-vals)
               (output '(val) '(args)
                       '((assign args (op list) (reg val)))))))
         (if (null? (cdr compiled-vals))
-            last-out
+            last-arg-out
             (output-preserving
              '(env)
-             last-out
+             last-arg-out
              (construct-init-args
               (cdr compiled-vals)))))))
 
 (define (construct-init-args compiled-vals)
-  (let ((next-out
+  (let ((next-arg-out
          (output-preserving
           '(args)
           (car compiled-vals)
           (output '(val args) '(args)
                   '((assign args (op cons) (reg val) (reg args)))))))
     (if (null? (cdr compiled-vals))
-        next-out
+        next-arg-out
         (output-preserving
          '(env)
-         next-out
+         next-arg-out
          (construct-init-args (cdr compiled-vals))))))
 
 (define (compile-call target linkage)
