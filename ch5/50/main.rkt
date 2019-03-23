@@ -258,27 +258,27 @@
        after-label))))
 
 (define (compile-subroutine-call target linkage)
-  (cond ((and (eq? target 'val) (not (eq? linkage 'return)))
-         (output '(proc) all-regs
-                 `((assign continue (label ,linkage))
-                   (assign val (op subroutine-label) (reg proc))
-                   (goto (reg val)))))
-        ((and (not (eq? target 'val))
-              (not (eq? linkage 'return)))
-         (let ((proc-return (gensym 'proc-return-)))
-           (output '(proc) all-regs
-                   `((assign continue (label ,proc-return))
-                     (assign val (op subroutine-label) (reg proc))
-                     (goto (reg val))
-                     ,proc-return
-                     (assign ,target (reg val))
-                     (goto (label ,linkage))))))
-        ((and (eq? target 'val) (eq? linkage 'return))
-         (output '(proc continue) all-regs
-                 '((assign val (op subroutine-label) (reg proc))
-                   (goto (reg val)))))
-        ((and (not (eq? target 'val)) (eq? linkage 'return))
-         (error "return linkage, target not val -- COMPILE" target))))
+  (case target
+    ('val (case linkage
+            ('return
+             (output '(proc continue) all-regs
+                     '((assign val (op subroutine-label) (reg proc))
+                       (goto (reg val)))))
+            (else
+             (output '(proc) all-regs
+                     `((assign continue (label ,linkage))
+                       (assign val (op subroutine-label) (reg proc))
+                       (goto (reg val)))))))
+    (else (case linkage
+            ('return (error "compilation error"))
+            (else (let ((return-label (gensym 'return-)))
+                    (output '(proc) all-regs
+                            `((assign continue (label ,return-label))
+                              (assign val (op subroutine-label) (reg proc))
+                              (goto (reg val))
+                              ,return-label
+                              (assign ,target (reg val))
+                              (goto (label ,linkage))))))))))
 
 (define (end-with linkage out)
   (output-preserving
@@ -294,19 +294,19 @@
 (define (output-preserving regs out1 out2)
   (if (null? regs)
       (append-output out1 out2)
-      (let ((first-reg (car regs)))
-        (if (and (needs? out2 first-reg)
-                 (modifies? out1 first-reg))
+      (let ((reg (car regs)))
+        (if (and (needs? reg out2)
+                 (modifies? reg out1))
             (output-preserving
              (cdr regs)
              (output
-              (set-union (list first-reg)
+              (set-union (list reg)
                          (needed out1))
               (set-subtract (modified out1)
-                            (list first-reg))
-              (append `((save ,first-reg))
+                            (list reg))
+              (append `((save ,reg))
                       (text out1)
-                      `((restore ,first-reg))))
+                      `((restore ,reg))))
              out2)
             (output-preserving (cdr regs) out1 out2)))))
 
@@ -350,10 +350,10 @@
 (define (text out)
   (if (symbol? out) (list out) (output-text out)))
 
-(define (needs? out reg)
+(define (needs? reg out)
   (memq reg (needed out)))
 
-(define (modifies? out reg)
+(define (modifies? reg out)
   (memq reg (modified out)))
 
 (define all-regs '(env proc val args continue))
