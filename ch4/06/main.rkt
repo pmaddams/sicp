@@ -22,9 +22,7 @@
         ((symbol? expr) (get-var expr env))
         (else (case (car expr)
                 ('quote (cadr expr))
-                ('lambda (let ((vars (cadr expr))
-                               (body (cddr expr)))
-                           (closure vars body env)))
+                ('lambda (eval-lambda expr env))
                 ('define (eval-define expr env))
                 ('set! (eval-set expr env))
                 ('if (eval-if expr env))
@@ -50,6 +48,11 @@
   (or (boolean? expr)
       (number? expr)
       (string? expr)))
+
+(define (eval-lambda expr env)
+  (let ((vars (cadr expr))
+        (body (cddr expr)))
+    (closure vars body env)))
 
 (define (eval-define expr env)
   (let* ((var (if (symbol? (cadr expr))
