@@ -135,13 +135,12 @@
     (cons (cons 'lambda (cons vars body)) exprs)))
 
 (define (subst vars vals env)
-  (cons (make-frame vars vals) env))
+  (if (= (length vars) (length vals))
+      (cons (make-frame vars vals) env)
+      (error "arity mismatch:" vars vals)))
 
 (define (make-frame vars vals)
-  (if (not (= (length vars) (length vals)))
-      (error "arity mismatch:" vars vals)
-      (let ((assocs (map cons vars vals)))
-        (make-hash assocs))))
+  (make-hash (map cons vars vals)))
 
 (define (define-var var val env)
   (let ((frame (car env)))

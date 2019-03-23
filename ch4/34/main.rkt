@@ -157,14 +157,13 @@
          (body (cddr expr)))
     (cons (cons 'lambda (cons vars body)) exprs)))
 
-(define (subst vars objs env)
-  (cons (make-frame vars objs) env))
+(define (subst vars vals env)
+  (if (= (length vars) (length vals))
+      (cons (make-frame vars vals) env)
+      (error "arity mismatch:" vars vals)))
 
-(define (make-frame vars objs)
-  (if (not (= (length vars) (length objs)))
-      (error "arity mismatch:" vars objs)
-      (let ((assocs (map cons vars objs)))
-        (make-hash assocs))))
+(define (make-frame vars vals)
+  (make-hash (map cons vars vals)))
 
 (define (define-var var obj env)
   (let ((frame (car env)))
