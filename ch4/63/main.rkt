@@ -4,7 +4,7 @@
 
 (provide (all-defined-out))
 
-(require (only-in racket (eval eval-lisp))
+(require (only-in racket (eval eval*))
          racket/list
          racket/promise
          racket/stream)
@@ -135,7 +135,7 @@
 (define (true expr st) st)
 
 (define (execute expr)
-  (let ((op (eval-lisp (car expr) (make-base-namespace)))
+  (let ((op (eval* (car expr) (make-base-namespace)))
         (args (cdr expr)))
     (apply op args)))
 
