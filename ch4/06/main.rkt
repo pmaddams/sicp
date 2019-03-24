@@ -4,7 +4,7 @@
 
 (provide (all-defined-out))
 
-(require (only-in racket (apply apply-builtin)))
+(require (only-in racket (apply apply*)))
 
 (define (interpret code)
   (let ((env (make-env)))
@@ -12,8 +12,6 @@
       (let ((val (eval expr env)))
         (unless (void? val)
           (displayln val))))))
-
-(struct builtin (proc))
 
 (struct closure (vars body env))
 
@@ -37,8 +35,8 @@
                         (apply op args)))))))
 
 (define (apply op args)
-  (if (builtin? op)
-      (apply-builtin (builtin-proc op) args)
+  (if (procedure? op)
+      (apply* op args)
       (eval-list (closure-body op)
                  (subst (closure-vars op)
                         args
@@ -183,5 +181,5 @@
 
 (define (make-env)
   (let ((vars (map car builtins))
-        (vals (map builtin (map cdr builtins))))
+        (vals (map cdr builtins)))
     (subst vars vals '())))

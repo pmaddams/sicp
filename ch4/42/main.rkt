@@ -4,7 +4,7 @@
 
 (provide (all-defined-out))
 
-(require (only-in racket (apply apply-builtin))
+(require (only-in racket (apply apply*))
          racket/function)
 
 (define liars
@@ -55,8 +55,6 @@
                       (loop fail*))
                     (thunk (loop start)))))))))
 
-(struct builtin (proc))
-
 (struct closure (vars proc env))
 
 (define (eval expr env succeed fail)
@@ -80,8 +78,8 @@
                 (else (analyze-apply expr))))))
 
 (define (apply op args succeed fail)
-  (if (builtin? op)
-      (succeed (apply-builtin (builtin-proc op) args) fail)
+  (if (procedure? op)
+      (succeed (apply* op args) fail)
       ((closure-proc op)
        (subst (closure-vars op)
               args
@@ -302,5 +300,5 @@
 
 (define (make-env)
   (let ((vars (map car builtins))
-        (vals (map builtin (map cdr builtins))))
+        (vals (map cdr builtins)))
     (subst vars vals '())))

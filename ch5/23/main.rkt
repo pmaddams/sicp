@@ -7,8 +7,6 @@
 (require racket/class
          "../../vm/vm.rkt")
 
-(require (only-in racket (apply apply-builtin)))
-
 (define lisp
   '(loop
     (assign expr (op read))
@@ -191,14 +189,13 @@
     (restore proc)
     (goto (label apply))
     apply
-    (test (op builtin?) (reg proc))
+    (test (op procedure?) (reg proc))
     (branch (label apply-builtin))
     (test (op closure?) (reg proc))
     (branch (label apply-closure))
     (goto (label unknown-procedure-type))
     apply-builtin
-    (assign val (op builtin-proc) (reg proc))
-    (assign val (op apply-builtin) (reg val) (reg args))
+    (assign val (op apply) (reg proc) (reg args))
     (restore continue)
     (goto (reg continue))
     apply-closure
@@ -207,8 +204,6 @@
     (assign env (op subst) (reg unev) (reg args) (reg env))
     (assign unev (op closure-body) (reg proc))
     (goto (label eval-list))))
-
-(struct builtin (proc))
 
 (struct closure (vars body env))
 
@@ -385,7 +380,7 @@
 
 (define (make-env)
   (let ((vars (map car builtins))
-        (vals (map builtin (map cdr builtins))))
+        (vals (map cdr builtins)))
     (subst vars vals '())))
 
 (define env (make-env))

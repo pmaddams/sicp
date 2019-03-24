@@ -4,7 +4,7 @@
 
 (provide (all-defined-out))
 
-(require (only-in racket (apply apply-builtin))
+(require (only-in racket (apply apply*))
          racket/class
          racket/set
          "../../vm/vm.rkt")
@@ -19,8 +19,6 @@
   (text (compile-list code 'val 'next)))
 
 (struct output (needs modifies text))
-
-(struct builtin (proc))
 
 (struct subroutine (label env))
 
@@ -243,7 +241,7 @@
     (let ((subroutine-linkage (if (eq? linkage 'next) after-label linkage)))
       (append-output
        (output '(proc) '()
-               `((test (op builtin?) (reg proc))
+               `((test (op procedure?) (reg proc))
                  (branch (label ,builtin-label))))
        (parallel-output
         (append-output
@@ -253,8 +251,7 @@
          builtin-label
          (end-with linkage
                    (output '(proc args) (list target)
-                           `((assign ,target (op builtin-proc) (reg proc))
-                             (assign ,target (op apply-builtin) (reg ,target) (reg args)))))))
+                           `((assign ,target (op apply*) (reg proc) (reg args)))))))
        after-label))))
 
 (define (compile-subroutine-call target linkage)
@@ -407,5 +404,5 @@
 
 (define (make-env)
   (let ((vars (map car builtins))
-        (vals (map builtin (map cdr builtins))))
+        (vals (map cdr builtins)))
     (subst vars vals '())))
