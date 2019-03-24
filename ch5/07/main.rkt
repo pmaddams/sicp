@@ -5,7 +5,7 @@
 (provide (all-defined-out))
 
 (require racket/class
-         "../../vm/vm.rkt")
+         vm)
 
 (define ((make-expt code) a n)
   (let ((vm (make-vm code)))

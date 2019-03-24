@@ -7,7 +7,7 @@
 (require (only-in racket (apply apply*))
          racket/class
          racket/set
-         "../../vm/vm.rkt")
+         vm)
 
 (define (execute code)
   (let ((vm (make-vm (compile* code) #:regs all-regs)))

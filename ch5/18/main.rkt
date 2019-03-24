@@ -5,7 +5,7 @@
 (provide (all-defined-out))
 
 (require racket/class
-         "../../vm/vm.rkt")
+         vm)
 
 (define (tracing vm%)
   (class vm%
