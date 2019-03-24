@@ -1,4 +1,39 @@
-(define apply-builtin apply)
+#lang lisp
+
+(define (list . args) args)
+
+(define (cadr l)
+  (car (cdr l)))
+
+(define (cddr l)
+  (cdr (cdr l)))
+
+(define (caadr l)
+  (car (cadr l)))
+
+(define (cdadr l)
+  (cdr (cadr l)))
+
+(define (caddr l)
+  (car (cddr l)))
+
+(define (cadddr l)
+  (car (cdr (cddr l))))
+
+(define (length l)
+  (if (null? l)
+      0
+      (+ 1 (length (cdr l)))))
+
+(define (map f l)
+  (if (null? l)
+      '()
+      (cons (f (car l)) (map f (cdr l)))))
+
+(define (memq x l)
+  (cond ((null? l) #f)
+        ((eq? x (car l)) l)
+        (else (memq x (cdr l)))))
 
 (define (eval expr env)
   (cond ((literal? expr) expr)
@@ -20,7 +55,7 @@
 
 (define (apply op args)
   (if (builtin? op)
-      (apply-builtin op args)
+      (apply* op args)
       (eval-list (closure-body op)
                  (subst (closure-vars op)
                         args
