@@ -7,25 +7,20 @@
 (require racket/class
          "../../vm/vm.rkt")
 
+(define (execute code)
+  (let ((vm (make-vm lisp)))
+    (set! env (make-env))
+    (set! buf code)
+    (send vm execute)
+    (send vm get 'val)))
+
 (define lisp
   '(loop
-    (assign expr (op read))
+    (assign expr (op input))
+    (test (op eof-object?) (reg expr))
+    (branch (label done))
     (assign env (op get-env))
-    (assign continue (label print))
-    (goto (label eval))
-    print
-    (perform (op displayln) (reg val))
-    (goto (label loop))
-    unknown-expression-type
-    (assign val (const "error: unknown expression type"))
-    (goto (label error))
-    unknown-procedure-type
-    (restore continue)
-    (assign val (const "error: unknown procedure type"))
-    (goto (label error))
-    error
-    (perform (op displayln) (reg val))
-    (goto (label loop))
+    (assign continue (label loop))
     eval
     (test (op literal?) (reg expr))
     (branch (label eval-literal))
@@ -53,7 +48,7 @@
     (branch (label eval-let))
     (test (op pair?) (reg expr))
     (branch (label eval-application))
-    (goto (label unknown-expression-type))
+    (perform (op error) (const "syntax error"))
     eval-literal
     (assign val (reg expr))
     (goto (reg continue))
@@ -191,9 +186,7 @@
     apply
     (test (op procedure?) (reg proc))
     (branch (label apply-builtin))
-    (test (op closure?) (reg proc))
-    (branch (label apply-closure))
-    (goto (label unknown-procedure-type))
+    (goto (label apply-closure))
     apply-builtin
     (assign val (op apply) (reg proc) (reg args))
     (restore continue)
@@ -203,7 +196,8 @@
     (assign env (op closure-env) (reg proc))
     (assign env (op subst) (reg unev) (reg args) (reg env))
     (assign unev (op closure-body) (reg proc))
-    (goto (label eval-list))))
+    (goto (label eval-list))
+    done))
 
 (struct closure (vars body env))
 
@@ -383,6 +377,15 @@
         (vals (map cdr builtins)))
     (subst vars vals '())))
 
-(define env (make-env))
+(define env '())
 
 (define (get-env) env)
+
+(define buf '())
+
+(define (input)
+  (if (null? buf)
+      eof
+      (let ((expr (car buf)))
+        (set! buf (cdr buf))
+        expr)))
