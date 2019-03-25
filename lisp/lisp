@@ -39,7 +39,7 @@
         ((type? 'quote expr) (cadr expr))
         ((type? 'lambda expr) (eval-lambda expr env))
         ((type? 'define expr) (eval-define expr env))
-        ((type? 'set expr) (eval-set expr env))
+        ((type? 'set! expr) (eval-set expr env))
         ((type? 'if expr) (eval-if expr env))
         ((type? 'begin expr) (eval-list (cdr expr) env))
         ((type? 'cond expr) (eval (cond->if expr) env))
@@ -61,8 +61,7 @@
 
 (define (literal? expr)
   (or (boolean? expr)
-      (number? expr)
-      (string? expr)))
+      (number? expr)))
 
 (define (type? t x)
   (and (pair? x)
@@ -115,9 +114,7 @@
         (let ((predicate (car first))
               (consequent (list->expr (cdr first))))
           (if (eq? 'else predicate)
-              (if (null? rest)
-                  consequent
-                  (error "else clause must be last"))
+              consequent
               (let ((alternative (expand-cond rest)))
                 (list 'if predicate consequent alternative)))))))
 
@@ -163,7 +160,11 @@
 (define closure-env caddr)
 
 (define builtins
-  (list (cons '+ +)
+  (list (cons 'boolean? boolean?)
+        (cons 'number? number?)
+        (cons 'symbol? symbol?)
+        (cons 'procedure? procedure?)
+        (cons '+ +)
         (cons '- -)
         (cons '* *)
         (cons '/ /)
@@ -179,9 +180,23 @@
         (cons 'cdr cdr)
         (cons 'list list)
         (cons 'display display)
-        (cons 'newline newline)))
+        (cons 'newline newline)
+        (cons 'read read)
+        (cons 'subst subst)
+        (cons 'define-var define-var)
+        (cons 'get-var get-var)
+        (cons 'set-var set-var)
+        (cons 'apply* apply*)))
 
 (define (make-env)
   (let ((vars (map car builtins))
         (vals (map cdr builtins)))
     (subst vars vals '())))
+
+(let ((env (make-env)))
+  (define (loop)
+    (display (eval (read) env))
+    (newline)
+    (loop))
+
+  (loop))

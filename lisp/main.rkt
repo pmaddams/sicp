@@ -24,7 +24,6 @@
  ; builtins
  boolean?
  number?
- string?
  symbol?
  procedure?
  +
@@ -45,8 +44,6 @@
  display
  newline
  read
- load
- error
  subst
  define-var
  get-var
