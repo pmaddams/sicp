@@ -41,19 +41,18 @@
 (define (interpret code)
   (let ((env (make-env))
         (start void))
-    (let loop ((fail start))
-      (unless (null? code)
-        (let ((expr (car code)))
-          (set! code (cdr code))
-          (if (eq? expr 'next)
-              (fail)
-              (eval expr
-                    env
-                    (lambda (val fail*)
-                      (unless (void? val)
-                        (displayln val))
-                      (loop fail*))
-                    (thunk (loop start)))))))))
+    (let loop ((val #f) (fail start))
+      (if (null? code)
+          val
+          (let ((expr (car code)))
+            (set! code (cdr code))
+            (if (eq? expr 'next)
+                (fail)
+                (eval expr
+                      env
+                      (lambda (val fail*)
+                        (loop val fail*))
+                      (thunk (loop start)))))))))
 
 (struct closure (vars proc env))
 
@@ -253,11 +252,9 @@
 
 (define (subst vars vals env)
   (if (= (length vars) (length vals))
-      (cons (make-frame vars vals) env)
+      (let ((frame (make-hash (map cons vars vals))))
+        (cons frame env))
       (error "arity mismatch:" vars vals)))
-
-(define (make-frame vars vals)
-  (make-hash (map cons vars vals)))
 
 (define (define-var var val env)
   (let ((frame (car env)))

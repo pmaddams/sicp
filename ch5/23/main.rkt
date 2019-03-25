@@ -7,7 +7,7 @@
 (require racket/class
          vm)
 
-(define (execute code)
+(define (interpret code)
   (let ((vm (make-vm lisp)))
     (set! env (make-env))
     (set! buf code)
@@ -15,7 +15,8 @@
     (send vm get 'val)))
 
 (define lisp
-  '(loop
+  '((assign val (const #f))
+    loop
     (assign expr (op input))
     (test (op eof-object?) (reg expr))
     (branch (label done))
@@ -327,11 +328,9 @@
 
 (define (subst vars vals env)
   (if (= (length vars) (length vals))
-      (cons (make-frame vars vals) env)
+      (let ((frame (make-hash (map cons vars vals))))
+        (cons frame env))
       (error "arity mismatch:" vars vals)))
-
-(define (make-frame vars vals)
-  (make-hash (map cons vars vals)))
 
 (define (define-var var val env)
   (let ((frame (car env)))

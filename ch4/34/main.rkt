@@ -8,10 +8,8 @@
 
 (define (interpret code)
   (let ((env (make-env)))
-    (for ((expr (in-list code)))
-      (let ((val (value expr env)))
-        (unless (void? val)
-          (displayln val))))))
+    (for/last ((expr (in-list code)))
+      (value expr env))))
 
 (struct closure (vars body env))
 
@@ -26,7 +24,6 @@
                 ('quote (cadr expr))
                 ('lambda (eval-lambda expr env))
                 ('define (eval-define expr env))
-                ('set! (eval-set expr env))
                 ('if (eval-if expr env))
                 ('begin (eval-list (cdr expr) env))
                 ('cond (eval (cond->if expr) env))
@@ -86,12 +83,6 @@
                   (cons 'lambda (cons vars body)))))
          (obj (eval x env)))
     (define-var var obj env)))
-
-(define (eval-set expr env)
-  (let* ((var (cadr expr))
-         (x (caddr expr))
-         (obj (eval x env)))
-    (set-var var obj env)))
 
 (define (eval-if expr env)
   (let ((predicate (cadr expr))
@@ -157,11 +148,9 @@
 
 (define (subst vars vals env)
   (if (= (length vars) (length vals))
-      (cons (make-frame vars vals) env)
+      (let ((frame (make-hash (map cons vars vals))))
+        (cons frame env))
       (error "arity mismatch:" vars vals)))
-
-(define (make-frame vars vals)
-  (make-hash (map cons vars vals)))
 
 (define (define-var var obj env)
   (let ((frame (car env)))
@@ -174,14 +163,6 @@
         (if (hash-has-key? frame var)
             (hash-ref frame var)
             (get-var var (cdr env))))))
-
-(define (set-var var obj env)
-  (if (null? env)
-      (error "undefined:" var)
-      (let ((frame (car env)))
-        (if (hash-has-key? frame var)
-            (hash-set! frame var obj)
-            (set-var var obj (cdr env))))))
 
 (define (stream-cons x y)
   (stream

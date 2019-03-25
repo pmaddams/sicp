@@ -162,40 +162,6 @@
 
 (define closure-env caddr)
 
-(define (subst vars vals env)
-  (if (= (length vars) (length vals))
-      (cons (make-frame vars vals) env)
-      (error "arity mismatch:" vars vals)))
-
-(define (zip l1 l2)
-  (if (or (null? l1) (null? l2))
-      '()
-      (cons (cons (car l1) (car l2))
-            (zip (cdr l1) (cdr l2)))))
-
-(define (make-frame vars vals)
-  (make-hash (zip vars vals)))
-
-(define (define-var var val env)
-  (let ((frame (car env)))
-    (hash-set! frame var val)))
-
-(define (get-var var env)
-  (if (null? env)
-      (error "undefined:" var)
-      (let ((frame (car env)))
-        (if (hash-has-key? frame var)
-            (hash-ref frame var)
-            (get-var var (cdr env))))))
-
-(define (set-var var val env)
-  (if (null? env)
-      (error "undefined:" var)
-      (let ((frame (car env)))
-        (if (hash-has-key? frame var)
-            (hash-set! frame var val)
-            (set-var var val (cdr env))))))
-
 (define builtins
   (list (cons '+ +)
         (cons '- -)

@@ -9,11 +9,12 @@
          racket/set
          vm)
 
-(define (execute code)
-  (let ((vm (make-vm (compile* code) #:regs all-regs)))
-    (send vm set 'env (make-env))
-    (send vm execute)
-    (send vm get 'val)))
+(define (interpret code)
+  (and (not (null? code))
+       (let ((vm (make-vm (compile* code) #:regs all-regs)))
+         (send vm set 'env (make-env))
+         (send vm execute)
+         (send vm get 'val))))
 
 (define (compile* code)
   (text (compile-list code 'val 'next)))
@@ -357,11 +358,9 @@
 
 (define (subst vars vals env)
   (if (= (length vars) (length vals))
-      (cons (make-frame vars vals) env)
+      (let ((frame (make-hash (map cons vars vals))))
+        (cons frame env))
       (error "arity mismatch:" vars vals)))
-
-(define (make-frame vars vals)
-  (make-hash (map cons vars vals)))
 
 (define (define-var var val env)
   (let ((frame (car env)))

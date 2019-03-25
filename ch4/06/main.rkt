@@ -8,10 +8,8 @@
 
 (define (interpret code)
   (let ((env (make-env)))
-    (for ((expr (in-list code)))
-      (let ((val (eval expr env)))
-        (unless (void? val)
-          (displayln val))))))
+    (for/last ((expr (in-list code)))
+      (eval expr env))))
 
 (struct closure (vars body env))
 
@@ -134,11 +132,9 @@
 
 (define (subst vars vals env)
   (if (= (length vars) (length vals))
-      (cons (make-frame vars vals) env)
+      (let ((frame (make-hash (map cons vars vals))))
+        (cons frame env))
       (error "arity mismatch:" vars vals)))
-
-(define (make-frame vars vals)
-  (make-hash (map cons vars vals)))
 
 (define (define-var var val env)
   (let ((frame (car env)))
