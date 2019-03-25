@@ -65,8 +65,7 @@
 
 (define (literal? expr)
   (or (boolean? expr)
-      (number? expr)
-      (string? expr)))
+      (number? expr)))
 
 (define (eval-lambda expr env)
   (let ((vars (cadr expr))
@@ -109,9 +108,7 @@
              (consequent (list->expr (cdr first)))
              (rest (cdr clauses)))
         (if (eq? predicate 'else)
-            (if (null? rest)
-                consequent
-                (error "else clause must be last"))
+            consequent
             (let ((alternative (expand-cond rest)))
               (list 'if predicate consequent alternative))))))
 
@@ -167,20 +164,32 @@
        x)))
 
 (define builtins
-  `((+ . ,+)
+  `(; types
+    (null? . ,null?)
+    (pair? . ,stream?)
+    (symbol? . ,symbol?)
+    (boolean? . ,boolean?)
+    (number? . ,number?)
+
+    ; arithmetic
+    (+ . ,+)
     (- . ,-)
     (* . ,*)
     (/ . ,/)
+
+    ; logic
     (< . ,<)
     (> . ,>)
     (= . ,=)
     (eq? . ,eq?)
     (not . ,not)
-    (null? . ,null?)
-    (pair? . ,stream?)
+
+    ; data structures
     (cons . ,stream-cons)
     (car . ,stream-first)
     (cdr . ,stream-rest)
+
+    ; input/output
     (display . ,stream-display)
     (newline . ,newline)))
 

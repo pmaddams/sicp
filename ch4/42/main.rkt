@@ -89,8 +89,7 @@
 
 (define (literal? expr)
   (or (boolean? expr)
-      (number? expr)
-      (string? expr)))
+      (number? expr)))
 
 (define ((analyze-literal expr) env succeed fail)
   (succeed expr fail))
@@ -175,9 +174,7 @@
              (consequent (list->expr (cdr first)))
              (rest (cdr clauses)))
         (if (eq? predicate 'else)
-            (if (null? rest)
-                consequent
-                (error "else clause must be last"))
+            consequent
             (let ((alternative (expand-cond rest)))
               (list 'if predicate consequent alternative))))))
 
@@ -252,23 +249,46 @@
        fail)))
 
 (define builtins
-  `((+ . ,+)
+  `(; types
+    (null? . ,null?)
+    (pair? . ,pair?)
+    (symbol? . ,symbol?)
+    (boolean? . ,boolean?)
+    (number? . ,number?)
+    (procedure? . ,procedure?)
+
+    ; arithmetic
+    (+ . ,+)
     (- . ,-)
     (* . ,*)
     (/ . ,/)
+
+    ; logic
     (< . ,<)
     (> . ,>)
     (= . ,=)
     (eq? . ,eq?)
     (not . ,not)
-    (null? . ,null?)
-    (pair? . ,pair?)
+
+    ; data structures
     (cons . ,cons)
     (car . ,car)
     (cdr . ,cdr)
     (list . ,list)
+
+    ; input/output
     (display . ,display)
-    (newline . ,newline)))
+    (newline . ,newline)
+    (read . ,read)
+
+    ; environment
+    (subst . ,subst)
+    (define-var . ,define-var)
+    (get-var . ,get-var)
+    (set-var . ,set-var)
+
+    ; application
+    (apply* . ,apply*)))
 
 (define (make-env)
   (let ((vars (map car builtins))

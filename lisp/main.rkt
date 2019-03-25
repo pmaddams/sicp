@@ -21,35 +21,45 @@
  or
  let
 
- ; builtins
+ ; types
+ null?
+ pair?
  boolean?
  number?
  symbol?
  procedure?
+
+ ; arithmetic
  +
  -
  *
  /
+
+ ; logic
  >
  <
  =
  eq?
  not
- null?
- pair?
+
+ ; data structures
  cons
  car
  cdr
  list
+
+ ; input/output
  display
  newline
  read
+
+ ; environment
  subst
  define-var
  get-var
  set-var
 
- ; reserved
+ ; application
  (rename-out (apply apply*)))
 
 (require lisp/env)
