@@ -1,7 +1,5 @@
 #lang lisp
 
-(define (list . args) args)
-
 (define (cadr l)
   (car (cdr l)))
 
@@ -54,7 +52,7 @@
                   (apply op args))))))
 
 (define (apply op args)
-  (if (builtin? op)
+  (if (procedure? op)
       (apply* op args)
       (eval-list (closure-body op)
                  (subst (closure-vars op)
@@ -167,51 +165,36 @@
 (define (subst vars vals env)
   (if (= (length vars) (length vals))
       (cons (make-frame vars vals) env)
-      (error "arity mismatch")))
+      (error "arity mismatch:" vars vals)))
 
-(define make-frame cons)
+(define (zip l1 l2)
+  (if (or (null? l1) (null? l2))
+      '()
+      (cons (cons (car l1) (car l2))
+            (zip (cdr l1) (cdr l2)))))
 
-(define frame-vars car)
-
-(define frame-vals cdr)
+(define (make-frame vars vals)
+  (make-hash (zip vars vals)))
 
 (define (define-var var val env)
   (let ((frame (car env)))
-    (define (scan vars vals)
-      (cond ((null? vars) (set-car! frame (cons var (frame-vars frame)))
-                          (set-cdr! frame (cons val (frame-vals frame))))
-            ((eq? var (car vars)) (set-car! vals val))
-            (else (scan (cdr vars) (cdr vals)))))
-
-    (scan (frame-vars frame) (frame-vals frame))))
+    (hash-set! frame var val)))
 
 (define (get-var var env)
-  (define (loop env)
-    (define (scan vars vals)
-      (cond ((null? vars) (loop (cdr env)))
-            ((eq? var (car vars)) (car vals))
-            (else (scan (cdr vars) (cdr vals)))))
-
-    (if (null? env)
-        (error "undefined")
-        (let ((frame (car env)))
-          (scan (frame-vars frame) (frame-vals frame)))))
-
-  (loop env))
+  (if (null? env)
+      (error "undefined:" var)
+      (let ((frame (car env)))
+        (if (hash-has-key? frame var)
+            (hash-ref frame var)
+            (get-var var (cdr env))))))
 
 (define (set-var var val env)
-  (define (loop env)
-    (define (scan vars vals)
-      (cond ((null? vars) (loop (cdr env)))
-            ((eq? var (car vars)) (set-car! vals val))
-            (else (scan (cdr vars) (cdr vals)))))
-
-    (if (null? env)
-        (error "undefined")
-        (let ((frame (car env)))
-          (scan (frame-vars frame) (frame-vals frame)))))
-
-  (loop env))
+  (if (null? env)
+      (error "undefined:" var)
+      (let ((frame (car env)))
+        (if (hash-has-key? frame var)
+            (hash-set! frame var val)
+            (set-var var val (cdr env))))))
 
 (define builtins
   (list (cons '+ +)
@@ -232,5 +215,7 @@
         (cons 'display display)
         (cons 'newline newline)))
 
-(define (builtin? op)
-  (memq op (map car builtins)))
+(define (make-env)
+  (let ((vars (map car builtins))
+        (vals (map cdr builtins)))
+    (subst vars vals '())))

@@ -1,13 +1,10 @@
 #lang racket/base
 
 (provide
- ; racket
+ ; implicit forms
  #%app
  #%datum
- #%expression
  #%module-begin
- #%provide
- #%require
  #%top
  #%top-interaction
 
@@ -29,6 +26,7 @@
  number?
  string?
  symbol?
+ procedure?
  +
  -
  *
@@ -39,21 +37,19 @@
  eq?
  not
  null?
-
- ; input/output
+ pair?
+ cons
+ car
+ cdr
+ list
+ make-hash
+ hash-has-key?
+ hash-ref
+ hash-set!
  display
  newline
+ read
  error
 
- (rename-out
-  ; mutable pairs
-  (mpair? pair?)
-  (mcons cons)
-  (mcar car)
-  (mcdr cdr)
-  (mcdr cdr)
-  (set-mcar! set-car!)
-  (set-mcdr! set-cdr!)
-
-  ; reserved
-  (apply apply*)))
+ ; reserved
+ (rename-out (apply apply*)))
