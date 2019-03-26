@@ -151,11 +151,11 @@
        fail))))
 
 (define (analyze-list exprs)
-  (define ((sequence e1 e2) env succeed fail)
-    (e1
+  (define ((sequence p1 p2) env succeed fail)
+    (p1
      env
      (lambda (val fail*)
-       (e2 env succeed fail*))
+       (p2 env succeed fail*))
      fail))
 
   (let ((analyzed (map analyze exprs)))
