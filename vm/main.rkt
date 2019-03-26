@@ -263,9 +263,12 @@
     (append ops builtins)))
 
 (define (used-in text type)
-  (let loop ((l (flatten text)) (acc '()))
-    (cond ((null? l) acc)
-          ((eq? type (car l)) (loop (cddr l) (cons (cadr l) acc)))
-          (else (loop (cdr l) acc)))))
+  (flatten
+   (for/list ((stmt (in-list text))
+              #:when (list? stmt))
+     (for/list ((x (in-list stmt))
+                #:when (and (list? x)
+                            (eq? type (car x))))
+       (cadr x)))))
 
 (define (call proc) (proc))
