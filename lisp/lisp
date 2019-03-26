@@ -1,38 +1,5 @@
 #lang lisp
 
-(define (cadr l)
-  (car (cdr l)))
-
-(define (cddr l)
-  (cdr (cdr l)))
-
-(define (caadr l)
-  (car (cadr l)))
-
-(define (cdadr l)
-  (cdr (cadr l)))
-
-(define (caddr l)
-  (car (cddr l)))
-
-(define (cadddr l)
-  (car (cdr (cddr l))))
-
-(define (length l)
-  (if (null? l)
-      0
-      (+ 1 (length (cdr l)))))
-
-(define (map f l)
-  (if (null? l)
-      '()
-      (cons (f (car l)) (map f (cdr l)))))
-
-(define (memq x l)
-  (cond ((null? l) #f)
-        ((eq? x (car l)) l)
-        (else (memq x (cdr l)))))
-
 (define (eval expr env)
   (cond ((literal? expr) expr)
         ((symbol? expr) (get-var expr env))
@@ -62,10 +29,6 @@
 (define (literal? expr)
   (or (boolean? expr)
       (number? expr)))
-
-(define (type? t x)
-  (and (pair? x)
-       (eq? t (car x))))
 
 (define (eval-lambda expr env)
   (let ((params (cadr expr))
@@ -149,6 +112,33 @@
     (let ((params (map car bindings))
           (exprs (map cadr bindings)))
       (cons (cons 'lambda (cons params body)) exprs))))
+
+(define (type? t x)
+  (and (pair? x)
+       (eq? t (car x))))
+
+(define (map f l)
+  (if (null? l)
+      '()
+      (cons (f (car l)) (map f (cdr l)))))
+
+(define (cadr l)
+  (car (cdr l)))
+
+(define (cddr l)
+  (cdr (cdr l)))
+
+(define (caadr l)
+  (car (cadr l)))
+
+(define (cdadr l)
+  (cdr (cadr l)))
+
+(define (caddr l)
+  (car (cddr l)))
+
+(define (cadddr l)
+  (cadr (cddr l)))
 
 (define (make-closure params body env)
   (list params body env))
