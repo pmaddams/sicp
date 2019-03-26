@@ -61,7 +61,7 @@
     (assign val (op cadr) (reg expr))
     (goto (reg continue))
     eval-lambda
-    (assign unev (op lambda-expr-vars) (reg expr))
+    (assign unev (op lambda-expr-params) (reg expr))
     (assign expr (op lambda-expr-body) (reg expr))
     (assign val (op closure) (reg unev) (reg expr) (reg env))
     (goto (reg continue))
@@ -194,14 +194,14 @@
     (restore continue)
     (goto (reg continue))
     apply-closure
-    (assign unev (op closure-vars) (reg proc))
+    (assign unev (op closure-params) (reg proc))
     (assign env (op closure-env) (reg proc))
     (assign env (op subst) (reg unev) (reg args) (reg env))
     (assign unev (op closure-body) (reg proc))
     (goto (label eval-list))
     done))
 
-(struct closure (vars body env))
+(struct closure (params body env))
 
 (define (literal? expr)
   (or (boolean? expr)
@@ -213,7 +213,7 @@
 (define (lambda-expr? expr)
   (type? 'lambda expr))
 
-(define lambda-expr-vars cadr)
+(define lambda-expr-params cadr)
 
 (define lambda-expr-body cddr)
 
@@ -304,10 +304,10 @@
 
 (define (let->lambda expr)
   (let* ((bindings (cadr expr))
-         (vars (map car bindings))
+         (params (map car bindings))
          (exprs (map cadr bindings))
          (body (cddr expr)))
-    (cons (cons 'lambda (cons vars body)) exprs)))
+    (cons (cons 'lambda (cons params body)) exprs)))
 
 (define (type? t x)
   (and (pair? x)

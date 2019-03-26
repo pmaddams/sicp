@@ -55,7 +55,7 @@
   (if (procedure? op)
       (apply* op args)
       (eval-list (closure-body op)
-                 (subst (closure-vars op)
+                 (subst (closure-params op)
                         args
                         (closure-env op)))))
 
@@ -68,9 +68,9 @@
        (eq? t (car x))))
 
 (define (eval-lambda expr env)
-  (let ((vars (cadr expr))
+  (let ((params (cadr expr))
         (body (cddr expr)))
-    (make-closure vars body env)))
+    (make-closure params body env)))
 
 (define (eval-define expr env)
   (let ((var (if (symbol? (cadr expr))
@@ -78,9 +78,9 @@
                  (caadr expr)))
         (x (if (symbol? (cadr expr))
                (caddr expr)
-               (let ((vars (cdadr expr))
+               (let ((params (cdadr expr))
                      (body (cddr expr)))
-                 (cons 'lambda (cons vars body))))))
+                 (cons 'lambda (cons params body))))))
     (let ((val (eval x env)))
       (define-var var val env))))
 
@@ -146,47 +146,61 @@
 (define (let->lambda expr)
   (let ((bindings (cadr expr))
         (body (cddr expr)))
-    (let ((vars (map car bindings))
+    (let ((params (map car bindings))
           (exprs (map cadr bindings)))
-      (cons (cons 'lambda (cons vars body)) exprs))))
+      (cons (cons 'lambda (cons params body)) exprs))))
 
-(define (make-closure vars body env)
-  (list vars body env))
+(define (make-closure params body env)
+  (list params body env))
 
-(define closure-vars car)
+(define closure-params car)
 
 (define closure-body cadr)
 
 (define closure-env caddr)
 
 (define builtins
-  (list (cons 'boolean? boolean?)
-        (cons 'number? number?)
-        (cons 'symbol? symbol?)
-        (cons 'procedure? procedure?)
-        (cons '+ +)
-        (cons '- -)
-        (cons '* *)
-        (cons '/ /)
-        (cons '< <)
-        (cons '> >)
-        (cons '= =)
-        (cons 'eq? eq?)
-        (cons 'not not)
-        (cons 'null? null?)
-        (cons 'pair? pair?)
-        (cons 'cons cons)
-        (cons 'car car)
-        (cons 'cdr cdr)
-        (cons 'list list)
-        (cons 'display display)
-        (cons 'newline newline)
-        (cons 'read read)
-        (cons 'subst subst)
-        (cons 'define-var define-var)
-        (cons 'get-var get-var)
-        (cons 'set-var set-var)
-        (cons 'apply* apply*)))
+  (list
+   ; types
+   (cons 'null? null?)
+   (cons 'pair? pair?)
+   (cons 'boolean? boolean?)
+   (cons 'number? number?)
+   (cons 'symbol? symbol?)
+   (cons 'procedure? procedure?)
+
+   ; arithmetic
+   (cons '+ +)
+   (cons '- -)
+   (cons '* *)
+   (cons '/ /)
+
+   ; logic
+   (cons '< <)
+   (cons '> >)
+   (cons '= =)
+   (cons 'eq? eq?)
+   (cons 'not not)
+
+   ; data structures
+   (cons 'cons cons)
+   (cons 'car car)
+   (cons 'cdr cdr)
+   (cons 'list list)
+
+   ; input/output
+   (cons 'display display)
+   (cons 'newline newline)
+   (cons 'read read)
+
+   ; environment
+   (cons 'subst subst)
+   (cons 'define-var define-var)
+   (cons 'get-var get-var)
+   (cons 'set-var set-var)
+
+   ; application
+   (cons 'apply* apply*)))
 
 (define (make-env)
   (let ((vars (map car builtins))

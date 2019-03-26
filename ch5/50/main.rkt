@@ -72,13 +72,13 @@
        after-label))))
 
 (define (compile-lambda-body expr label)
-  (let ((vars (cadr expr))
+  (let ((params (cadr expr))
         (body (cddr expr)))
     (append-output
      (output '(env proc args) '(env)
              `(,label
                (assign env (op subroutine-env) (reg proc))
-               (assign env (op subst) (const ,vars) (reg args) (reg env))))
+               (assign env (op subst) (const ,params) (reg args) (reg env))))
      (compile-list body 'val 'return))))
 
 (define (compile-define expr target linkage)
@@ -87,9 +87,9 @@
                   (caadr expr)))
          (x (if (symbol? (cadr expr))
                 (caddr expr)
-                (let ((vars (cdadr expr))
+                (let ((params (cdadr expr))
                       (body (cddr expr)))
-                  (cons 'lambda (cons vars body)))))
+                  (cons 'lambda (cons params body)))))
          (out (compile x 'val 'next)))
     (end-with linkage
               (output-preserving
@@ -185,10 +185,10 @@
 
 (define (let->lambda expr)
   (let* ((bindings (cadr expr))
-         (vars (map car bindings))
+         (params (map car bindings))
          (exprs (map cadr bindings))
          (body (cddr expr)))
-    (cons (cons 'lambda (cons vars body)) exprs)))
+    (cons (cons 'lambda (cons params body)) exprs)))
 
 (define (compile-application expr target linkage)
   (let ((proc-out (compile (car expr) 'proc 'next))

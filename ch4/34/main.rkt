@@ -12,7 +12,7 @@
     (for/last ((expr (in-list code)))
       (value expr env))))
 
-(struct closure (vars body env))
+(struct closure (params body env))
 
 (struct promise (forced val expr env) #:mutable)
 
@@ -41,7 +41,7 @@
         (apply* op vals))
       (let ((promises (map (lambda (x) (delay x env)) args)))
         (eval-list (closure-body op)
-                   (subst (closure-vars op)
+                   (subst (closure-params op)
                           promises
                           (closure-env op))))))
 
@@ -68,9 +68,9 @@
       (number? expr)))
 
 (define (eval-lambda expr env)
-  (let ((vars (cadr expr))
+  (let ((params (cadr expr))
         (body (cddr expr)))
-    (closure vars body env)))
+    (closure params body env)))
 
 (define (eval-define expr env)
   (let* ((var (if (symbol? (cadr expr))
@@ -78,9 +78,9 @@
                   (caadr expr)))
          (x (if (symbol? (cadr expr))
                 (caddr expr)
-                (let ((vars (cdadr expr))
+                (let ((params (cdadr expr))
                       (body (cddr expr)))
-                  (cons 'lambda (cons vars body)))))
+                  (cons 'lambda (cons params body)))))
          (obj (eval x env)))
     (define-var var obj env)))
 
@@ -139,10 +139,10 @@
 
 (define (let->lambda expr)
   (let* ((bindings (cadr expr))
-         (vars (map car bindings))
+         (params (map car bindings))
          (exprs (map cadr bindings))
          (body (cddr expr)))
-    (cons (cons 'lambda (cons vars body)) exprs)))
+    (cons (cons 'lambda (cons params body)) exprs)))
 
 (define (stream-cons x y)
   (stream

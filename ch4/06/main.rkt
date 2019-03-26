@@ -12,7 +12,7 @@
     (for/last ((expr (in-list code)))
       (eval expr env))))
 
-(struct closure (vars body env))
+(struct closure (params body env))
 
 (define (eval expr env)
   (cond ((literal? expr) expr)
@@ -37,7 +37,7 @@
   (if (procedure? op)
       (apply* op args)
       (eval-list (closure-body op)
-                 (subst (closure-vars op)
+                 (subst (closure-params op)
                         args
                         (closure-env op)))))
 
@@ -46,9 +46,9 @@
       (number? expr)))
 
 (define (eval-lambda expr env)
-  (let ((vars (cadr expr))
+  (let ((params (cadr expr))
         (body (cddr expr)))
-    (closure vars body env)))
+    (closure params body env)))
 
 (define (eval-define expr env)
   (let* ((var (if (symbol? (cadr expr))
@@ -56,9 +56,9 @@
                   (caadr expr)))
          (x (if (symbol? (cadr expr))
                 (caddr expr)
-                (let ((vars (cdadr expr))
+                (let ((params (cdadr expr))
                       (body (cddr expr)))
-                  (cons 'lambda (cons vars body)))))
+                  (cons 'lambda (cons params body)))))
          (val (eval x env)))
     (define-var var val env)))
 
@@ -123,10 +123,10 @@
 
 (define (let->lambda expr)
   (let* ((bindings (cadr expr))
-         (vars (map car bindings))
+         (params (map car bindings))
          (exprs (map cadr bindings))
          (body (cddr expr)))
-    (cons (cons 'lambda (cons vars body)) exprs)))
+    (cons (cons 'lambda (cons params body)) exprs)))
 
 (define builtins
   `(; types

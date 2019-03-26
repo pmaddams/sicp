@@ -55,7 +55,7 @@
                         (loop val fail*))
                       (thunk (loop start)))))))))
 
-(struct closure (vars proc env))
+(struct closure (params proc env))
 
 (define (eval expr env succeed fail)
   ((analyze expr) env succeed fail))
@@ -81,7 +81,7 @@
   (if (procedure? op)
       (succeed (apply* op args) fail)
       ((closure-proc op)
-       (subst (closure-vars op)
+       (subst (closure-params op)
               args
               (closure-env op))
        succeed
@@ -101,10 +101,10 @@
   (succeed (cadr expr) fail))
 
 (define (analyze-lambda expr)
-  (let ((vars (cadr expr))
+  (let ((params (cadr expr))
         (proc (analyze-list (cddr expr))))
     (lambda (env succeed fail)
-      (succeed (closure vars proc env) fail))))
+      (succeed (closure params proc env) fail))))
 
 (define (analyze-define expr)
   (let* ((var (if (symbol? (cadr expr))
@@ -112,9 +112,9 @@
                   (caadr expr)))
          (x (if (symbol? (cadr expr))
                 (caddr expr)
-                (let ((vars (cdadr expr))
+                (let ((params (cdadr expr))
                       (body (cddr expr)))
-                  (cons 'lambda (cons vars body)))))
+                  (cons 'lambda (cons params body)))))
          (proc (analyze x)))
     (lambda (env succeed fail)
       (proc
@@ -205,10 +205,10 @@
 
 (define (let->lambda expr)
   (let* ((bindings (cadr expr))
-         (vars (map car bindings))
+         (params (map car bindings))
          (exprs (map cadr bindings))
          (body (cddr expr)))
-    (cons (cons 'lambda (cons vars body)) exprs)))
+    (cons (cons 'lambda (cons params body)) exprs)))
 
 (define (analyze-amb expr)
   (let ((choice-procs (map analyze (cdr expr))))
