@@ -5,10 +5,10 @@
 
 (test-case
  "nth-root-approx"
- (let ((% 0.1))
-   (for ((i 5))
-     (let ((n (random 2 5))
-           (x (random 10 100)))
+ (for ((i 5))
+   (let ((n (random 2 5))
+         (x (random 10 100)))
+     (for ((% '(0.1 0.01 0.001)))
        (check (within? %)
               ((nth-root-approx n %) x)
               (expt x (/ 1 n)))))))
