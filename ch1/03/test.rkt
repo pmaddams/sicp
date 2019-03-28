@@ -1,25 +1,16 @@
 #lang racket/base
 
-(require racket/dict
-         rackunit
+(require rackunit
          "main.rkt")
 
-(define-check (check-all f d)
-  (for (((args expected) (in-dict d)))
-    (let ((actual (apply f args)))
-      (with-check-info (('actual actual) ('expected expected))
-        (unless (equal? actual expected) (fail-check))))))
+(test-case
+ "sum-of-larger-squares"
+ (check-equal? (sum-of-larger-squares 1 2 3) (sum-of-squares 2 3))
+ (check-equal? (sum-of-larger-squares 5 4 3 2) (sum-of-squares 5 4 3))
+ (check-equal? (sum-of-larger-squares 6 2 5 3 4) (sum-of-squares 6 5 3 4)))
 
 (test-case
- "sum-larger-squares"
- (check-all sum-larger-squares
-            `(((1 2 3) . ,(sum-of-squares 2 3))
-              ((4 3 5 2) . ,(sum-of-squares 4 3 5))
-              ((6 7 3 4 5) . ,(sum-of-squares 6 7 4 5)))))
-
-(test-case
- "remove-smallest"
- (check-all remove-smallest
-            '((((1 2 3)) . (2 3))
-              (((4 3 5 2)) . (4 3 5))
-              (((6 7 3 4 5)) . (6 7 4 5)))))
+ "sum-of-squares"
+ (check-equal? (sum-of-squares 2 3) 13)
+ (check-equal? (sum-of-squares 5 4 3) 50)
+ (check-equal? (sum-of-squares 6 5 3 4) 86))
