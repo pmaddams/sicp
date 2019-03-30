@@ -48,7 +48,7 @@
 (define (children state)
   (if (= size (length state))
       '()
-      (for/list ((i size))
+      (for/list ((i (in-range size)))
         (cons i state))))
 
 (define (return state)

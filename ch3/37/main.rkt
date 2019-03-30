@@ -103,10 +103,10 @@
              (set a1 (- (get s) (get a2))))))
 
     (define/public (retract)
-      (for ((conn (list a1 a2 s)))
+      (for ((conn (in-list (list a1 a2 s))))
         (forget conn)))
 
-    (for ((conn (list a1 a2 s)))
+    (for ((conn (in-list (list a1 a2 s))))
       (connect conn))))
 
 (define product%
@@ -125,10 +125,10 @@
              (set m1 (/ (get p) (get m2))))))
 
     (define/public (retract)
-      (for ((conn (list m1 m2 p)))
+      (for ((conn (in-list (list m1 m2 p))))
         (forget conn)))
 
-    (for ((conn (list m1 m2 p)))
+    (for ((conn (in-list (list m1 m2 p))))
       (connect conn))))
 
 (define (set? conn)

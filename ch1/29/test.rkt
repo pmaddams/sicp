@@ -13,7 +13,7 @@
  "integration"
  (let ((lo 1) (hi 10))
    (for (((f g) (in-dict integrated)))
-     (for ((step '(0.01 0.001)))
+     (for ((step (in-list '(0.01 0.001))))
        (let* ((definite (- (g hi) (g lo)))
               (tolerance (max step (/ definite 100))))
          (check-= definite (simpson-integral f lo hi step) tolerance)

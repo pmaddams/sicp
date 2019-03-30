@@ -8,10 +8,10 @@
 (define composites '(0 1 4 6 8 9 10 12 14 15))
 
 (define-check (check-prime p)
-  (for ((n primes))
+  (for ((n (in-list primes)))
     (with-check-info (('actual n) ('expected 'prime))
       (unless (p n) (fail-check))))
-  (for ((n composites))
+  (for ((n (in-list composites)))
     (with-check-info (('actual n) ('expected 'composite))
       (when (p n) (fail-check)))))
 
@@ -21,7 +21,7 @@
 
 (test-case
  "expmod"
- (for ((i 10))
+ (for ((i (in-range 10)))
    (let ((b (random 2 100))
          (x (random 2 100))
          (m (random 2 100)))
@@ -38,7 +38,7 @@
 
 (test-case
  "carmichael numbers"
- (for ((n '(561 1105 1729 2465 2821 6601)))
+ (for ((n (in-list '(561 1105 1729 2465 2821 6601))))
    (check-true (fools-fermat n)
                (format "~a doesn't fool fermat" n))
    (check-false (fools-miller-rabin n)

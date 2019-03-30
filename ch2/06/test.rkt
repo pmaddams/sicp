@@ -16,7 +16,7 @@
 
 (test-case
  "random tests"
- (for ((i 5))
+ (for ((i (in-range 5)))
    (let ((n (random 10)))
      (check-equal? (church->number (number->church n)) n)
      (check church=?
@@ -25,7 +25,7 @@
 
 (test-case
  "add"
- (for ((i 5))
+ (for ((i (in-range 5)))
    (let ((n (random 10))
          (m (random 10)))
      (check church=?
@@ -34,7 +34,7 @@
 
 (test-case
  "mul"
- (for ((i 5))
+ (for ((i (in-range 5)))
    (let ((n (random 10))
          (m (random 10)))
      (check church=?
@@ -43,7 +43,7 @@
 
 (test-case
  "pow"
- (for ((i 5))
+ (for ((i (in-range 5)))
    (let ((n (random 2 5))
          (m (random 2 5)))
      (check church=?

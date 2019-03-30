@@ -30,7 +30,7 @@
   (make-prime
    (lambda (n)
      (for/fold ((acc #t))
-               ((i k))
+               ((i (in-range k)))
        (let ((a (random 2 (sub1 n))))
          (and (= 1 (expmod a (sub1 n) n)) acc))))))
 

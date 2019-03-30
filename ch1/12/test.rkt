@@ -5,10 +5,10 @@
 
 (test-case
  "pascal"
- (for ((n 5)
-       (l '((1)
-            (1 1)
-            (1 2 1)
-            (1 3 3 1)
-            (1 4 6 4 1))))
+ (for ((n (in-range 5))
+       (l (in-list '((1)
+                     (1 1)
+                     (1 2 1)
+                     (1 3 3 1)
+                     (1 4 6 4 1)))))
    (check-equal? (pascal n) l)))

@@ -32,7 +32,7 @@
 
 (define (make-segment list-of-coordinates)
   (points->segments
-   (for/list ((l list-of-coordinates))
+   (for/list ((l (in-list list-of-coordinates)))
      (apply point l))))
 
 (define ((segments->painter l) fr)

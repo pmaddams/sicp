@@ -56,7 +56,7 @@
 
     (init regs ops)
     (field (reg-table (make-hash
-                       (for/list ((reg (append regs '(pc flag))))
+                       (for/list ((reg (in-list (append regs '(pc flag)))))
                          (cons reg (register (void))))))
            (op-table (make-hash ops)))
 
@@ -258,7 +258,7 @@
   (let* ((ns (current-namespace))
          (provided (map car ops))
          (required (remove-duplicates (used-in text 'op)))
-         (builtins (for/list ((name (remove* provided required)))
+         (builtins (for/list ((name (in-list (remove* provided required))))
                      (cons name (eval name ns)))))
     (append ops builtins)))
 
