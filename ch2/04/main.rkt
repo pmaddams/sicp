@@ -10,17 +10,17 @@
      (lambda (z) (set! x z))
      (lambda (z) (set! y z))))
 
-(define (car c)
-  (c (lambda (x y sx sy) x)))
+(define (car p)
+  (p (lambda (x y sx sy) x)))
 
-(define (cdr c)
-  (c (lambda (x y sx sy) y)))
+(define (cdr p)
+  (p (lambda (x y sx sy) y)))
 
-(define (set-car! c z)
-  (c (lambda (x y sx sy) (sx z))))
+(define (set-car! p z)
+  (p (lambda (x y sx sy) (sx z))))
 
-(define (set-cdr! c z)
-  (c (lambda (x y sx sy) (sy z))))
+(define (set-cdr! p z)
+  (p (lambda (x y sx sy) (sy z))))
 
 (define (equal? x y)
   (if (not (procedure? x))
@@ -40,23 +40,29 @@
         (else (cons (car l) (remove x (cdr l))))))
 
 (define (length l)
-  (let ((f (lambda (x acc) (add1 acc))))
-    (foldr f 0 l)))
+  (foldr (lambda (x acc)
+           (add1 acc))
+         0 l))
 
 (define (append l1 l2)
   (foldr cons l2 l1))
 
 (define (reverse l)
-  (let ((f (lambda (x acc) (append acc (cons x '())))))
-    (foldr f '() l)))
+  (foldr (lambda (x acc)
+           (append acc (cons x '())))
+         '() l))
 
-(define (map g l)
-  (let ((f (lambda (x acc) (cons (g x) acc))))
-    (foldr f '() l)))
+(define (map f l)
+  (foldr (lambda (x acc)
+           (cons (f x) acc))
+         '() l))
 
 (define (filter p l)
-  (let ((f (lambda (x acc) (if (p x) (cons x acc) acc))))
-    (foldr f '() l)))
+  (foldr (lambda (x acc)
+           (if (p x)
+               (cons x acc)
+               acc))
+         '() l))
 
 (define (sum l)
   (foldr + 0 l))
