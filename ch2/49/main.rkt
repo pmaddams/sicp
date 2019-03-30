@@ -26,14 +26,14 @@
     (painter unit-frame)
     bitmap))
 
-(define (make-painter . segment-coordinates)
+(define (make-painter . args)
   (segments->painter
-   (apply append (map make-segment segment-coordinates))))
+   (apply append (map make-segment args))))
 
-(define (make-segment list-of-coordinates)
+(define (make-segment coordinate-list)
   (points->segments
-   (for/list ((l (in-list list-of-coordinates)))
-     (apply point l))))
+   (for/list ((coords (in-list coordinate-list)))
+     (apply point coords))))
 
 (define ((segments->painter l) fr)
   (for ((s (in-list l)))
