@@ -6,52 +6,49 @@
 
 (require racket/function)
 
-(define size 8)
+(define (queens size)
+  (define result '())
 
-(define (queens)
-  (backtrack '() reject accept children return))
+  (define (reject state)
+    (and (not (null? state))
+         (let ((i (car state)))
+           (or (collide-right state i)
+               (collide-up state i)
+               (collide-down state i)))))
 
-(define (backtrack state reject accept children return)
-  (let loop ((state state))
+  (define ((collide next invalid) state i)
+    (let loop ((i (next i)) (state (cdr state)))
+      (and (not (null? state))
+           (not (invalid i))
+           (or (= i (car state))
+               (loop (next i) (cdr state))))))
+
+  (define collide-right
+    (collide identity (const #f)))
+
+  (define collide-up
+    (collide add1 (lambda (i) (>= i size))))
+
+  (define collide-down
+    (collide sub1 (lambda (i) (negative? i))))
+
+  (define (accept state)
+    (and (= size (length state))
+         (not (reject state))))
+
+  (define (children state)
+    (if (= size (length state))
+        '()
+        (for/list ((i (in-range size)))
+          (cons i state))))
+
+  (define (return state)
+    (set! result (cons state result)))
+
+  (let loop ((state '()))
     (unless (reject state)
       (if (accept state)
           (return state)
-          (for-each loop (children state))))))
+          (for-each loop (children state)))))
 
-(define (reject state)
-  (and (not (null? state))
-       (let ((i (car state)))
-         (or (collide-up state i)
-             (collide-right state i)
-             (collide-down state i)))))
-
-(define ((collide next invalid) state i)
-  (let loop ((i (next i)) (state (cdr state)))
-    (and (not (null? state))
-         (not (invalid i))
-         (or (= i (car state))
-             (loop (next i) (cdr state))))))
-
-(define collide-right
-  (collide identity (const #f)))
-
-(define collide-up
-  (collide add1 (lambda (i) (>= i size))))
-
-(define collide-down
-  (collide sub1 (lambda (i) (negative? i))))
-
-(define (accept state)
-  (and (= size (length state))
-       (not (reject state))))
-
-(define (children state)
-  (if (= size (length state))
-      '()
-      (for/list ((i (in-range size)))
-        (cons i state))))
-
-(define (return state)
-  (for ((i (in-list state)))
-    (printf "~a " i))
-  (newline))
+  result)
