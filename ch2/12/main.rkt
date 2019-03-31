@@ -7,7 +7,8 @@
 (struct interval (lo hi) #:transparent)
 
 (define (make-center-percent c %)
-  (make-center-width c (* c (/ % 100.0))))
+  (let ((w (abs (* c (/ % 100.0)))))
+    (make-center-width c w)))
 
 (define (percent i)
   (* (/ (width i) (center i)) 100.0))
@@ -26,8 +27,8 @@
             (+ (interval-hi i1) (interval-hi i2))))
 
 (define (interval-sub i1 i2)
-  (interval (- (interval-lo i1) (interval-lo i2))
-            (- (interval-hi i1) (interval-hi i2))))
+  (interval (- (interval-lo i1) (interval-hi i2))
+            (- (interval-hi i1) (interval-lo i2))))
 
 (define (interval-mul i1 i2)
   (let ((l1 (interval-lo i1))
@@ -64,7 +65,7 @@
             (zero? h2)
             (and (negative? l2) (positive? h2)))
         (error "division by zero:" i1 i2)
-        (interval-mul i2 (interval (/ 1.0 h2) (/ 1.0 l2))))))
+        (interval-mul i1 (interval (/ 1.0 h2) (/ 1.0 l2))))))
 
 (define (average . args)
   (/ (apply + args)
