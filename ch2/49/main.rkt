@@ -82,7 +82,7 @@
 (define (square-limit painter n)
   (let* ((quarter (corner-split painter n))
          (half (beside (flip-horiz quarter) quarter)))
-    (below (flip-vert half) half)))
+    (below half (flip-vert half))))
 
 (define (corner-split painter n)
   (if (zero? n)
@@ -92,14 +92,14 @@
              (upper-left (beside upper upper))
              (lower-right (below right right))
              (corner (corner-split painter (sub1 n))))
-        (beside (below painter upper-left)
-                (below lower-right corner)))))
+        (beside (below upper-left painter)
+                (below corner lower-right)))))
 
 (define (up-split painter n)
   (if (zero? n)
       painter
       (let ((smaller (up-split painter (sub1 n))))
-        (below painter (beside smaller smaller)))))
+        (below (beside smaller smaller) painter))))
 
 (define (right-split painter n)
   (if (zero? n)
@@ -147,9 +147,9 @@
 
 (define rotate90
   (transform-painter
-   (point 1.0 0.0)
-   (point 1.0 1.0)
-   (point 0.0 0.0)))
+   (point 0.0 1.0)
+   (point 0.0 0.0)
+   (point 1.0 1.0)))
 
 (define rotate180
   (transform-painter
@@ -159,9 +159,9 @@
 
 (define rotate270
   (transform-painter
-   (point 0.0 1.0)
-   (point 0.0 0.0)
-   (point 1.0 1.0)))
+   (point 1.0 0.0)
+   (point 1.0 1.0)
+   (point 0.0 0.0)))
 
 (define wave
   (make-painter
