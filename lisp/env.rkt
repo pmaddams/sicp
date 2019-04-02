@@ -18,10 +18,13 @@
       (error "arity mismatch:" vars vals)))
 
 (define (define-var var val env)
+  (unless (symbol? var)
+    (error "not a variable:" var))
   (let ((frame (car env)))
     (if (hash-has-key? frame var)
         (error "already defined:" var)
-        (hash-set! frame var val))))
+        (begin (hash-set! frame var val)
+               var))))
 
 (define (get-var var env)
   (if (null? env)
@@ -36,5 +39,6 @@
       (error "undefined:" var)
       (let ((frame (car env)))
         (if (hash-has-key? frame var)
-            (hash-set! frame var val)
+            (begin (hash-set! frame var val)
+                   val)
             (set-var var val (cdr env))))))
