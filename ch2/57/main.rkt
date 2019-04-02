@@ -4,10 +4,10 @@
 
 (provide (all-defined-out))
 
+(require (only-in racket (eval eval*)))
+
 (define (eval-deriv expr var val)
-  (let ((ns (current-namespace)))
-    (namespace-set-variable-value! var val)
-    (eval (deriv expr var) ns)))
+  (eval (deriv expr var) var val))
 
 (define (deriv expr var)
   (cond ((number? expr) 0)
@@ -58,3 +58,8 @@
 (define base cadr)
 
 (define exponent caddr)
+
+(define (eval expr var val)
+  (let ((ns (make-base-namespace)))
+    (namespace-set-variable-value! var val #f ns #f)
+    (eval* expr ns)))
