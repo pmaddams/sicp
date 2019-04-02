@@ -18,7 +18,7 @@
          (send vm get 'val))))
 
 (define (compile* code)
-  (text (compile-list code 'val 'next)))
+  (output-text (compile-list code 'val 'next)))
 
 (struct output (needs modifies text))
 
@@ -69,7 +69,7 @@
                   (output '(env) (list target)
                           `((assign ,target (op subroutine) (label ,label) (reg env)))))
         (compile-lambda-body expr label))
-       after-label))))
+       (label-output after-label)))))
 
 (define (compile-lambda-body expr label)
   (let ((params (cadr expr))
@@ -132,9 +132,13 @@
                   `((test (op false?) (reg val))
                     (branch (label ,else-label))))
           (parallel-output
-           (append-output then-label consequent-out)
-           (append-output else-label alternative-out))
-          after-label))))))
+           (append-output
+            (label-output then-label)
+            consequent-out)
+           (append-output
+            (label-output else-label)
+            alternative-out))
+          (label-output after-label)))))))
 
 (define (compile-list exprs target linkage)
   (if (null? (cdr exprs))
@@ -244,14 +248,14 @@
                  (branch (label ,builtin-label))))
        (parallel-output
         (append-output
-         subroutine-label
+         (label-output subroutine-label)
          (compile-subroutine-call target subroutine-linkage))
         (append-output
-         builtin-label
+         (label-output builtin-label)
          (end-with linkage
                    (output '(proc args) (list target)
                            `((assign ,target (op apply*) (reg proc) (reg args)))))))
-       after-label))))
+       (label-output after-label)))))
 
 (define (compile-subroutine-call target linkage)
   (case target
@@ -297,60 +301,57 @@
              (cdr regs)
              (output
               (set-union (list reg)
-                         (needed out1))
-              (set-subtract (modified out1)
+                         (output-needs out1))
+              (set-subtract (output-modifies out1)
                             (list reg))
               (append `((save ,reg))
-                      (text out1)
+                      (output-text out1)
                       `((restore ,reg))))
              out2)
             (output-preserving (cdr regs) out1 out2)))))
 
 (define (parallel-output out1 out2)
   (output
-   (set-union (needed out1)
-              (needed out2))
-   (set-union (modified out1)
-              (modified out2))
-   (append (text out1) (text out2))))
+   (set-union (output-needs out1)
+              (output-needs out2))
+   (set-union (output-modifies out1)
+              (output-modifies out2))
+   (append (output-text out1)
+           (output-text out2))))
 
 (define (embed-output out body-out)
   (output
-   (needed out)
-   (modified out)
-   (append (text out) (text body-out))))
+   (output-needs out)
+   (output-modifies out)
+   (append (output-text out)
+           (output-text body-out))))
 
 (define (append-output . args)
   (define (combine out1 out2)
-    (output (set-union (needed out1)
-                       (set-subtract (needed out2)
-                                     (modified out1)))
-            (set-union (modified out1)
-                       (modified out2))
-            (append (text out1) (text out2))))
+    (output (set-union (output-needs out1)
+                       (set-subtract (output-needs out2)
+                                     (output-modifies out1)))
+            (set-union (output-modifies out1)
+                       (output-modifies out2))
+            (append (output-text out1)
+                    (output-text out2))))
 
   (let loop ((l args))
     (if (null? l)
         (empty-output)
         (combine (car l) (loop (cdr l))))))
 
+(define (label-output label)
+  (output '() '() (list label)))
+
 (define (empty-output)
   (output '() '() '()))
 
-(define (needed out)
-  (if (symbol? out) '() (output-needs out)))
-
-(define (modified out)
-  (if (symbol? out) '() (output-modifies out)))
-
-(define (text out)
-  (if (symbol? out) (list out) (output-text out)))
-
 (define (needs? reg out)
-  (memq reg (needed out)))
+  (memq reg (output-needs out)))
 
 (define (modifies? reg out)
-  (memq reg (modified out)))
+  (memq reg (output-modifies out)))
 
 (define all-regs '(env proc val args continue))
 
