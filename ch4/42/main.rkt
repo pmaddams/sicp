@@ -40,7 +40,7 @@
             (list 'mary mary)))))
 
 (define (interpret code)
-  (let ((env (make-env))
+  (let ((env (make-env builtins))
         (start void))
     (let loop ((val #f) (fail start))
       (if (null? code)
@@ -282,6 +282,7 @@
     (read . ,read)
 
     ; environment
+    (make-env . ,make-env)
     (subst . ,subst)
     (define-var . ,define-var)
     (get-var . ,get-var)
@@ -289,8 +290,3 @@
 
     ; application
     (apply* . ,apply*)))
-
-(define (make-env)
-  (let ((vars (map car builtins))
-        (vals (map cdr builtins)))
-    (subst vars vals '())))

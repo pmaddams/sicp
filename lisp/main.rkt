@@ -54,6 +54,7 @@
  read
 
  ; environment
+ make-env
  subst
  define-var
  get-var

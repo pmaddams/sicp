@@ -2,15 +2,26 @@
 
 (provide (all-defined-out))
 
+(define (make-env builtins)
+  (let ((vars (map car builtins))
+        (vals (map cdr builtins)))
+    (cons (make-hash)
+          (subst vars vals '()))))
+
 (define (subst vars vals env)
   (if (= (length vars) (length vals))
-      (let ((frame (make-hash (map cons vars vals))))
-        (cons frame env))
+      (let ((env* (cons (make-hash) env)))
+        (for ((var (in-list vars))
+              (val (in-list vals)))
+          (define-var var val env*))
+        env*)
       (error "arity mismatch:" vars vals)))
 
 (define (define-var var val env)
   (let ((frame (car env)))
-    (hash-set! frame var val)))
+    (if (hash-has-key? frame var)
+        (error "already defined:" var)
+        (hash-set! frame var val))))
 
 (define (get-var var env)
   (if (null? env)

@@ -8,7 +8,7 @@
          lisp/env)
 
 (define (interpret code)
-  (let ((env (make-env)))
+  (let ((env (make-env builtins)))
     (for/last ((expr (in-list code)))
       (value expr env))))
 
@@ -192,8 +192,3 @@
     ; input/output
     (display . ,stream-display)
     (newline . ,newline)))
-
-(define (make-env)
-  (let ((vars (map car builtins))
-        (vals (map cdr builtins)))
-    (subst vars vals '())))

@@ -10,7 +10,7 @@
 
 (define (interpret code)
   (let ((vm (make-vm lisp)))
-    (set! env (make-env))
+    (set! env (make-env builtins))
     (set! buf code)
     (send vm execute)
     (send vm get 'val)))
@@ -358,6 +358,7 @@
     (read . ,read)
 
     ; environment
+    (make-env . ,make-env)
     (subst . ,subst)
     (define-var . ,define-var)
     (get-var . ,get-var)
@@ -366,16 +367,11 @@
     ; application
     (apply* . ,apply)))
 
-(define (make-env)
-  (let ((vars (map car builtins))
-        (vals (map cdr builtins)))
-    (subst vars vals '())))
-
-(define env '())
+(define env (void))
 
 (define (get-env) env)
 
-(define buf '())
+(define buf (void))
 
 (define (input)
   (if (null? buf)

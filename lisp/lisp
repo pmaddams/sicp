@@ -184,6 +184,7 @@
    (cons 'read read)
 
    ; environment
+   (cons 'make-env make-env)
    (cons 'subst subst)
    (cons 'define-var define-var)
    (cons 'get-var get-var)
@@ -192,12 +193,7 @@
    ; application
    (cons 'apply* apply*)))
 
-(define (make-env)
-  (let ((vars (map car builtins))
-        (vals (map cdr builtins)))
-    (subst vars vals '())))
-
-(let ((env (make-env)))
+(let ((env (make-env builtins)))
   (define (loop)
     (display (eval (read) env))
     (newline)

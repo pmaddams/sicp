@@ -13,7 +13,7 @@
 (define (interpret code)
   (and (not (null? code))
        (let ((vm (make-vm (compile* code) #:regs all-regs)))
-         (send vm set 'env (make-env))
+         (send vm set 'env (make-env builtins))
          (send vm execute)
          (send vm get 'val))))
 
@@ -393,6 +393,7 @@
     (read . ,read)
 
     ; environment
+    (make-env . ,make-env)
     (subst . ,subst)
     (define-var . ,define-var)
     (get-var . ,get-var)
@@ -400,8 +401,3 @@
 
     ; application
     (apply* . ,apply*)))
-
-(define (make-env)
-  (let ((vars (map car builtins))
-        (vals (map cdr builtins)))
-    (subst vars vals '())))
