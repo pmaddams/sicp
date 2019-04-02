@@ -4,8 +4,7 @@
 
 (provide (all-defined-out))
 
-(require (only-in racket (apply apply*))
-         racket/class
+(require racket/class
          racket/set
          lisp/env
          vm)
@@ -254,7 +253,7 @@
          (label-output builtin-label)
          (end-with linkage
                    (output '(proc args) (list target)
-                           `((assign ,target (op apply*) (reg proc) (reg args)))))))
+                           `((assign ,target (op apply) (reg proc) (reg args)))))))
        (label-output after-label)))))
 
 (define (compile-subroutine-call target linkage)
@@ -400,4 +399,4 @@
     (set-var . ,set-var)
 
     ; application
-    (apply* . ,apply*)))
+    (apply* . ,apply)))
