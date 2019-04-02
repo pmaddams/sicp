@@ -4,6 +4,11 @@
 
 (provide (all-defined-out))
 
+(define (eval-deriv expr var val)
+  (let ((ns (current-namespace)))
+    (namespace-set-variable-value! var val)
+    (eval (deriv expr var) ns)))
+
 (define (deriv expr var)
   (cond ((number? expr) 0)
         ((symbol? expr) (if (eq? var expr) 1 0))
@@ -15,10 +20,10 @@
                           (v (multiplicand expr)))
                       (make-sum (make-product (deriv u var) v)
                                 (make-product u (deriv v var)))))
-                ('** (let ((u (base expr))
-                           (n (exponent expr)))
-                       (make-product (deriv u var)
-                                     (make-product n (make-power u (- n 1))))))))))
+                ('expt (let ((u (base expr))
+                             (n (exponent expr)))
+                         (make-product (deriv u var)
+                                       (make-product n (make-power u (- n 1))))))))))
 
 (define (make-sum a1 a2)
   (cond ((eq? a1 0) a2)
@@ -38,7 +43,7 @@
         ((or (eq? b 1) (zero? n)) 1)
         ((= n 1) b)
         ((number? b) (expt b n))
-        (else (list '** b n))))
+        (else (list 'expt b n))))
 
 (define addend cadr)
 
