@@ -5,20 +5,29 @@
 (provide (all-defined-out))
 
 (require racket/class
+         racket/function
          lisp/env
          vm)
 
 (define (interpret code)
-  (let ((vm (make-vm lisp)))
-    (set! env (make-env builtins))
-    (set! buf code)
+  (define (read)
+    (if (null? code)
+        eof
+        (let ((expr (car code)))
+          (set! code (cdr code))
+          expr)))
+
+  (let* ((env (make-env builtins))
+         (ops `((get-env . ,(thunk env))
+                (read . , read)))
+         (vm (make-vm lisp #:ops ops)))
     (send vm execute)
     (send vm get 'val)))
 
 (define lisp
   '((assign val (const #f))
     loop
-    (assign expr (op input))
+    (assign expr (op read))
     (test (op eof-object?) (reg expr))
     (branch (label done))
     (assign env (op get-env))
@@ -366,16 +375,3 @@
 
     ; application
     (apply* . ,apply)))
-
-(define env (void))
-
-(define (get-env) env)
-
-(define buf (void))
-
-(define (input)
-  (if (null? buf)
-      eof
-      (let ((expr (car buf)))
-        (set! buf (cdr buf))
-        expr)))
