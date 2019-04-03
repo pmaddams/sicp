@@ -4,15 +4,68 @@
 
 (provide (all-defined-out))
 
+(require racket/list)
+
 (struct leaf (symbol weight))
 
 (struct branch (symbols weight left right))
+
+(define (make-huffman-tree symbols)
+  (make-branches (make-leaves (counts symbols))))
+
+(define (make-branches leaves)
+  (unless (> (length leaves) 1)
+    (error "not enough information:" leaves))
+  (let loop ((leaves (cddr leaves))
+             (acc (make-branch (car leaves) (cadr leaves))))
+    (if (null? leaves)
+        acc
+        (loop (cdr leaves)
+              (make-branch (car leaves) acc)))))
 
 (define (make-branch left right)
   (branch (append (symbols left) (symbols right))
           (+ (weight left) (weight right))
           left
           right))
+
+(define (make-leaves pairs)
+  (define (insert leaf set)
+    (cond ((null? set) (list leaf))
+          ((< (weight leaf) (weight (car set))) (cons leaf set))
+          (else (cons (car set) (insert leaf (cdr set))))))
+
+  (define (make-leaf pair)
+    (leaf (car pair) (cdr pair)))
+
+  (foldr insert '() (map make-leaf pairs)))
+
+(define (encode symbols t)
+  (append-map (lambda (s) (encode-symbol s t)) symbols))
+
+(define (encode-symbol s t)
+  (let loop ((t t) (acc '()))
+    (cond ((leaf? t) (reverse acc))
+          ((contains? s (branch-left t)) (loop (branch-left t) (cons 0 acc)))
+          ((contains? s (branch-right t)) (loop (branch-right t) (cons 1 acc)))
+          (else (error "unknown symbol:" s)))))
+
+(define (contains? s t)
+  (member s (symbols t)))
+
+(define (decode bits root)
+  (let loop ((bits bits) (current root))
+    (if (null? bits)
+        '()
+        (let ((next (choose-branch (car bits) current)))
+          (if (leaf? next)
+              (cons (leaf-symbol next) (loop (cdr bits) root))
+              (loop (cdr bits) next))))))
+
+(define (choose-branch bit t)
+  (if (zero? bit)
+      (branch-left t)
+      (branch-right t)))
 
 (define (symbols t)
   (if (leaf? t)
@@ -24,74 +77,15 @@
       (leaf-weight t)
       (branch-weight t)))
 
-(define (make-huffman-tree pairs)
-  (if (< (length pairs) 2)
-      (error "not enough symbols:" pairs)
-      (merge (leaf-set pairs))))
-
-(define (merge l)
-  (let loop ((l (cddr l)) (acc (make-branch (car l) (cadr l))))
-    (if (null? l)
-        acc
-        (loop (cdr l) (make-branch (car l) acc)))))
-
-(define (leaf-set pairs)
-  (if (null? pairs)
-      '()
-      (let ((pair (car pairs)))
-        (adjoin (leaf (car pair) (cdr pair))
-                (leaf-set (cdr pairs))))))
-
-(define (adjoin t set)
-  (cond ((null? set) (list t))
-        ((< (weight t) (weight (car set))) (cons t set))
-        (else (cons (car set) (adjoin t (cdr set))))))
-
-(define (encode message t)
-  (let loop ((message message))
-    (if (null? message)
-        '()
-        (append (encode-symbol (car message) t)
-                (loop (cdr message))))))
-
-(define (encode-symbol symbol t)
-  (let loop ((t t) (acc '()))
-    (cond ((leaf? t) (reverse acc))
-          ((contains? symbol (branch-left t)) (loop (branch-left t) (cons 0 acc)))
-          ((contains? symbol (branch-right t)) (loop (branch-right t) (cons 1 acc)))
-          (else (error "unknown symbol:" symbol)))))
-
-(define (contains? symbol t)
-  (member symbol (symbols t)))
-
-(define (decode bits t)
-  (if (null? bits)
-      '()
-      (let ((next (choose-branch (car bits) t)))
-        (if (leaf? next)
-            (cons (leaf-symbol next) (decode (cdr bits) t))
-            (decode (cdr bits) next)))))
-
-(define (choose-branch bit t)
-  (if (zero? bit)
-      (branch-left t)
-      (branch-right t)))
-
-(define alphabet
-  (make-huffman-tree
-   '((A . 2)
-     (BOOM . 1)
-     (GET . 2)
-     (JOB . 2)
-     (NA . 16)
-     (SHA . 3)
-     (YIP . 9)
-     (WAH . 1))))
+(define (counts l)
+  (for/list ((s (in-list (sort (remove-duplicates l) symbol<?))))
+    (let ((p (lambda (x) (eq? s x))))
+      (cons s (length (filter p l))))))
 
 (define song
   '(GET A JOB
         SHA NA NA NA NA NA NA NA NA
         GET A JOB
         SHA NA NA NA NA NA NA NA NA
-        WAH YIP YIP YIP YIP YIP YIP YIP YIP
+        WAH YIP YIP YIP YIP YIP YIP YIP YIP YIP
         SHA BOOM))
