@@ -4,19 +4,22 @@
 
 (provide (all-defined-out))
 
+(require racket/list)
+
 (struct node (val left right))
 
 (define (list->set l)
-  (car (let loop ((l l) (n (length l)))
-         (if (zero? n)
-             (cons '() l)
-             (let* ((left-size (quotient (sub1 n) 2))
-                    (left-pair (loop l left-size))
-                    (non-left-l (cdr left-pair))
-                    (right-size (- n (add1 left-size)))
-                    (right-pair (loop (cdr non-left-l) right-size)))
-               (cons (node (car non-left-l) (car left-pair) (car right-pair))
-                     (cdr right-pair)))))))
+  (let ((l (sort (remove-duplicates l) <)))
+    (car (let loop ((l l) (n (length l)))
+           (if (zero? n)
+               (cons '() l)
+               (let* ((left-size (quotient (sub1 n) 2))
+                      (left-pair (loop l left-size))
+                      (non-left-l (cdr left-pair))
+                      (right-size (- n (add1 left-size)))
+                      (right-pair (loop (cdr non-left-l) right-size)))
+                 (cons (node (car non-left-l) (car left-pair) (car right-pair))
+                       (cdr right-pair))))))))
 
 (define (set->list s)
   (let loop ((s s) (acc '()))
@@ -32,7 +35,7 @@
          (let ((val (node-val s)))
            (cond ((< n val) (loop (node-left s)))
                  ((> n val) (loop (node-right s)))
-                 (else val))))))
+                 (else #t))))))
 
 (define (set-add s n)
   (let loop ((s s))
@@ -40,7 +43,7 @@
         (node n '() '())
         (let ((val (node-val s)))
           (cond ((< n val) (node val (loop (node-left s)) (node-right s)))
-                ((> n val) (node val (node-right s) (loop (node-right s))))
+                ((> n val) (node val (node-left s) (loop (node-right s))))
                 (else s))))))
 
 (define (set-union s1 s2)
