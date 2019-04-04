@@ -13,14 +13,14 @@
 (define (make-huffman-tree symbols)
   (make-branches (make-leaves (counts symbols))))
 
-(define (make-branches l)
-  (unless (> (length l) 1)
-    (error "not enough information:" l))
-  (let loop ((l l))
-    (if (null? (cdr l))
-        (car l)
-        (loop (insert (make-branch (car l) (cadr l))
-                      (cddr l))))))
+(define (make-branches set)
+  (unless (> (length set) 1)
+    (error "not enough information:" set))
+  (let loop ((set set))
+    (if (null? (cdr set))
+        (car set)
+        (loop (insert (make-branch (car set) (cadr set))
+                      (cddr set))))))
 
 (define (make-branch left right)
   (branch (append (symbols left) (symbols right))
@@ -40,10 +40,10 @@
 (define (encode-symbol s t)
   (if (leaf? t)
       '()
-      (let ((l (branch-left t))
-            (r (branch-right t)))
-        (cond ((contains? s l) (cons 0 (encode-symbol s l)))
-              ((contains? s r) (cons 1 (encode-symbol s r)))
+      (let ((left (branch-left t))
+            (right (branch-right t)))
+        (cond ((contains? s left) (cons 0 (encode-symbol s left)))
+              ((contains? s right) (cons 1 (encode-symbol s right)))
               (else (error "unknown symbol:" s))))))
 
 (define (contains? s t)
@@ -63,10 +63,10 @@
         ((= bit 1) (branch-right t))
         (else (error "invalid bit:" bit))))
 
-(define (insert t l)
-  (cond ((null? l) (list t))
-        ((< (weight t) (weight (car l))) (cons t l))
-        (else (cons (car l) (insert t (cdr l))))))
+(define (insert t set)
+  (cond ((null? set) (list t))
+        ((< (weight t) (weight (car set))) (cons t set))
+        (else (cons (car set) (insert t (cdr set))))))
 
 (define (symbols t)
   (if (leaf? t)
@@ -78,10 +78,10 @@
       (leaf-weight t)
       (branch-weight t)))
 
-(define (counts l)
-  (for/list ((s (in-list (sort (remove-duplicates l) symbol<?))))
+(define (counts symbols)
+  (for/list ((s (in-list (remove-duplicates symbols))))
     (let ((p (lambda (x) (eq? s x))))
-      (cons s (length (filter p l))))))
+      (cons s (length (filter p symbols))))))
 
 (define get-a-job
   '(GET A JOB
