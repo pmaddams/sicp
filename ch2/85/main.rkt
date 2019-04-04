@@ -88,7 +88,10 @@
        (lambda (n)
          (make-rational
           (value n)
-          1))))
+          1)))
+
+  (put 'simplify 'integer
+       identity))
 
 (install-integer-package)
 
@@ -147,7 +150,7 @@
                 (dv (quotient (denom n) g)))
            (if (= dv 1)
                (make-integer nv)
-               n)))))
+               (make-rational nv dv))))))
 
 (install-rational-package)
 
@@ -261,7 +264,7 @@
                (iv (imag-part n)))
            (if (zero? iv)
                (simplify (make-real rv))
-               n)))))
+               (make-rectangular rv iv))))))
 
 (install-complex-package)
 
