@@ -6,22 +6,21 @@
 
 (require racket/list)
 
-(struct leaf (symbol weight))
+(struct leaf (symbol weight) #:transparent)
 
-(struct branch (symbols weight left right))
+(struct branch (symbols weight left right) #:transparent)
 
 (define (make-huffman-tree symbols)
   (make-branches (make-leaves (counts symbols))))
 
-(define (make-branches leaves)
-  (unless (> (length leaves) 1)
-    (error "not enough information:" leaves))
-  (let loop ((leaves (cddr leaves))
-             (acc (make-branch (car leaves) (cadr leaves))))
-    (if (null? leaves)
-        acc
-        (loop (cdr leaves)
-              (make-branch (car leaves) acc)))))
+(define (make-branches l)
+  (unless (> (length l) 1)
+    (error "not enough information:" l))
+  (let loop ((l l))
+    (if (null? (cdr l))
+        (car l)
+        (loop (insert (make-branch (car l) (cadr l))
+                      (cddr l))))))
 
 (define (make-branch left right)
   (branch (append (symbols left) (symbols right))
@@ -30,28 +29,25 @@
           right))
 
 (define (make-leaves pairs)
-  (define (insert leaf set)
-    (cond ((null? set) (list leaf))
-          ((< (weight leaf) (weight (car set))) (cons leaf set))
-          (else (cons (car set) (insert leaf (cdr set))))))
-
-  (define (make-leaf pair)
-    (leaf (car pair) (cdr pair)))
-
   (foldr insert '() (map make-leaf pairs)))
+
+(define (make-leaf pair)
+  (leaf (car pair) (cdr pair)))
 
 (define (encode symbols t)
   (append-map (lambda (s) (encode-symbol s t)) symbols))
 
 (define (encode-symbol s t)
-  (let loop ((t t) (acc '()))
-    (cond ((leaf? t) (reverse acc))
-          ((contains? s (branch-left t)) (loop (branch-left t) (cons 0 acc)))
-          ((contains? s (branch-right t)) (loop (branch-right t) (cons 1 acc)))
-          (else (error "unknown symbol:" s)))))
+  (if (leaf? t)
+      '()
+      (let ((l (branch-left t))
+            (r (branch-right t)))
+        (cond ((contains? s l) (cons 0 (encode-symbol s l)))
+              ((contains? s r) (cons 1 (encode-symbol s r)))
+              (else (error "unknown symbol:" s))))))
 
 (define (contains? s t)
-  (member s (symbols t)))
+  (memq s (symbols t)))
 
 (define (decode bits root)
   (let loop ((bits bits) (current root))
@@ -63,9 +59,14 @@
               (loop (cdr bits) next))))))
 
 (define (choose-branch bit t)
-  (if (zero? bit)
-      (branch-left t)
-      (branch-right t)))
+  (cond ((= bit 0) (branch-left t))
+        ((= bit 1) (branch-right t))
+        (else (error "invalid bit:" bit))))
+
+(define (insert t l)
+  (cond ((null? l) (list t))
+        ((< (weight t) (weight (car l))) (cons t l))
+        (else (cons (car l) (insert t (cdr l))))))
 
 (define (symbols t)
   (if (leaf? t)
