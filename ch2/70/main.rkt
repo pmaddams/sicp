@@ -83,7 +83,7 @@
     (let ((p (lambda (x) (eq? s x))))
       (cons s (length (filter p l))))))
 
-(define song
+(define get-a-job
   '(GET A JOB
         SHA NA NA NA NA NA NA NA NA
         GET A JOB
