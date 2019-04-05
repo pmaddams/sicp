@@ -15,32 +15,32 @@
     (field (passwords '()) (attempts 0))
 
     (define/public (deposit password n)
-      (or (invalid? password)
+      (or (incorrect? password)
           (begin (set! balance (+ balance n))
                  balance)))
 
     (define/public (withdraw password n)
-      (or (invalid? password)
+      (or (incorrect? password)
           (if (>= balance n)
               (begin (set! balance (- balance n))
                      balance)
               "insufficient funds")))
 
     (define/public (add-user password new-password)
-      (or (invalid? password)
+      (or (incorrect? password)
           (if (member new-password passwords)
-              "user exists"
+              "user already exists"
               (begin (set! passwords (cons new-password passwords))
-                     "added user"))))
+                     "added new user"))))
 
-    (define (invalid? password)
+    (define (incorrect? password)
       (if (or (null? passwords)
               (member password passwords))
           (begin (set! attempts 0) #f)
           (begin (set! attempts (add1 attempts))
                  (if (> attempts 7)
                      (call-the-cops)
-                     "invalid password"))))
+                     "incorrect password"))))
 
     (define (call-the-cops) "dialing 911")
 
