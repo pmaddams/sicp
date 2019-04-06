@@ -5,7 +5,10 @@
 (provide (all-defined-out))
 
 (require racket/class
-         racket/function)
+         racket/function
+         racket/list)
+
+(struct message (name time signal) #:transparent)
 
 (define queue%
   (class object%
@@ -43,19 +46,29 @@
   (class object%
     (super-new)
 
-    (field (current-signal 0) (actions '()))
+    (init-field (signal 0))
+    (field (actions '()))
 
-    (define/public (set signal)
-      (unless (or (= signal 0) (= signal 1))
-        (error "invalid signal:" signal))
-      (unless (= current-signal signal)
-        (set! current-signal signal)
+    (define/public (set new-signal)
+      (unless (or (= new-signal 0) (= new-signal 1))
+        (error "invalid signal:" new-signal))
+      (unless (= signal new-signal)
+        (set! signal new-signal)
         (for ((action (in-list actions)))
           (action))))
 
     (define/public (add action)
       (set! actions (cons action actions))
       (action))))
+
+(define (set wire signal)
+  (send wire set signal))
+
+(define (add wire action)
+  (send wire add action))
+
+(define (get-signal wire)
+  (get-field signal wire))
 
 (define agenda%
   (class object%
@@ -64,7 +77,7 @@
     (field (current-time 0) (segments '()))
 
     (define/public (propagate)
-      (for ((segment (in-list segments)))
+      (for ((segment (in-mlist segments)))
         (set! current-time (get-field time segment))
         (let loop ()
           (unless (send segment empty?)
@@ -95,25 +108,83 @@
 (define (propagate)
   (send agenda propagate))
 
+(define (get-time)
+  (get-field current-time agenda))
+
 (define (after delay action)
   (send agenda after delay action))
 
-(define (current-time)
-  (get-field current-time agenda))
+(define buffer '())
 
-(define (set wire signal)
-  (send wire set signal))
+(define (output)
+  (let ((l (remove-duplicates buffer #:key message-name)))
+    (for/list ((msg (in-list (sort l symbol<? #:key message-name))))
+      (cons (message-name msg)
+            (message-signal msg)))))
 
-(define (add wire action)
-  (send wire add action))
+(define (reset)
+  (set! agenda (new agenda%))
+  (set! buffer '()))
 
-(define (receive wire)
-  (get-field current-signal wire))
+(define (probe wire name)
+  (send wire add
+        (thunk
+         (let ((msg (message name (get-time) (get-signal wire))))
+           (set! buffer (cons msg buffer))))))
 
-(define (logical-not a)
-  (cond ((= a 0) 1)
-        ((= a 1) 0)
-        (else (error "invalid input:" a))))
+(define-syntax-rule (circuit (wire ...) expr ...)
+  (let ((wire (new wire%)) ...)
+    expr ...))
+
+(define (full-adder in1 in2 carry-in sum carry-out)
+  (circuit (a b c d)
+           (half-adder in1 in2 a b)
+           (half-adder carry-in a sum c)
+           (nor-gate b c d)
+           (inverter d carry-out)))
+
+(define (half-adder in1 in2 sum carry)
+  (circuit (a)
+           (xor-gate in1 in2 sum)
+           (nand-gate in1 in2 a)
+           (inverter a carry)))
+
+(define (xor-gate in1 in2 out)
+  (circuit (a b c)
+           (nand-gate in1 in2 a)
+           (nand-gate in1 a b)
+           (nand-gate in2 a c)
+           (nand-gate b c out)))
+
+(define (nand-gate in1 in2 out)
+  (let* ((delay 3)
+         (action
+          (thunk
+           (let ((signal (logical-not
+                          (logical-and (get-signal in1)
+                                       (get-signal in2)))))
+             (after delay (thunk (set out signal)))))))
+    (add in1 action)
+    (add in2 action)))
+
+(define (nor-gate in1 in2 out)
+  (let* ((delay 3)
+         (action
+          (thunk
+           (let ((signal (logical-not
+                          (logical-or (get-signal in1)
+                                      (get-signal in2)))))
+             (after delay (thunk (set out signal)))))))
+    (add in1 action)
+    (add in2 action)))
+
+(define (inverter in out)
+  (let* ((delay 2)
+         (action
+          (thunk
+           (let ((signal (logical-not (get-signal in))))
+             (after delay (thunk (set out signal)))))))
+    (add in action)))
 
 (define (logical-and a b)
   (cond ((and (= a 0) (= b 0)) 0)
@@ -129,62 +200,7 @@
         ((and (= a 1) (= b 1)) 1)
         (else (error "invalid input:" a b))))
 
-(define (probe wire name)
-  (send wire add
-        (thunk
-         (printf "~a -- current time: ~a signal: ~a\n"
-                 name (current-time) (receive wire)))))
-
-(define (inverter in out)
-  (let* ((delay 2)
-         (action
-          (thunk
-           (let ((signal (logical-not (receive in))))
-             (after delay (thunk (set out signal)))))))
-    (add in action)))
-
-(define (nand-gate in1 in2 out)
-  (let* ((delay 3)
-         (action
-          (thunk
-           (let ((signal (logical-not
-                          (logical-and (receive in1)
-                                       (receive in2)))))
-             (after delay (thunk (set out signal)))))))
-    (add in1 action)
-    (add in2 action)))
-
-(define (nor-gate in1 in2 out)
-  (let* ((delay 3)
-         (action
-          (thunk
-           (let ((signal (logical-not
-                          (logical-or (receive in1)
-                                      (receive in2)))))
-             (after delay (thunk (set out signal)))))))
-    (add in1 action)
-    (add in2 action)))
-
-(define-syntax-rule (circuit (wire ...) expr ...)
-  (let ((wire (new wire%)) ...)
-    expr ...))
-
-(define (xor-gate in1 in2 out)
-  (circuit (a b c)
-           (nand-gate in1 in2 a)
-           (nand-gate in1 a b)
-           (nand-gate in2 a c)
-           (nand-gate b c out)))
-
-(define (half-adder in1 in2 sum carry)
-  (circuit (a)
-           (xor-gate in1 in2 sum)
-           (nand-gate in1 in2 a)
-           (inverter a carry)))
-
-(define (full-adder in1 in2 carry-in sum carry-out)
-  (circuit (a b c d)
-           (half-adder in1 in2 a b)
-           (half-adder carry-in a sum c)
-           (nor-gate b c d)
-           (inverter d carry-out)))
+(define (logical-not a)
+  (cond ((= a 0) 1)
+        ((= a 1) 0)
+        (else (error "invalid input:" a))))
