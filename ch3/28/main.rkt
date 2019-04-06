@@ -61,12 +61,6 @@
       (set! actions (cons action actions))
       (action))))
 
-(define (set wire signal)
-  (send wire set signal))
-
-(define (add wire action)
-  (send wire add action))
-
 (define (get-signal wire)
   (get-field signal wire))
 
@@ -111,26 +105,14 @@
 (define (get-time)
   (get-field current-time agenda))
 
-(define (after delay action)
-  (send agenda after delay action))
-
-(define buffer '())
-
-(define (output)
-  (let ((l (remove-duplicates buffer #:key message-name)))
-    (for/list ((msg (in-list (sort l symbol<? #:key message-name))))
-      (cons (message-name msg)
-            (message-signal msg)))))
-
 (define (reset)
-  (set! agenda (new agenda%))
-  (set! buffer '()))
+  (set! agenda (new agenda%)))
 
-(define (probe wire name)
+(define (probe name wire)
   (send wire add
         (thunk
-         (let ((msg (message name (get-time) (get-signal wire))))
-           (set! buffer (cons msg buffer))))))
+         (printf "~a -- current time: ~a signal: ~a\n"
+                 name (get-time) (get-signal wire)))))
 
 (define-syntax-rule (circuit (wire ...) expr ...)
   (let ((wire (new wire%)) ...)
@@ -163,9 +145,9 @@
            (let ((signal (logical-not
                           (logical-and (get-signal in1)
                                        (get-signal in2)))))
-             (after delay (thunk (set out signal)))))))
-    (add in1 action)
-    (add in2 action)))
+             (send agenda after delay (thunk (send out set signal)))))))
+    (send in1 add action)
+    (send in2 add action)))
 
 (define (nor-gate in1 in2 out)
   (let* ((delay 3)
@@ -174,17 +156,17 @@
            (let ((signal (logical-not
                           (logical-or (get-signal in1)
                                       (get-signal in2)))))
-             (after delay (thunk (set out signal)))))))
-    (add in1 action)
-    (add in2 action)))
+             (send agenda after delay (thunk (send out set signal)))))))
+    (send in1 add action)
+    (send in2 add action)))
 
 (define (inverter in out)
   (let* ((delay 2)
          (action
           (thunk
            (let ((signal (logical-not (get-signal in))))
-             (after delay (thunk (set out signal)))))))
-    (add in action)))
+             (send agenda after delay (thunk (send out set signal)))))))
+    (send in add action)))
 
 (define (logical-and a b)
   (cond ((and (= a 0) (= b 0)) 0)
