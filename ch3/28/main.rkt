@@ -5,10 +5,7 @@
 (provide (all-defined-out))
 
 (require racket/class
-         racket/function
-         racket/list)
-
-(struct message (name time signal) #:transparent)
+         racket/function)
 
 (define queue%
   (class object%
