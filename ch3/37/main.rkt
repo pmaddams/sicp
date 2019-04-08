@@ -53,24 +53,6 @@
     (define/public (connect conn)
       (send conn connect this))))
 
-(define probe%
-  (class constraint%
-    (super-new)
-    (inherit connect)
-
-    (init-field conn name)
-
-    (define/public (inform)
-      (print (get conn)))
-
-    (define/public (retract)
-      (print "?"))
-
-    (define (print val)
-      (printf "~a = ~a\n" name val))
-
-    (connect conn)))
-
 (define constant%
   (class constraint%
     (super-new)
@@ -131,44 +113,42 @@
     (for ((conn (in-list (list m1 m2 p))))
       (connect conn))))
 
-(define (set? conn)
-  (send conn set?))
-
 (define (get conn)
   (get-field val conn))
 
 (define (set conn val)
+  (send conn forget 'user)
   (send conn set val 'user))
 
-(define (forget conn)
-  (send conn forget 'user))
+(define (set? conn)
+  (send conn set?))
 
-(define (var name)
+(define (const val)
   (let ((conn (new connector%)))
-    (probe conn name)
+    (make-object constant% conn val)
     conn))
 
-(define (probe conn name)
-  (make-object probe% conn name))
+(define (add a1 a2)
+  (let ((s (new connector%)))
+    (make-object sum% a1 a2 s)
+    s))
 
-(define (const conn val)
-  (make-object constant% conn val))
+(define (sub s a1)
+  (let ((a2 (new connector%)))
+    (make-object sum% a1 a2 s)
+    a2))
 
-(define (add a1 a2 s)
-  (make-object sum% a1 a2 s))
+(define (mul m1 m2)
+  (let ((p (new connector%)))
+    (make-object product% m1 m2 p)
+    p))
 
-(define (mul m1 m2 p)
-  (make-object product% m1 m2 p))
+(define (div p m1)
+  (let ((m2 (new connector%)))
+    (make-object product% m1 m2 p)
+    m2))
 
-(define (celsius<->fahrenheit c f)
-  (let ((u (new connector%))
-        (v (new connector%))
-        (w (new connector%))
-        (x (new connector%))
-        (y (new connector%)))
-    (mul c w u)
-    (mul v x u)
-    (add v y f)
-    (const w 9)
-    (const x 5)
-    (const y 32)))
+(define (celsius->fahrenheit c)
+  (add (mul (div (const 9) (const 5))
+            c)
+       (const 32)))
