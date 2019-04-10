@@ -4,24 +4,37 @@
 
 (provide (all-defined-out))
 
-(require racket/stream)
+(require racket/function
+         racket/stream)
 
-(define ((sin-approx terms) x)
-  (eval-series sin-series x terms))
+(define (sin-approx %)
+  (series-approx sin-series odd? %))
 
-(define ((cos-approx terms) x)
-  (eval-series cos-series x terms))
+(define (cos-approx %)
+  (series-approx cos-series even? %))
 
-(define ((tan-approx terms) x)
-  (eval-series tan-series x terms))
+(define (tan-approx %)
+  (series-approx tan-series odd? %))
 
-(define ((exp-approx terms) x)
-  (eval-series exp-series x terms))
+(define (exp-approx %)
+  (series-approx exp-series identity %))
 
-(define (eval-series s x terms)
-  (for/sum ((term (in-stream (stream-take s terms)))
-            (n (in-naturals)))
-    (* term (expt x n))))
+(define ((series-approx s p %) x)
+  (let ((s (for/stream ((a (in-stream s))
+                        (n (in-naturals))
+                        #:when (p n))
+             (* a (expt x n)))))
+    (if (zero? (stream-first s))
+        0
+        (let loop ((s (stream-rest s)) (acc (stream-first s)))
+          (let ((next (+ acc (stream-first s))))
+            (if ((within? %) acc next)
+                next
+                (loop (stream-rest s) next)))))))
+
+(define ((within? %) guess next)
+  (< (abs (/ (- next guess) guess))
+     (/ % 100.0)))
 
 (define (add s1 s2)
   (for/stream ((a (in-stream s1))
@@ -38,14 +51,14 @@
         (b (stream-first s2)))
     (stream-cons (* a b)
                  (add (mul (stream-rest s1) s2)
-                      (mul (stream-cons a (infinite 0))
+                      (mul (stream-cons a zero)
                            (stream-rest s2))))))
 
 (define (div s1 s2)
   (let ((a (stream-first s1))
         (b (stream-first s2)))
     (letrec ((q (stream-cons (/ a b)
-                             (mul (stream-cons (/ 1 b) (infinite 0))
+                             (mul (stream-cons (/ 1 b) zero)
                                   (sub (stream-rest s1)
                                        (mul q (stream-rest s2)))))))
       q)))
@@ -58,17 +71,16 @@
 (define (negative s)
   (stream-map (lambda (n) (- n)) s))
 
-(define (infinite n)
-  (stream-cons n (infinite n)))
+(define zero (stream-cons 0.0 zero))
 
 (define sin-series
-  (stream-cons 0 (integral cos-series)))
+  (stream-cons 0.0 (integral cos-series)))
 
 (define cos-series
-  (stream-cons 1 (negative (integral sin-series))))
+  (stream-cons 1.0 (negative (integral sin-series))))
 
 (define tan-series
   (div sin-series cos-series))
 
 (define exp-series
-  (stream-cons 1 (integral exp-series)))
+  (stream-cons 1.0 (integral exp-series)))
