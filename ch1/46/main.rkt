@@ -22,10 +22,9 @@
         next
         (loop next (f next)))))
 
-(define (within? %)
-  (lambda (guess next)
-    (< (abs (/ (- next guess) guess))
-       (/ % 100.0))))
+(define ((within? %) guess next)
+  (< (abs (/ (- next guess) guess))
+     (/ % 100.0)))
 
 (define exact-ceiling
   (compose inexact->exact ceiling))

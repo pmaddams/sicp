@@ -25,7 +25,6 @@
             ((i (in-range k 0 -1)))
     (/ (n i) (+ (d i) acc))))
 
-(define (within? %)
-  (lambda (guess next)
-    (< (abs (/ (- next guess) guess))
-       (/ % 100.0))))
+(define ((within? %) guess next)
+  (< (abs (/ (- next guess) guess))
+     (/ % 100.0)))
