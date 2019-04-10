@@ -6,51 +6,69 @@
 
 (require racket/stream)
 
+(define ((sin-approx terms) x)
+  (eval-series sin-series x terms))
+
+(define ((cos-approx terms) x)
+  (eval-series cos-series x terms))
+
+(define ((tan-approx terms) x)
+  (eval-series tan-series x terms))
+
+(define ((exp-approx terms) x)
+  (eval-series exp-series x terms))
+
+(define (eval-series s x terms)
+  (for/sum ((term (in-stream (stream-take s terms)))
+            (n (in-naturals)))
+    (* term (expt x n))))
+
 (define (add s1 s2)
-  (zip-with + s1 s2))
+  (for/stream ((a (in-stream s1))
+               (b (in-stream s2)))
+    (+ a b)))
 
 (define (sub s1 s2)
-  (zip-with - s1 s2))
+  (for/stream ((a (in-stream s1))
+               (b (in-stream s2)))
+    (- a b)))
 
 (define (mul s1 s2)
   (let ((a (stream-first s1))
         (b (stream-first s2)))
     (stream-cons (* a b)
                  (add (mul (stream-rest s1) s2)
-                      (mul (series a) (stream-rest s2))))))
+                      (mul (stream-cons a (infinite 0))
+                           (stream-rest s2))))))
 
 (define (div s1 s2)
   (let ((a (stream-first s1))
         (b (stream-first s2)))
     (letrec ((q (stream-cons (/ a b)
-                             (mul (series (/ 1 b))
+                             (mul (stream-cons (/ 1 b) (infinite 0))
                                   (sub (stream-rest s1)
                                        (mul q (stream-rest s2)))))))
       q)))
 
-(define sin
-  (stream-cons 0 (integral cos)))
-
-(define cos
-  (stream-cons 1 (negative (integral sin))))
-
-(define tan (div sin cos))
-
-(define exp (stream-cons 1 (integral exp)))
-
 (define (integral s)
-  (zip-with / s (in-naturals 1)))
+  (for/stream ((a (in-stream s))
+               (b (in-naturals 1)))
+    (/ a b)))
 
 (define (negative s)
   (stream-map (lambda (n) (- n)) s))
 
-(define (series n)
-  (stream-cons n (let loop ()
-                   (stream-cons 0 (loop)))))
+(define (infinite n)
+  (stream-cons n (infinite n)))
 
-(define (zip-with f . args)
-  (let loop ((l args))
-    (if (ormap stream-empty? l)
-        empty-stream
-        (stream-cons (apply f (map stream-first l))
-                     (loop (map stream-rest l))))))
+(define sin-series
+  (stream-cons 0 (integral cos-series)))
+
+(define cos-series
+  (stream-cons 1 (negative (integral sin-series))))
+
+(define tan-series
+  (div sin-series cos-series))
+
+(define exp-series
+  (stream-cons 1 (integral exp-series)))
