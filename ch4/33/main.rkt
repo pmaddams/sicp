@@ -9,14 +9,15 @@
 
 (define (interpret code)
   (let ((env (make-env builtins)))
+    (eval '(define (cons x y) (lambda (m) (m x y))) env)
+    (eval '(define (car p) (p (lambda (x y) x))) env)
+    (eval '(define (cdr p) (p (lambda (x y) y))) env)
     (for/last ((expr (in-list code)))
       (value expr env))))
 
 (struct closure (params body env))
 
 (struct promise (forced val expr env) #:mutable)
-
-(struct stream (proc))
 
 (define (eval expr env)
   (cond ((literal? expr) expr)
@@ -144,29 +145,9 @@
          (body (cddr expr)))
     (cons (cons 'lambda (cons params body)) exprs)))
 
-(define (stream-cons x y)
-  (stream
-   (lambda (m)
-     (m x y))))
-
-(define (stream-first st)
-  ((stream-proc st)
-   (lambda (x y) x)))
-
-(define (stream-rest st)
-  ((stream-proc st)
-   (lambda (x y) y)))
-
-(define (stream-display x)
-  (display
-   (if (stream? x)
-       (format "(~a ..." (stream-first x))
-       x)))
-
 (define builtins
   `(; types
     (null? . ,null?)
-    (pair? . ,stream?)
     (symbol? . ,symbol?)
     (boolean? . ,boolean?)
     (number? . ,number?)
@@ -184,11 +165,6 @@
     (eq? . ,eq?)
     (not . ,not)
 
-    ; data structures
-    (cons . ,stream-cons)
-    (car . ,stream-first)
-    (cdr . ,stream-rest)
-
     ; input/output
-    (display . ,stream-display)
+    (display . ,display)
     (newline . ,newline)))
