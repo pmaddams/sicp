@@ -5,10 +5,8 @@
 
 (test-case
  "literals"
- (check-equal? (interpret '(#f)) #f)
  (check-equal? (interpret '(#t)) #t)
- (check-equal? (interpret '(0)) 0)
- (check-equal? (interpret '(1)) 1)
+ (check-equal? (interpret '(#f)) #f)
  (let ((n (random)))
    (check-equal? (interpret `(,n)) n)))
 
@@ -53,10 +51,10 @@
 
 (test-case
  "if"
- (check-equal? (interpret '((if #t
-                                1
+ (check-equal? (interpret '((if (< 1 2)
+                                'foo
                                 (/ 1 0))))
-               1)
+               'foo)
  (check-equal? (interpret '((define (map f l)
                               (if (null? l)
                                   '()
@@ -69,11 +67,11 @@
  "begin"
  (check-equal? (interpret '((begin #t #f)))
                #f)
- (check-equal? (interpret '((define l '())
-                            (begin (set! l (cons 1 l))
-                                   (set! l (cons (+ (car l) 1) (cdr l)))
-                                   (car l))))
-               2))
+ (check-equal? (interpret '((if (< 1 2)
+                                (begin 'foo
+                                       'bar)
+                                (/ 1 0))))
+               'bar))
 
 (test-case
  "cond"
@@ -81,13 +79,15 @@
                               (cond ((null? l) #f)
                                     ((eq? x (car l)) l)
                                     (else (memq x (cdr l)))))
-                            (memq 3 '(1 2 3 4 5))))
-               '(3 4 5))
+                            (let ((x (memq 3 '(1 2 3 4 5))))
+                              (and x (car x)))))
+               3)
  (check-equal? (interpret '((define (memq x l)
                               (cond ((null? l) #f)
                                     ((eq? x (car l)) l)
                                     (else (memq x (cdr l)))))
-                            (memq 6 '(1 2 3 4 5))))
+                            (let ((x (memq 6 '(1 2 3 4 5))))
+                              (and x (car x)))))
                #f))
 
 (test-case
