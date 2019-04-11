@@ -7,6 +7,45 @@
 (require (only-in racket (apply apply*))
          lisp/env)
 
+(define ramanujan
+  '((define (merge-weighted l1 l2 w)
+      (let ((a (car l1))
+            (b (car l2)))
+        (if (< (w a) (w b))
+            (cons a (merge-weighted (cdr l1) l2 w))
+            (cons b (merge-weighted l1 (cdr l2) w)))))
+
+    (define (weighted-pairs l1 l2 w)
+      (let ((a (car l1))
+            (b (car l2)))
+        (cons (cons a b)
+              (merge-weighted
+               (map (lambda (b*) (cons a b*)) (cdr l2))
+               (weighted-pairs (cdr l1) (cdr l2) w)
+               w))))
+
+    (define (map f l)
+      (if (null? l)
+          '()
+          (cons (f (car l)) (map f (cdr l)))))
+
+    (define (sum-of-cubes p)
+      (+ (cube (car p))
+         (cube (cdr p))))
+
+    (define (cube n) (* n n n))
+
+    (define (naturals n)
+      (cons n (naturals (+ n 1))))
+
+    (define (loop l)
+      (let ((n (sum-of-cubes (car l))))
+        (if (= n (sum-of-cubes (car (cdr l))))
+            n
+            (loop (cdr l)))))
+
+    (loop (weighted-pairs (naturals 1) (naturals 1) sum-of-cubes))))
+
 (define (interpret code)
   (let ((env (make-env builtins)))
     (eval '(define (cons x y) (lambda (m) (m x y))) env)
