@@ -1,13 +1,14 @@
 #lang racket/base
 
-(require rackunit
+(require racket/sequence
+         rackunit
          "main.rkt")
 
 (test-case
  "factorial"
  (for ((n (in-range 10)))
    (check-equal? (factorial n)
-                 (for/product ((i (in-range 1 (add1 n)))) i))))
+                 (sequence-fold * 1 (in-range 1 (add1 n))))))
 
 (test-case
  "fibonacci"
