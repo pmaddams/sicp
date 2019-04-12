@@ -27,29 +27,36 @@
 
     (rule (grandfather ?grandson ?grandfather)
           (and (father ?father ?grandfather)
-               (father ?grandson ?father)))
+               (father ?grandson ?father)))))
 
-    (grandfather ?x Cain)
-    (father ?x Lamech)
-    (grandfather ?x Methushael)))
+(define (initialize data)
+  (set! db (database empty-stream empty-stream))
+  (set! index (make-hash))
 
-(define (interpret code)
-  (initialize)
-  (for ((expr (in-list code)))
-    (let ((x (expand-vars expr)))
-      (if (rule-or-fact? x)
-          (add-rule-or-fact x)
-          (stream-display
-           (stream-map
-            (lambda (frame)
-              (instantiate x frame (lambda (v f) (contract-var v))))
-            (eval x (stream '()))))))))
+  (put 'and 'eval eval-and)
+  (put 'or 'eval eval-or)
+  (put 'not 'eval eval-not)
+  (put 'value 'eval value)
+  (put 'true 'eval true)
+
+  (for ((expr (in-list data)))
+    (add-rule-or-fact (expand-vars expr))))
+
+(define (query expr)
+  (let ((x (expand-vars expr)))
+    (sort (stream->list
+           (stream-map (lambda (frame)
+                         (instantiate x frame (lambda (v f) (contract-var v))))
+                       (eval x (stream '()))))
+          (lambda (l1 l2)
+            (string<? (format "~a" l1)
+                      (format "~a" l2))))))
 
 (struct database (facts rules) #:mutable)
 
-(define db (database empty-stream empty-stream))
+(define db (void))
 
-(define index (make-hash))
+(define index (void))
 
 (define (get k1 k2)
   (let ((k (cons k1 k2)))
@@ -375,10 +382,3 @@
 
 (define (list->symbol l)
   (string->symbol (list->string l)))
-
-(define (initialize)
-  (put 'and 'eval eval-and)
-  (put 'or 'eval eval-or)
-  (put 'not 'eval eval-not)
-  (put 'value 'eval value)
-  (put 'true 'eval true))
