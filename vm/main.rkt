@@ -17,15 +17,17 @@
   (make-vm text
            #:regs (regs '())
            #:ops (ops '())
+           #:in (in (void))
            #:type (type vm%))
   (->* (valid?)
        (#:regs (listof symbol?)
         #:ops (listof (cons/c symbol? procedure?))
+        #:in namespace-anchor?
         #:type class?)
        vm?)
   (let ((vm (make-object type
               (needed-regs text regs)
-              (needed-ops text ops))))
+              (needed-ops text ops in))))
     (send vm install text)
     vm))
 
@@ -254,8 +256,10 @@
            (used-in text 'assign)
            (used-in text 'reg))))
 
-(define (needed-ops text ops)
-  (let* ((ns (current-namespace))
+(define (needed-ops text ops in)
+  (let* ((ns (if (void? in)
+                 (make-base-namespace)
+                 (namespace-anchor->namespace in)))
          (provided (map car ops))
          (required (remove-duplicates (used-in text 'op)))
          (builtins (for/list ((name (in-list (remove* provided required))))
