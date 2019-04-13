@@ -9,6 +9,8 @@
          lisp/env
          vm)
 
+(define-namespace-anchor here)
+
 (define (interpret code)
   (define (read)
     (if (null? code)
@@ -19,8 +21,8 @@
 
   (let* ((env (make-env builtins))
          (ops `((get-env . ,(thunk env))
-                (read . , read)))
-         (vm (make-vm lisp #:ops ops)))
+                (read . ,read)))
+         (vm (make-vm lisp #:ops ops #:in here)))
     (send vm execute)
     (send vm get 'val)))
 
