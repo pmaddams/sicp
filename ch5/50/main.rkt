@@ -9,9 +9,11 @@
          lisp/env
          vm)
 
+(define-namespace-anchor here)
+
 (define (interpret code)
   (and (not (null? code))
-       (let ((vm (make-vm (compile* code) #:regs all-regs)))
+       (let ((vm (make-vm (compile* code) #:regs all-regs #:in here)))
          (send vm set 'env (make-env builtins))
          (send vm execute)
          (send vm get 'val))))
@@ -101,7 +103,7 @@
 
 (define (compile-set expr target linkage)
   (let ((var (cadr expr))
-        (out (compile (caddr expr expr) 'val 'next)))
+        (out (compile (caddr expr) 'val 'next)))
     (end-with linkage
               (output-preserving
                '(env)
