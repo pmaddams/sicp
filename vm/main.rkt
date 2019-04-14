@@ -14,17 +14,19 @@
 (define (vm? x) (is-a? x vm%))
 
 (define/contract
-  (make-vm text
-           #:regs (regs '())
-           #:ops (ops '())
-           #:in (in (void))
-           #:type (type vm%))
-  (->* (valid?)
-       (#:regs (listof symbol?)
-        #:ops (listof (cons/c symbol? procedure?))
-        #:in namespace-anchor?
-        #:type class?)
-       vm?)
+  (make-vm
+   text
+   #:regs (regs '())
+   #:ops (ops '())
+   #:in (in (void))
+   #:type (type vm%))
+  (->*
+   (valid?)
+   (#:regs (listof symbol?)
+    #:ops (listof (cons/c symbol? procedure?))
+    #:in namespace-anchor?
+    #:type class?)
+   vm?)
   (let ((vm (make-object type
               (needed-regs text regs)
               (needed-ops text ops in))))
@@ -250,13 +252,13 @@
     ('reg (let ((reg (cadr expr)))
             (thunk (send vm get reg))))))
 
-(define (needed-regs text regs)
+(define (needed-regs text (regs '()))
   (remove-duplicates
    (append regs
            (used-in text 'assign)
            (used-in text 'reg))))
 
-(define (needed-ops text ops in)
+(define (needed-ops text (ops '()) (in (void)))
   (let* ((ns (if (void? in)
                  (make-base-namespace)
                  (namespace-anchor->namespace in)))
