@@ -4,8 +4,8 @@
   (lambda (in out)
     (if (equal? in out)
         'ok
-        (begin (display name)
-               (newline)))))
+        (begin (displayln 'FAILURE)
+               (displayln name)))))
 
 (define (equal? x y)
   (if (pair? x)
@@ -13,6 +13,10 @@
            (equal? (car x) (car y))
            (equal? (cdr x) (cdr y)))
       (eq? x y)))
+
+(define (displayln x)
+  (display x)
+  (newline))
 
 (let ((check (make-check 'literals)))
   (check #t #t)
