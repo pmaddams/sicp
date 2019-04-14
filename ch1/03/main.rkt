@@ -5,9 +5,9 @@
 (provide (all-defined-out))
 
 (define (sum-of-larger-squares . args)
-  (let* ((smallest (apply min args))
-         (larger (remove smallest args)))
-    (apply sum-of-squares larger)))
+  (let* ((n (apply min args))
+         (l (remove n args)))
+    (apply sum-of-squares l)))
 
 (define (sum-of-squares . args)
   (apply + (map square args)))
