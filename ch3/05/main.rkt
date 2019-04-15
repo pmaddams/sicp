@@ -27,7 +27,7 @@
       (square r)))
 
 (define (monte-carlo trials experiment)
-  (/ (for/sum ((i trials))
+  (/ (for/sum ((i (in-range trials)))
        (if (experiment) 1 0))
      trials))
 
