@@ -75,7 +75,7 @@
  (define code
    '((assign continue (label done))
      loop
-     (test (op =) (reg n) (const 1))
+     (test (op <=) (reg n) (const 1))
      (branch (label base-case))
      (save continue)
      (save n)
@@ -92,9 +92,8 @@
      (goto (reg continue))
      done))
 
- (for ((i (in-range 5)))
-   (let ((vm (make-vm code))
-         (n (random 1 100)))
+ (for ((n (in-range 10)))
+   (let ((vm (make-vm code)))
      (send vm set 'n n)
      (send vm execute)
      (check-equal? (send vm get 'val)
