@@ -7,15 +7,15 @@
          racket/function
          racket/list)
 
-(define (valid? text)
-  (for/and ((x (in-list text)))
+(define (valid? code)
+  (for/and ((x (in-list code)))
     (or (symbol? x) (valid-stmt? x))))
 
 (define (vm? x) (is-a? x vm%))
 
 (define/contract
   (make-vm
-   text
+   code
    #:regs (regs '())
    #:ops (ops '())
    #:in (in (void))
@@ -28,9 +28,9 @@
     #:type class?)
    vm?)
   (let ((vm (make-object type
-              (needed-regs text regs)
-              (needed-ops text ops in))))
-    (send vm install text)
+              (needed-regs code #:regs regs)
+              (needed-ops code #:ops ops #:in in))))
+    (send vm install code)
     vm))
 
 (struct register (val) #:mutable)
@@ -83,22 +83,22 @@
       (let ((insts (send this get 'pc)))
         (send this set 'pc (cdr insts))))
 
-    (define/public (install text)
-      (let ((insts (assemble this text)))
+    (define/public (install code)
+      (let ((insts (assemble this code)))
         (send this set 'pc insts)))))
 
-(define (assemble vm text)
+(define (assemble vm code)
   (define (update insts labels)
     (for ((inst (in-list insts)))
       (let ((stmt (instruction-stmt inst)))
         (set-instruction-proc! inst (generate vm stmt labels))))
     insts)
 
-  (let loop ((text text) (k update))
-    (if (null? text)
+  (let loop ((code code) (k update))
+    (if (null? code)
         (k '() #hash())
-        (loop (cdr text)
-              (let ((x (car text)))
+        (loop (cdr code)
+              (let ((x (car code)))
                 (lambda (insts labels)
                   (if (symbol? x)
                       (k insts (hash-set labels x insts))
@@ -252,29 +252,31 @@
     ('reg (let ((reg (cadr expr)))
             (thunk (send vm get reg))))))
 
-(define (needed-regs text (regs '()))
+(define (needed-regs code #:regs (regs '()))
   (remove-duplicates
    (append regs
-           (used-in text 'assign)
-           (used-in text 'reg))))
+           (used-in code 'assign)
+           (used-in code 'reg))))
 
-(define (needed-ops text (ops '()) (in (void)))
+(define (needed-ops code #:ops (ops '()) #:in (in (void)))
   (let* ((ns (if (void? in)
                  (make-base-namespace)
                  (namespace-anchor->namespace in)))
          (provided (map car ops))
-         (required (remove-duplicates (used-in text 'op)))
+         (required (remove-duplicates (used-in code 'op)))
          (builtins (for/list ((name (in-list (remove* provided required))))
                      (cons name (eval name ns)))))
     (append ops builtins)))
 
-(define (used-in text type)
+(define (used-in code type)
   (flatten
-   (for/list ((stmt (in-list text))
+   (for/list ((stmt (in-list code))
               #:when (list? stmt))
-     (for/list ((x (in-list stmt))
-                #:when (and (list? x)
-                            (eq? type (car x))))
-       (cadr x)))))
+     (if (eq? type (car stmt))
+         (cadr stmt)
+         (for/list ((x (in-list stmt))
+                    #:when (and (list? x)
+                                (eq? type (car x))))
+           (cadr x))))))
 
 (define (call proc) (proc))
