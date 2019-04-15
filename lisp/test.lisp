@@ -1,8 +1,8 @@
 #lang lisp
 
 (define (make-check name)
-  (lambda (in out)
-    (if (equal? in out)
+  (lambda (x y)
+    (if (equal? x y)
         'ok
         (begin (displayln 'FAILURE)
                (displayln name)))))
