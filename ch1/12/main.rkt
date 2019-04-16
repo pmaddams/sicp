@@ -6,13 +6,20 @@
 
 (require racket/sequence)
 
-(define (pascal n)
-  (for/list ((k (add1 n)))
-    (choose n k)))
+(define (pascal r c)
+  (if (or (< c 0) (> c r))
+      0
+      (let loop ((r r) (c c))
+        (if (or (= c 0) (= c r))
+            1
+            (+ (loop (sub1 r) (sub1 c))
+               (loop (sub1 r) c))))))
 
 (define (choose n k)
-  (quotient (factorial (+ k 1) n)
-            (factorial (- n k))))
+  (if (or (< k 0) (> k n))
+      0
+      (quotient (factorial (+ k 1) n)
+                (factorial (- n k)))))
 
 (define factorial
   (case-lambda
