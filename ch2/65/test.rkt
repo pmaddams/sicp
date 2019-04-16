@@ -1,7 +1,7 @@
 #lang racket/base
 
-(require (prefix-in set: racket/set)
-         racket/sequence
+(require racket/sequence
+         (prefix-in set: racket/set)
          rackunit
          "main.rkt")
 

@@ -1,7 +1,7 @@
 #lang racket/base
 
-(require rackunit
-         racket/dict
+(require racket/dict
+         rackunit
          "main.rkt")
 
 (define differentiated
