@@ -9,7 +9,7 @@
     (x . 1)
     ((+ x x) . 2)
     ((* x x) . (* 2 x))
-    ((* 2 (expt x 3)) . (* 6 (expt x 2)))))
+    ((expt x 3) . (* 3 (expt x 2)))))
 
 (test-case
  "differentiation"
