@@ -16,7 +16,7 @@
  (let ((step 0.001))
    (for (((f g) (in-dict integrated)))
      (for ((i (in-range 5)))
-       (let* ((lo (random 10))
+       (let* ((lo (random 50))
               (hi (random (add1 lo) 100))
               (definite (- (g hi) (g lo)))
               (tolerance (/ (abs definite) 100.0)))
