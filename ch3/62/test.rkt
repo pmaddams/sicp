@@ -7,7 +7,7 @@
 (test-case
  "series"
  (for ((i (in-range 5)))
-   (for ((% (in-list '(0.1 0.01 0.001))))
+   (for ((% (in-list '(1.0 0.1 0.01))))
      (let ((x (* (if (random 1) 1 -1)
                  (random)
                  (/ pi 4))))
