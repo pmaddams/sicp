@@ -4,11 +4,18 @@
          "main.rkt")
 
 (test-case
+ "sqrt-approx"
+ (let* ((% 0.00001)
+        (f (sqrt-approx %)))
+   (for ((i (in-range 5)))
+     (let ((x (random 1000000)))
+       (check (within? %) (f x) (sqrt x))))))
+
+(test-case
  "nth-root-approx"
- (for ((i (in-range 5)))
-   (let ((n (random 2 5))
-         (x (random 10 100)))
-     (for ((% (in-list '(0.1 0.01 0.001))))
+ (for ((n (in-range 1 11)))
+   (let ((x (random 1000)))
+     (for ((% (in-list '(1.0 0.1 0.01))))
        (check (within? %)
               ((nth-root-approx n %) x)
               (expt x (/ 1 n)))))))

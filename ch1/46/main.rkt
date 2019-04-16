@@ -6,6 +6,9 @@
 
 (require racket/function)
 
+(define (sqrt-approx %)
+  (nth-root-approx 2 %))
+
 (define ((nth-root-approx n %) x)
   (let ((damped (repeated average-damp (exact-ceiling (log n))))
         (f (lambda (y) (/ x (expt y (sub1 n))))))
