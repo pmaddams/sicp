@@ -16,10 +16,10 @@
 (test-case
  "expmod"
  (for ((i (in-range 10)))
-   (let ((b (random 2 100))
-         (x (random 2 100))
+   (let ((a (random 2 100))
+         (n (random 2 100))
          (m (random 2 100)))
-     (check-equal? (expmod b x m) (modulo (expt b x) m)))))
+     (check-equal? (expmod a n m) (modulo (expt a n) m)))))
 
 (test-case
  "carmichael numbers"

@@ -5,8 +5,9 @@
 (provide (all-defined-out))
 
 (define (search-for-primes lo hi)
-  (for ((n (in-range lo (add1 hi))))
-    (timed-prime-test (miller-rabin 10) n)))
+  (let ((p (miller-rabin 10)))
+    (for ((n (in-range lo (add1 hi))))
+      (timed-prime-test p n))))
 
 (define (timed-prime-test p n)
   (define (now) (current-inexact-milliseconds))
