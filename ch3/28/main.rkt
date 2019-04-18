@@ -47,7 +47,8 @@
     (field (actions '()))
 
     (define/public (set new-signal)
-      (unless (or (= new-signal 0) (= new-signal 1))
+      (unless (or (= new-signal 0)
+                  (= new-signal 1))
         (error "invalid signal:" new-signal))
       (unless (= signal new-signal)
         (set! signal new-signal)
@@ -83,9 +84,12 @@
             (let loop ((segments segments))
               (let ((first (mcar segments))
                     (rest (mcdr segments)))
-                (cond ((= (get-field time first) time) (send first push action))
-                      ((before? time rest) (set-mcdr! segments (mcons (at time action) rest)))
-                      (else (loop rest))))))))
+                (cond ((= time (get-field time first))
+                       (send first push action))
+                      ((before? time rest)
+                       (set-mcdr! segments (mcons (at time action) rest)))
+                      (else
+                       (loop rest))))))))
 
     (define (before? time segments)
       (or (null? segments)
