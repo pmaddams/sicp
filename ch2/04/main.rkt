@@ -23,11 +23,11 @@
   (p (lambda (x y sx sy) (sy z))))
 
 (define (equal? x y)
-  (if (not (procedure? x))
-      (eq? x y)
+  (if (procedure? x)
       (and (procedure? y)
            (equal? (car x) (car y))
-           (equal? (cdr x) (cdr y)))))
+           (equal? (cdr x) (cdr y)))
+      (eq? x y)))
 
 (define (member x l)
   (cond ((null? l) #f)
@@ -42,7 +42,8 @@
 (define (length l)
   (foldr (lambda (x acc)
            (add1 acc))
-         0 l))
+         0
+         l))
 
 (define (append l1 l2)
   (foldr cons l2 l1))
@@ -50,19 +51,22 @@
 (define (reverse l)
   (foldr (lambda (x acc)
            (append acc (cons x '())))
-         '() l))
+         '()
+         l))
 
 (define (map f l)
   (foldr (lambda (x acc)
            (cons (f x) acc))
-         '() l))
+         '()
+         l))
 
 (define (filter p l)
   (foldr (lambda (x acc)
            (if (p x)
                (cons x acc)
                acc))
-         '() l))
+         '()
+         l))
 
 (define (sum l)
   (foldr + 0 l))
