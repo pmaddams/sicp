@@ -12,10 +12,7 @@
 
 (define (two f) (compose f f))
 
-(define ((number->church n) f)
-  (for/fold ((acc identity))
-            ((i (in-range n)))
-    (compose f acc)))
+(define ((number->church n) f) (repeated f n))
 
 (define (church->number c) ((c add1) 0))
 
@@ -25,6 +22,11 @@
 
 (define ((add c1 c2) f) (compose (c1 f) (c2 f)))
 
-(define (mul c1 c2) (compose c1 c2))
+(define ((mul c1 c2) f) ((compose c1 c2) f))
 
-(define (pow c1 c2) (c2 c1))
+(define ((pow c1 c2) f) ((c2 c1) f))
+
+(define (repeated f n)
+  (for/fold ((acc identity))
+            ((i (in-range n)))
+    (compose f acc)))
