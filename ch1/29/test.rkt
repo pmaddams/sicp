@@ -7,8 +7,7 @@
 (define integrated
   `((,(lambda (x) 1) . ,(lambda (x) x))
     (,(lambda (x) x) . ,(lambda (x) (/ (expt x 2) 2)))
-    (,(lambda (x) (+ x x)) . ,(lambda (x) (* x x)))
-    (,(lambda (x) (* x x)) . ,(lambda (x) (/ (expt x 3) 3)))
+    (,(lambda (x) (* 3 x)) . ,(lambda (x) (* (/ 3 2) (expt x 2))))
     (,(lambda (x) (expt x 3)) . ,(lambda (x) (/ (expt x 4) 4)))))
 
 (test-case
