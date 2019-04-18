@@ -20,10 +20,9 @@
               ((nth-root-approx n %) x)
               (expt x (/ 1 n)))))))
 
-(define (square n) (* n n))
-
 (test-case
  "repeated"
  (for ((n (in-range 5)))
    (check-equal? ((repeated add1 n) 0) n)
-   (check-equal? ((repeated square n) 2) (expt 2 (expt 2 n)))))
+   (check-equal? ((repeated (lambda (x) (expt x 2)) n) 2)
+                 (expt 2 (expt 2 n)))))

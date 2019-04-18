@@ -148,3 +148,10 @@
                         (make-rectangular e f))
                    (div (make-rectangular d 0.0)
                         (make-rectangular e f))))))
+
+(test-case
+ "repeated"
+ (for ((n (in-range 5)))
+   (check-equal? ((repeated add1 n) 0) n)
+   (check-equal? ((repeated (lambda (x) (expt x 2)) n) 2)
+                 (expt 2 (expt 2 n)))))
