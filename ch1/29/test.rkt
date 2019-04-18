@@ -18,6 +18,6 @@
        (let* ((lo (random 50))
               (hi (random (add1 lo) 100))
               (definite (- (g hi) (g lo)))
-              (tolerance (/ (abs definite) 100.0)))
+              (tolerance (* 0.01 (abs definite))))
          (check-= definite (simpson-integral f lo hi step) tolerance)
          (check-= definite (riemann-integral f lo hi step) tolerance))))))

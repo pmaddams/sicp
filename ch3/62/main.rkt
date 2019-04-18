@@ -33,8 +33,9 @@
                 (loop (stream-rest s) next)))))))
 
 (define ((within? %) guess next)
-  (< (abs (/ (- next guess) guess))
-     (/ % 100.0)))
+  (let ((diff (abs (/ (- next guess)
+                      guess))))
+    (< diff (* 0.01 %))))
 
 (define (add s1 s2)
   (for/stream ((a (in-stream s1))

@@ -26,8 +26,9 @@
         (loop next (f next)))))
 
 (define ((within? %) guess next)
-  (< (abs (/ (- next guess) guess))
-     (/ % 100.0)))
+  (let ((diff (abs (/ (- next guess)
+                      guess))))
+    (< diff (* 0.01 %))))
 
 (define exact-ceiling
   (compose inexact->exact ceiling))
