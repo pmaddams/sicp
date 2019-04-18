@@ -18,12 +18,16 @@
 (define (paint painter)
   (let* ((bitmap (make-bitmap size size))
          (dc (make-object bitmap-dc% bitmap))
-         (unit-frame
-          (frame (point 0 0)
-                 (point size 0)
-                 (point 0 size)
-                 dc)))
-    (painter unit-frame)
+         (unit-frame (frame (point 0 0)
+                            (point size 0)
+                            (point 0 size)
+                            dc))
+         (canvas ((relative-frame
+                   (point 0.01 0.01)
+                   (point 0.99 0.01)
+                   (point 0.01 0.99))
+                  unit-frame)))
+    (painter canvas)
     bitmap))
 
 (define (make-painter . args)
@@ -135,33 +139,46 @@
 
 (define flip-horiz
   (transform-painter
-   (point 1.0 0.0)
-   (point 0.0 0.0)
-   (point 1.0 1.0)))
+   (point 1 0)
+   (point 0 0)
+   (point 1 1)))
 
 (define flip-vert
   (transform-painter
-   (point 0.0 1.0)
-   (point 1.0 1.0)
-   (point 0.0 0.0)))
+   (point 0 1)
+   (point 1 1)
+   (point 0 0)))
 
 (define rotate90
   (transform-painter
-   (point 0.0 1.0)
-   (point 0.0 0.0)
-   (point 1.0 1.0)))
+   (point 0 1)
+   (point 0 0)
+   (point 1 1)))
 
 (define rotate180
   (transform-painter
-   (point 1.0 1.0)
-   (point 0.0 1.0)
-   (point 1.0 0.0)))
+   (point 1 1)
+   (point 0 1)
+   (point 1 0)))
 
 (define rotate270
   (transform-painter
-   (point 1.0 0.0)
-   (point 1.0 1.0)
-   (point 0.0 0.0)))
+   (point 1 0)
+   (point 1 1)
+   (point 0 0)))
+
+(define outline
+  (make-painter
+   '((0 0) (1 0) (1 1) (0 1) (0 0))))
+
+(define X
+  (make-painter
+   '((0 0) (1 1))
+   '((1 0) (0 1))))
+
+(define diamond
+  (make-painter
+   '((0.5 0.0) (1.0 0.5) (0.5 1.0) (0.0 0.5) (0.5 0.0))))
 
 (define wave
   (make-painter
