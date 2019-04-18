@@ -7,9 +7,8 @@
 (define differentiated
   `((1 . 0)
     (x . 1)
-    ((+ x x) . 2)
-    ((* x x) . (* 2 x))
-    ((expt x 3) . (* 3 (expt x 2)))))
+    ((+ x x x) . 3)
+    ((* x x x) . (* 3 x x))))
 
 (test-case
  "differentiation"
