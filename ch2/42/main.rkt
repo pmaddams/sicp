@@ -7,48 +7,47 @@
 (require racket/function)
 
 (define (queens size)
-  (define result '())
-
-  (define (reject state)
-    (and (not (null? state))
-         (let ((i (car state)))
-           (or (collide-right state i)
-               (collide-up state i)
-               (collide-down state i)))))
-
-  (define ((collide next invalid) state i)
-    (let loop ((i (next i)) (state (cdr state)))
+  (let ((results '()))
+    (define (reject state)
       (and (not (null? state))
-           (not (invalid i))
-           (or (= i (car state))
-               (loop (next i) (cdr state))))))
+           (let ((i (car state)))
+             (or (collide-right state i)
+                 (collide-up state i)
+                 (collide-down state i)))))
 
-  (define collide-right
-    (collide identity (const #f)))
+    (define ((collide next invalid) state i)
+      (let loop ((i (next i)) (state (cdr state)))
+        (and (not (null? state))
+             (not (invalid i))
+             (or (= i (car state))
+                 (loop (next i) (cdr state))))))
 
-  (define collide-up
-    (collide add1 (lambda (i) (>= i size))))
+    (define collide-right
+      (collide identity (const #f)))
 
-  (define collide-down
-    (collide sub1 (lambda (i) (negative? i))))
+    (define collide-up
+      (collide add1 (lambda (i) (>= i size))))
 
-  (define (accept state)
-    (and (= size (length state))
-         (not (reject state))))
+    (define collide-down
+      (collide sub1 (lambda (i) (negative? i))))
 
-  (define (children state)
-    (if (= size (length state))
-        '()
-        (for/list ((i (in-range size)))
-          (cons i state))))
+    (define (accept state)
+      (and (= size (length state))
+           (not (reject state))))
 
-  (define (return state)
-    (set! result (cons state result)))
+    (define (children state)
+      (if (= size (length state))
+          '()
+          (for/list ((i (in-range size)))
+            (cons i state))))
 
-  (let loop ((state '()))
-    (unless (reject state)
-      (if (accept state)
-          (return state)
-          (for-each loop (children state)))))
+    (define (return state)
+      (set! results (cons state results)))
 
-  result)
+    (let loop ((state '()))
+      (unless (reject state)
+        (if (accept state)
+            (return state)
+            (for-each loop (children state)))))
+
+    results))
