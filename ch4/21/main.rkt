@@ -4,11 +4,28 @@
 
 (provide (all-defined-out))
 
-(define (Y f)
-  (let ((r (lambda (r*)
-             (lambda (x)
-               ((f (r* r*)) x)))))
-    (r r)))
+(define (even? n)
+  ((lambda (even? odd?)
+     (even? even? odd? n))
+
+   (lambda (even? odd? n) ; even?
+     (if (zero? n)
+         #t
+         (odd? even? odd? (sub1 n))))
+
+   (lambda (even? odd? n) ; odd?
+     (if (zero? n)
+         #f
+         (even? even? odd? (sub1 n))))))
+
+(define (Y lam)
+  ((lambda (rec)
+     (lambda (x)
+       ((lam (rec rec)) x)))
+
+   (lambda (rec)
+     (lambda (x)
+       ((lam (rec rec)) x)))))
 
 (define factorial
   (Y (lambda (f)

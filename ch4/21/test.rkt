@@ -5,6 +5,15 @@
          "main.rkt")
 
 (test-case
+ "even?"
+ (for ((n (in-range 10)))
+   (let ((r (remainder n 2)))
+     (check-true
+      (if (even? n)
+          (= r 0)
+          (= r 1))))))
+
+(test-case
  "factorial"
  (for ((n (in-range 10)))
    (check-equal? (factorial n)
