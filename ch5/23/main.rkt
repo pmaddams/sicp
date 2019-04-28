@@ -88,8 +88,7 @@
     (restore continue)
     (restore env)
     (restore unev)
-    (perform (op define-var) (reg unev) (reg val) (reg env))
-    (assign val (const ""))
+    (assign val (op define-var) (reg unev) (reg val) (reg env))
     (goto (reg continue))
     eval-set
     (assign unev (op set-expr-var) (reg expr))
@@ -103,8 +102,7 @@
     (restore continue)
     (restore env)
     (restore unev)
-    (perform (op set-var) (reg unev) (reg val) (reg env))
-    (assign val (const ""))
+    (assign val (op set-var) (reg unev) (reg val) (reg env))
     (goto (reg continue))
     eval-if
     (save expr)

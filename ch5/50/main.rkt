@@ -98,8 +98,7 @@
                out
                (output
                 '(env val) (list target)
-                `((perform (op define-var) (const ,var) (reg val) (reg env))
-                  (assign ,target (const ok))))))))
+                `((assign ,target (op define-var) (const ,var) (reg val) (reg env))))))))
 
 (define (compile-set expr target linkage)
   (let ((var (cadr expr))
@@ -110,8 +109,7 @@
                out
                (output
                 '(env val) (list target)
-                `((perform (op set-var) (const ,var) (reg val) (reg env))
-                  (assign ,target (const ok))))))))
+                `((assign ,target (op set-var) (const ,var) (reg val) (reg env))))))))
 
 (define (compile-if expr target linkage)
   (let ((predicate (cadr expr))
