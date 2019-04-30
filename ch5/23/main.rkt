@@ -183,7 +183,7 @@
     (restore unev)
     (restore env)
     (restore args)
-    (assign args (op adjoin) (reg val) (reg args))
+    (assign args (op snoc) (reg val) (reg args))
     (assign unev (op cdr) (reg unev))
     (goto (label eval-application-loop))
     eval-application-after-loop
@@ -191,7 +191,7 @@
     (goto (label eval))
     eval-application-accumulate-last
     (restore args)
-    (assign args (op adjoin) (reg val) (reg args))
+    (assign args (op snoc) (reg val) (reg args))
     (restore proc)
     (goto (label apply))
     apply
@@ -324,8 +324,7 @@
 
 (define (singleton? l) (null? (cdr l)))
 
-(define (adjoin x l)
-  (append l (list x)))
+(define (snoc x l) (append l (list x)))
 
 (define (empty-list) '())
 
