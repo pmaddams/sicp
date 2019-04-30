@@ -140,7 +140,7 @@
           (label-output after-label)))))))
 
 (define (compile-list exprs target linkage)
-  (if (null? (cdr exprs))
+  (if (last? exprs)
       (compile (car exprs) target linkage)
       (output-preserving
        '(env continue)
@@ -162,7 +162,7 @@
               (list 'if predicate consequent alternative))))))
 
 (define (list->expr exprs)
-  (if (null? (cdr exprs))
+  (if (last? exprs)
       (car exprs)
       (cons 'begin exprs)))
 
@@ -170,7 +170,7 @@
 
 (define (expand-and exprs)
   (cond ((null? exprs) #t)
-        ((null? (cdr exprs)) (car exprs))
+        ((last? exprs) (car exprs))
         (else (let ((predicate (car exprs))
                     (consequent (expand-and (cdr exprs)))
                     (alternative #f))
@@ -180,7 +180,7 @@
 
 (define (expand-or exprs)
   (cond ((null? exprs) #f)
-        ((null? (cdr exprs)) (car exprs))
+        ((last? exprs) (car exprs))
         (else (let ((predicate (car exprs))
                     (consequent (car exprs))
                     (alternative (expand-or (cdr exprs))))
@@ -214,7 +214,7 @@
               (car compiled-vals)
               (output '(val) '(args)
                       '((assign args (op list) (reg val)))))))
-        (if (null? (cdr compiled-vals))
+        (if (last? compiled-vals)
             last-arg-out
             (output-preserving
              '(env)
@@ -229,7 +229,7 @@
           (car compiled-vals)
           (output '(val args) '(args)
                   '((assign args (op cons) (reg val) (reg args)))))))
-    (if (null? (cdr compiled-vals))
+    (if (last? compiled-vals)
         next-arg-out
         (output-preserving
          '(env)
@@ -353,6 +353,8 @@
   (memq reg (output-modifies out)))
 
 (define all-regs '(env proc val args continue))
+
+(define (last? l) (null? (cdr l)))
 
 (define (true? x) (not (false? x)))
 

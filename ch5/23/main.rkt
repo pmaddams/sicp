@@ -128,7 +128,7 @@
     (goto (label eval-list))
     eval-list
     (assign expr (op car) (reg unev))
-    (test (op singleton?) (reg unev))
+    (test (op last?) (reg unev))
     (branch (label eval-list-last))
     (save unev)
     (save env)
@@ -173,7 +173,7 @@
     eval-application-loop
     (save args)
     (assign expr (op car) (reg unev))
-    (test (op singleton?) (reg unev))
+    (test (op last?) (reg unev))
     (branch (label eval-application-after-loop))
     (save env)
     (save unev)
@@ -278,7 +278,7 @@
               (list 'if predicate consequent alternative))))))
 
 (define (list->expr exprs)
-  (if (null? (cdr exprs))
+  (if (last? exprs)
       (car exprs)
       (cons 'begin exprs)))
 
@@ -289,7 +289,7 @@
 
 (define (expand-and exprs)
   (cond ((null? exprs) #t)
-        ((null? (cdr exprs)) (car exprs))
+        ((last? exprs) (car exprs))
         (else (let ((predicate (car exprs))
                     (consequent (expand-and (cdr exprs)))
                     (alternative #f))
@@ -302,7 +302,7 @@
 
 (define (expand-or exprs)
   (cond ((null? exprs) #f)
-        ((null? (cdr exprs)) (car exprs))
+        ((last? exprs) (car exprs))
         (else (let ((predicate (car exprs))
                     (consequent (car exprs))
                     (alternative (expand-or (cdr exprs))))
@@ -322,9 +322,9 @@
   (and (pair? x)
        (eq? t (car x))))
 
-(define (singleton? l) (null? (cdr l)))
-
 (define (snoc x l) (append l (list x)))
+
+(define (last? l) (null? (cdr l)))
 
 (define (empty-list) '())
 

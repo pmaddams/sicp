@@ -78,7 +78,7 @@
 
 (define (eval-list exprs env)
   (let ((val (eval (car exprs) env)))
-    (if (null? (cdr exprs))
+    (if (last? exprs)
         val
         (eval-list (cdr exprs) env))))
 
@@ -97,7 +97,7 @@
               (list 'if predicate consequent alternative))))))
 
 (define (list->expr exprs)
-  (if (null? (cdr exprs))
+  (if (last? exprs)
       (car exprs)
       (cons 'begin exprs)))
 
@@ -105,7 +105,7 @@
 
 (define (expand-and exprs)
   (cond ((null? exprs) #t)
-        ((null? (cdr exprs)) (car exprs))
+        ((last? exprs) (car exprs))
         (else (let ((predicate (car exprs))
                     (consequent (expand-and (cdr exprs)))
                     (alternative #f))
@@ -115,7 +115,7 @@
 
 (define (expand-or exprs)
   (cond ((null? exprs) #f)
-        ((null? (cdr exprs)) (car exprs))
+        ((last? exprs) (car exprs))
         (else (let ((predicate (car exprs))
                     (consequent (car exprs))
                     (alternative (expand-or (cdr exprs))))
@@ -127,6 +127,8 @@
          (exprs (map cadr bindings))
          (body (cddr expr)))
     (cons (cons 'lambda (cons params body)) exprs)))
+
+(define (last? l) (null? (cdr l)))
 
 (define builtins
   `(; types

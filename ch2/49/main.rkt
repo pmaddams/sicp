@@ -51,7 +51,7 @@
   (if (< (length l) 2)
       (error "not enough points:" l)
       (let loop ((l l) (acc '()))
-        (if (null? (cdr l))
+        (if (last? l)
             acc
             (loop (cdr l) (cons (segment (car l) (cadr l)) acc))))))
 
@@ -59,6 +59,17 @@
   (point-add (frame-origin fr)
              (point-add (point-scale (point-x pt) (frame-e1 fr))
                         (point-scale (point-y pt) (frame-e2 fr)))))
+
+(define ((transform-painter origin e1 e2) painter)
+  (compose painter (relative-frame origin e1 e2)))
+
+(define ((relative-frame origin e1 e2) fr)
+  (let* ((cm (coordinate-map fr))
+         (new-origin (cm origin)))
+    (frame new-origin
+           (point-sub (cm e1) new-origin)
+           (point-sub (cm e2) new-origin)
+           (frame-dc fr))))
 
 (define (point-add p1 p2)
   (point (+ (point-x p1) (point-x p2))
@@ -72,16 +83,7 @@
   (point (* n (point-x pt))
          (* n (point-y pt))))
 
-(define ((transform-painter origin e1 e2) painter)
-  (compose painter (relative-frame origin e1 e2)))
-
-(define ((relative-frame origin e1 e2) fr)
-  (let* ((cm (coordinate-map fr))
-         (new-origin (cm origin)))
-    (frame new-origin
-           (point-sub (cm e1) new-origin)
-           (point-sub (cm e2) new-origin)
-           (frame-dc fr))))
+(define (last? l) (null? (cdr l)))
 
 (define (square-limit painter n)
   (let* ((quarter (corner-split painter n))

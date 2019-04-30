@@ -179,7 +179,7 @@
               (list 'if predicate consequent alternative))))))
 
 (define (list->expr exprs)
-  (if (null? (cdr exprs))
+  (if (last? exprs)
       (car exprs)
       (cons 'begin exprs)))
 
@@ -187,7 +187,7 @@
 
 (define (expand-and exprs)
   (cond ((null? exprs) #t)
-        ((null? (cdr exprs)) (car exprs))
+        ((last? exprs) (car exprs))
         (else (let ((predicate (car exprs))
                     (consequent (expand-and (cdr exprs)))
                     (alternative #f))
@@ -197,7 +197,7 @@
 
 (define (expand-or exprs)
   (cond ((null? exprs) #f)
-        ((null? (cdr exprs)) (car exprs))
+        ((last? exprs) (car exprs))
         (else (let ((predicate (car exprs))
                     (consequent (car exprs))
                     (alternative (expand-or (cdr exprs))))
@@ -247,6 +247,8 @@
                      (succeed (cons arg args) fail**))
                    fail*))
        fail)))
+
+(define (last? l) (null? (cdr l)))
 
 (define builtins
   `(; types

@@ -17,7 +17,7 @@
   (unless (> (length set) 1)
     (error "not enough information:" set))
   (let loop ((set set))
-    (if (null? (cdr set))
+    (if (last? set)
         (car set)
         (loop (insert (make-branch (car set) (cadr set))
                       (cddr set))))))
@@ -82,6 +82,8 @@
   (for/list ((s (in-list (remove-duplicates symbols))))
     (let ((p (lambda (x) (eq? s x))))
       (cons s (length (filter p symbols))))))
+
+(define (last? l) (null? (cdr l)))
 
 (define get-a-job
   '(GET A JOB
