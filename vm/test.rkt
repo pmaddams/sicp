@@ -24,7 +24,7 @@
      (goto (label loop))
      done))
 
- (check-equal? (used-in code 'assign)'(t a b))
+ (check-equal? (used-in code 'assign) '(t a b))
  (check-equal? (used-in code 'reg) '(b a b b t))
  (check-equal? (used-in code 'op) '(= rem))
  (check-equal? (sort (needed-regs code) symbol<?)
