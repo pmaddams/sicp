@@ -1,3 +1,0 @@
-Checks: 'bugprone-*, clang-analyzer-*, readability-*'
-HeaderFilterRegex: '.*'
-WarningsAsErrors: '*'
