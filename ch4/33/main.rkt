@@ -4,7 +4,9 @@
 
 (provide (all-defined-out))
 
-(require (only-in racket (apply apply*))
+(require (only-in racket
+                  (procedure? builtin?)
+                  (apply apply*))
          lisp/env)
 
 (define ramanujan
@@ -76,7 +78,7 @@
                         (apply op args env)))))))
 
 (define (apply op args env)
-  (if (procedure? op)
+  (if (builtin? op)
       (let ((vals (map (lambda (x) (value x env)) args)))
         (apply* op vals))
       (let ((promises (map (lambda (x) (delay x env)) args)))

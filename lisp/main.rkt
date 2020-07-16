@@ -27,7 +27,7 @@
  boolean?
  number?
  symbol?
- procedure?
+ (rename-out (procedure? builtin?))
 
  ; arithmetic
  +

@@ -19,7 +19,7 @@
                   (apply op args))))))
 
 (define (apply op args)
-  (if (procedure? op)
+  (if (builtin? op)
       (apply* op args)
       (eval-list (closure-body op)
                  (subst (closure-params op)
@@ -159,7 +159,7 @@
    (cons 'boolean? boolean?)
    (cons 'number? number?)
    (cons 'symbol? symbol?)
-   (cons 'procedure? procedure?)
+   (cons 'builtin? builtin?)
 
    ; arithmetic
    (cons '+ +)

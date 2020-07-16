@@ -339,7 +339,7 @@
     (symbol? . ,symbol?)
     (boolean? . ,boolean?)
     (number? . ,number?)
-    (procedure? . ,procedure?)
+    (builtin? . ,procedure?)
 
     ; arithmetic
     (+ . ,+)

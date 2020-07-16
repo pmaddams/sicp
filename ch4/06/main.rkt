@@ -4,7 +4,9 @@
 
 (provide (all-defined-out))
 
-(require (only-in racket (apply apply*))
+(require (only-in racket
+                  (procedure? builtin?)
+                  (apply apply*))
          lisp/env)
 
 (define (interpret code)
@@ -34,7 +36,7 @@
                         (apply op args)))))))
 
 (define (apply op args)
-  (if (procedure? op)
+  (if (builtin? op)
       (apply* op args)
       (eval-list (closure-body op)
                  (subst (closure-params op)
@@ -137,7 +139,7 @@
     (symbol? . ,symbol?)
     (boolean? . ,boolean?)
     (number? . ,number?)
-    (procedure? . ,procedure?)
+    (builtin? . ,builtin?)
 
     ; arithmetic
     (+ . ,+)

@@ -4,7 +4,9 @@
 
 (provide (all-defined-out))
 
-(require (only-in racket (apply apply*))
+(require (only-in racket
+                  (procedure? builtin?)
+                  (apply apply*))
          racket/function
          lisp/env)
 
@@ -78,7 +80,7 @@
                 (else (analyze-apply expr))))))
 
 (define (apply op args succeed fail)
-  (if (procedure? op)
+  (if (builtin? op)
       (succeed (apply* op args) fail)
       ((closure-proc op)
        (subst (closure-params op)
@@ -257,7 +259,7 @@
     (symbol? . ,symbol?)
     (boolean? . ,boolean?)
     (number? . ,number?)
-    (procedure? . ,procedure?)
+    (builtin? . ,builtin?)
 
     ; arithmetic
     (+ . ,+)
