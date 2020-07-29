@@ -5,16 +5,16 @@
 (provide (all-defined-out))
 
 (define (fibonacci n)
-  (let loop ((n n) (a 1) (b 0) (p 0) (q 1))
+  (let loop ((a 1) (b 0) (p 0) (q 1) (n n))
     (cond ((zero? n) b)
           ((even? n)
-           (loop (/ n 2) a b (next-p p q) (next-q p q)))
+           (loop a b (next-p p q) (next-q p q) (/ n 2)))
           (else
-           (loop (sub1 n)
-                 (+ (* (+ p q) a) (* q b))
-                 (+ (* q a) (* p b))
+           (loop (+ (* a (+ p q)) (* b q))
+                 (+ (* a q) (* b p))
                  p
-                 q)))))
+                 q
+                 (sub1 n))))))
 
 (define (next-p p q)
   (+ (square p) (square q)))

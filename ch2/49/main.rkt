@@ -50,10 +50,11 @@
 (define (points->segments l)
   (if (< (length l) 2)
       (error "not enough points:" l)
-      (let loop ((l l) (acc '()))
+      (let loop ((acc '()) (l l))
         (if (last? l)
             acc
-            (loop (cdr l) (cons (segment (car l) (cadr l)) acc))))))
+            (loop (cons (segment (car l) (cadr l)) acc)
+                  (cdr l))))))
 
 (define ((coordinate-map fr) pt)
   (point-add (frame-origin fr)

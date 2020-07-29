@@ -23,7 +23,7 @@
 (define (cont-frac n d k)
   (for/fold ((acc 0))
             ((i (in-range k 0 -1)))
-    (/ (n i) (+ (d i) acc))))
+    (/ (n i) (+ acc (d i)))))
 
 (define ((within? %) guess next)
   (let ((diff (abs (/ (- next guess)

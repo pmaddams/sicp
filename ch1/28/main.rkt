@@ -25,7 +25,7 @@
    (lambda (n)
      (for/fold ((acc #t))
                ((d (in-range 2 (add1 (integer-sqrt n)))))
-       (and (not (zero? (remainder n d))) acc)))))
+       (and acc (not (zero? (remainder n d))))))))
 
 (define ((probable-prime expmod) k)
   (make-prime
@@ -33,7 +33,7 @@
      (for/fold ((acc #t))
                ((i (in-range k)))
        (let ((a (random 2 (sub1 n))))
-         (and (= 1 (expmod a (sub1 n) n)) acc))))))
+         (and acc (= 1 (expmod a (sub1 n) n))))))))
 
 (define (expmod a n m)
   (let loop ((n n))

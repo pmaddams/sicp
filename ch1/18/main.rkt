@@ -15,22 +15,22 @@
       (sub (sub1 n) (sub1 m))))
 
 (define (mul n m)
-  (let loop ((n n) (m m) (acc 0))
+  (let loop ((acc 0) (n n) (m m))
     (cond ((zero? m) acc)
-          ((even? m) (loop (double n) (halve m) acc))
-          (else (loop n (sub1 m) (add n acc))))))
+          ((even? m) (loop acc (double n) (halve m)))
+          (else (loop (add acc n) n (sub1 m))))))
 
 (define (div n m)
-  (let loop ((n n) (acc 0))
+  (let loop ((acc 0) (n n))
     (if (< n m)
         acc
-        (loop (sub n m) (add1 acc)))))
+        (loop (add1 acc) (sub n m)))))
 
 (define (pow n m)
-  (let loop ((n n) (m m) (acc 1))
+  (let loop ((acc 1) (n n) (m m))
     (cond ((zero? m) acc)
-          ((even? m) (loop (square n) (halve m) acc))
-          (else (loop n (sub1 m) (mul n acc))))))
+          ((even? m) (loop acc (square n) (halve m)))
+          (else (loop (mul n acc) n (sub1 m))))))
 
 (define (double n) (add n n))
 

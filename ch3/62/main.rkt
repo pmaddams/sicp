@@ -26,11 +26,11 @@
              (* a (expt x n)))))
     (if (zero? (stream-first s))
         0
-        (let loop ((s (stream-rest s)) (acc (stream-first s)))
+        (let loop ((acc (stream-first s)) (s (stream-rest s)))
           (let ((next (+ acc (stream-first s))))
             (if ((within? %) acc next)
                 next
-                (loop (stream-rest s) next)))))))
+                (loop next (stream-rest s))))))))
 
 (define ((within? %) guess next)
   (let ((diff (abs (/ (- next guess)

@@ -31,12 +31,12 @@
     (car (loop l (length l)))))
 
 (define (set->list s)
-  (let loop ((s s) (acc '()))
+  (let loop ((acc '()) (s s))
     (if (null? s)
         acc
-        (loop (node-left s)
-              (cons (node-val s)
-                    (loop (node-right s) acc))))))
+        (loop (cons (node-val s)
+                    (loop acc (node-right s)))
+              (node-left s)))))
 
 (define (set-member? s n)
   (let loop ((s s))

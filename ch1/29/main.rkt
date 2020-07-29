@@ -8,12 +8,12 @@
 
 (define (simpson-integral f lo hi step)
   (* (/ step 3)
-     (let loop ((x (+ lo step)) (i 1) (acc (f lo)))
+     (let loop ((acc (f lo)) (i 1) (x (+ lo step)))
        (if (>= x hi)
            (+ acc (f x))
            (let* ((coeff (if (even? i) 2 4))
                   (term (* coeff (f x))))
-             (loop (+ x step) (add1 i) (+ acc term)))))))
+             (loop (+ acc term) (add1 i) (+ x step)))))))
 
 (define (riemann-integral f lo hi step)
   (* step (sum (sequence-map f (in-range lo hi step)))))
