@@ -64,7 +64,7 @@
            (if (null? l)
                '()
                (cons (f (car l)) (map f (cdr l)))))
-         (check (map (lambda (n) (* n 2))
+         (check (map (lambda (n) (* 2 n))
                      '(1 2 3 4 5))
                 '(2 4 6 8 10))))
 

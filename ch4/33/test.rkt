@@ -72,7 +72,7 @@
                               (if (null? l)
                                   '()
                                   (cons (f (car l)) (map f (cdr l)))))
-                            (car (cdr (map (lambda (n) (* n 2))
+                            (car (cdr (map (lambda (n) (* 2 n))
                                            '(1 2 3 4 5))))))
                4))
 
