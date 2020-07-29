@@ -50,7 +50,7 @@
 
 (define (interpret code)
   (let ((env (make-env builtins)))
-    (eval '(define (cons x y) (lambda (m) (m x y))) env)
+    (eval '(define (cons x y) (lambda (f) (f x y))) env)
     (eval '(define (car p) (p (lambda (x y) x))) env)
     (eval '(define (cdr p) (p (lambda (x y) y))) env)
     (for/last ((expr (in-list code)))

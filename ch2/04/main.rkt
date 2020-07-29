@@ -4,8 +4,8 @@
 
 (provide (all-defined-out))
 
-(define ((cons x y) m)
-  (m x
+(define ((cons x y) f)
+  (f x
      y
      (lambda (z) (set! x z))
      (lambda (z) (set! y z))))
