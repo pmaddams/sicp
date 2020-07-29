@@ -27,7 +27,7 @@
           (cons (node (car non-left-l) (car left-pair) (car right-pair))
                 (cdr right-pair)))))
 
-  (let ((l (distinct l)))
+  (let ((l (normalize l)))
     (car (loop l (length l)))))
 
 (define (set->list s)
@@ -78,7 +78,7 @@
                  ((> n1 n2) (loop l1 (cdr l2)))
                  (else (cons n1 (loop (cdr l1) (cdr l2))))))))))
 
-(define (distinct l)
+(define (normalize l)
   (for ((n (in-list l)))
     (unless (number? n)
       (error "not a number:" n)))
