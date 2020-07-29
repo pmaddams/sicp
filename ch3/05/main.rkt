@@ -10,7 +10,7 @@
   (integral-approx make-circle-experiment -1.0 1.0 -1.0 1.0 trials))
 
 (define (integral-approx make-experiment x1 x2 y1 y2 trials)
-  (let ((fraction (monte-carlo trials (make-experiment x1 x2 y1 y2)))
+  (let ((fraction (monte-carlo (make-experiment x1 x2 y1 y2) trials))
         (area (* (- x2 x1) (- y2 y1))))
     (* fraction area)))
 
@@ -26,7 +26,7 @@
   (<= (+ (square x) (square y))
       (square r)))
 
-(define (monte-carlo trials experiment)
+(define (monte-carlo experiment trials)
   (/ (for/sum ((i (in-range trials)))
        (if (experiment) 1 0))
      trials))

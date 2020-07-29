@@ -6,5 +6,5 @@
 
 (test-case
  "pi-approx"
- (for ((i (in-range 10)))
-   (check-within (pi-approx 200000) pi 0.01)))
+ (for ((i (in-range 5)))
+   (check-within (pi-approx 1000000) pi 0.01)))
