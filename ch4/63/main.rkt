@@ -9,7 +9,7 @@
          racket/promise
          racket/stream)
 
-(define bible
+(define genesis
   '((son Adam Cain)
     (son Cain Enoch)
     (son Enoch Irad)

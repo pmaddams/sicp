@@ -4,8 +4,8 @@
          "main.rkt")
 
 (test-case
- "bible"
- (initialize bible)
+ "genesis"
+ (initialize genesis)
  (check-equal? (query '(grandfather ?x Cain))
                '((grandfather Irad Cain)))
  (check-equal? (query '(father ?x Lamech))
