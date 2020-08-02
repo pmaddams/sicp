@@ -364,6 +364,7 @@
     (display . ,display)
     (newline . ,newline)
     (read . ,read)
+    (eof-object? . ,eof-object?)
 
     ; environment
     (make-env . ,make-env)

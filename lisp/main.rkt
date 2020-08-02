@@ -52,6 +52,7 @@
  display
  newline
  read
+ eof-object?
 
  ; environment
  make-env

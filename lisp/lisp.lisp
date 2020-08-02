@@ -184,6 +184,7 @@
    (cons 'display display)
    (cons 'newline newline)
    (cons 'read read)
+   (cons 'eof-object? eof-object?)
 
    ; environment
    (cons 'make-env make-env)
@@ -197,8 +198,11 @@
 
 (let ((env (make-env builtins)))
   (define (loop)
-    (display (eval (read) env))
-    (newline)
-    (loop))
+    (let ((expr (read)))
+      (if (eof-object? expr)
+          expr
+          (begin (display (eval expr env))
+                 (newline)
+                 (loop)))))
 
   (loop))
