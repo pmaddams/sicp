@@ -27,7 +27,7 @@
 
 (define (compile expr target linkage)
   (cond ((literal? expr) (compile-literal expr target linkage))
-        ((symbol? expr) (compile-variable expr target linkage))
+        ((variable? expr) (compile-variable expr target linkage))
         (else (case (car expr)
                 ('quote (compile-quote expr target linkage))
                 ('lambda (compile-lambda expr target linkage))
@@ -49,6 +49,8 @@
   (end-with linkage
             (output '() (list target)
                     `((assign ,target (const ,expr))))))
+
+(define variable? symbol?)
 
 (define (compile-variable expr target linkage)
   (end-with linkage

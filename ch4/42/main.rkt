@@ -64,7 +64,7 @@
 
 (define (analyze expr)
   (cond ((literal? expr) (analyze-literal expr))
-        ((symbol? expr) (analyze-symbol expr))
+        ((variable? expr) (analyze-variable expr))
         (else (case (car expr)
                 ('quote (analyze-quote expr))
                 ('lambda (analyze-lambda expr))
@@ -96,7 +96,9 @@
 (define ((analyze-literal expr) env succeed fail)
   (succeed expr fail))
 
-(define ((analyze-symbol expr) env succeed fail)
+(define variable? symbol?)
+
+(define ((analyze-variable expr) env succeed fail)
   (succeed (get-var expr env) fail))
 
 (define ((analyze-quote expr) env succeed fail)

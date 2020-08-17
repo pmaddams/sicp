@@ -2,7 +2,7 @@
 
 (define (eval expr env)
   (cond ((literal? expr) expr)
-        ((symbol? expr) (get-var expr env))
+        ((variable? expr) (get-var expr env))
         ((type? 'quote expr) (cadr expr))
         ((type? 'lambda expr) (eval-lambda expr env))
         ((type? 'define expr) (eval-define expr env))
@@ -29,6 +29,8 @@
 (define (literal? expr)
   (or (boolean? expr)
       (number? expr)))
+
+(define variable? symbol?)
 
 (define (eval-lambda expr env)
   (let ((params (cadr expr))

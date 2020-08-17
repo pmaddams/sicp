@@ -37,7 +37,7 @@
     eval
     (test (op literal?) (reg expr))
     (branch (label eval-literal))
-    (test (op symbol?) (reg expr))
+    (test (op variable?) (reg expr))
     (branch (label eval-variable))
     (test (op quote-expr?) (reg expr))
     (branch (label eval-quote))
@@ -215,6 +215,8 @@
 (define (literal? expr)
   (or (boolean? expr)
       (number? expr)))
+
+(define variable? symbol?)
 
 (define (quote-expr? expr)
   (type? 'quote expr))

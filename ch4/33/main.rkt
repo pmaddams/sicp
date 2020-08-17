@@ -62,7 +62,7 @@
 
 (define (eval expr env)
   (cond ((literal? expr) expr)
-        ((symbol? expr) (get-var expr env))
+        ((variable? expr) (get-var expr env))
         (else (case (car expr)
                 ('quote (eval-quote expr env))
                 ('lambda (eval-lambda expr env))
@@ -108,6 +108,8 @@
 (define (literal? expr)
   (or (boolean? expr)
       (number? expr)))
+
+(define variable? symbol?)
 
 (define (eval-quote expr env)
   (let ((x (cadr expr)))
