@@ -18,7 +18,8 @@
 (define ((make-prime p) n)
   (and (not (< n 2))
        (or (<= n 3)
-           (p n))))
+           (and (odd? n)
+                (p n)))))
 
 (define trial-division
   (make-prime
