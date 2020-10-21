@@ -23,7 +23,7 @@
 
 (struct sequence (needs modifies text))
 
-(struct subroutine (label env))
+(struct closure (label env))
 
 (define (compile expr target linkage)
   (cond ((literal? expr) (compile-literal expr target linkage))
@@ -66,21 +66,21 @@
   (let ((label (gensym 'lambda-))
         (after-label (gensym 'after-lambda-)))
     (let ((linkage* (if (eq? linkage 'next) after-label linkage)))
-      (generate-sequence
+      (generate-consecutive
        (generate-unconnected
         (end-with linkage*
                   (sequence '(env) (list target)
-                            `((assign ,target (op subroutine) (label ,label) (reg env)))))
+                            `((assign ,target (op closure) (label ,label) (reg env)))))
         (compile-lambda-body expr label))
        (generate-label after-label)))))
 
 (define (compile-lambda-body expr label)
   (let ((params (cadr expr))
         (body (cddr expr)))
-    (generate-sequence
+    (generate-consecutive
      (sequence '(env proc args) '(env)
                `(,label
-                 (assign env (op subroutine-env) (reg proc))
+                 (assign env (op closure-env) (reg proc))
                  (assign env (op subst) (const ,params) (reg args) (reg env))))
      (compile-list body 'val 'return))))
 
@@ -128,15 +128,15 @@
         (generate-preserving
          '(env continue)
          predicate-seq
-         (generate-sequence
+         (generate-consecutive
           (sequence '(val) '()
                     `((test (op false?) (reg val))
                       (branch (label ,else-label))))
-          (generate-alternatives
-           (generate-sequence
+          (generate-branches
+           (generate-consecutive
             (generate-label then-label)
             consequent-seq)
-           (generate-sequence
+           (generate-consecutive
             (generate-label else-label)
             alternative-seq))
           (generate-label after-label)))))))
@@ -212,7 +212,7 @@
       (sequence '() '(args)
                 '((assign args (const ()))))
       (let ((last-arg-seq
-             (generate-sequence
+             (generate-consecutive
               (car compiled-vals)
               (sequence '(val) '(args)
                         '((assign args (op list) (reg val)))))))
@@ -240,42 +240,42 @@
 
 (define (compile-call target linkage)
   (let ((builtin-label (gensym 'builtin-))
-        (subroutine-label (gensym 'subroutine-))
+        (closure-label (gensym 'closure-))
         (after-label (gensym 'after-call-)))
-    (let ((subroutine-linkage (if (eq? linkage 'next) after-label linkage)))
-      (generate-sequence
+    (let ((closure-linkage (if (eq? linkage 'next) after-label linkage)))
+      (generate-consecutive
        (sequence '(proc) '()
                  `((test (op procedure?) (reg proc))
                    (branch (label ,builtin-label))))
-       (generate-alternatives
-        (generate-sequence
-         (generate-label subroutine-label)
-         (compile-subroutine-call target subroutine-linkage))
-        (generate-sequence
+       (generate-branches
+        (generate-consecutive
+         (generate-label closure-label)
+         (compile-closure-call target closure-linkage))
+        (generate-consecutive
          (generate-label builtin-label)
          (end-with linkage
                    (sequence '(proc args) (list target)
                              `((assign ,target (op apply) (reg proc) (reg args)))))))
        (generate-label after-label)))))
 
-(define (compile-subroutine-call target linkage)
+(define (compile-closure-call target linkage)
   (case target
     ('val (case linkage
             ('return
              (sequence '(proc continue) all-regs
-                       '((assign val (op subroutine-label) (reg proc))
+                       '((assign val (op closure-label) (reg proc))
                          (goto (reg val)))))
             (else
              (sequence '(proc) all-regs
                        `((assign continue (label ,linkage))
-                         (assign val (op subroutine-label) (reg proc))
+                         (assign val (op closure-label) (reg proc))
                          (goto (reg val)))))))
     (else (case linkage
             ('return (error "compilation error"))
             (else (let ((return-label (gensym 'return-)))
                     (sequence '(proc) all-regs
                               `((assign continue (label ,return-label))
-                                (assign val (op subroutine-label) (reg proc))
+                                (assign val (op closure-label) (reg proc))
                                 (goto (reg val))
                                 ,return-label
                                 (assign ,target (reg val))
@@ -294,7 +294,7 @@
 
 (define (generate-preserving regs seq1 seq2)
   (if (null? regs)
-      (generate-sequence seq1 seq2)
+      (generate-consecutive seq1 seq2)
       (let ((reg (car regs)))
         (if (and (needs? reg seq2)
                  (modifies? reg seq1))
@@ -311,7 +311,7 @@
              seq2)
             (generate-preserving (cdr regs) seq1 seq2)))))
 
-(define (generate-alternatives seq1 seq2)
+(define (generate-branches seq1 seq2)
   (sequence
     (set-union (sequence-needs seq1)
                (sequence-needs seq2))
@@ -327,7 +327,7 @@
     (append (sequence-text seq)
             (sequence-text body-seq))))
 
-(define (generate-sequence . args)
+(define (generate-consecutive . seqs)
   (define (combine seq1 seq2)
     (sequence (set-union (sequence-needs seq1)
                          (set-subtract (sequence-needs seq2)
@@ -337,7 +337,7 @@
               (append (sequence-text seq1)
                       (sequence-text seq2))))
 
-  (let loop ((l args))
+  (let loop ((l seqs))
     (if (null? l)
         (generate-no-op)
         (combine (car l) (loop (cdr l))))))
