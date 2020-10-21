@@ -19,9 +19,9 @@
          (send vm get 'val))))
 
 (define (compile* code)
-  (output-text (compile-list code 'val 'next)))
+  (sequence-text (compile-list code 'val 'next)))
 
-(struct output (needs modifies text))
+(struct sequence (needs modifies text))
 
 (struct subroutine (label env))
 
@@ -47,41 +47,41 @@
 
 (define (compile-literal expr target linkage)
   (end-with linkage
-            (output '() (list target)
-                    `((assign ,target (const ,expr))))))
+            (sequence '() (list target)
+                      `((assign ,target (const ,expr))))))
 
 (define variable? symbol?)
 
 (define (compile-variable expr target linkage)
   (end-with linkage
-            (output '(env) (list target)
-                    `((assign ,target (op get-var) (const ,expr) (reg env))))))
+            (sequence '(env) (list target)
+                      `((assign ,target (op get-var) (const ,expr) (reg env))))))
 
 (define (compile-quote expr target linkage)
   (end-with linkage
-            (output '() (list target)
-                    `((assign ,target (const ,(cadr expr)))))))
+            (sequence '() (list target)
+                      `((assign ,target (const ,(cadr expr)))))))
 
 (define (compile-lambda expr target linkage)
   (let ((label (gensym 'lambda-))
         (after-label (gensym 'after-lambda-)))
     (let ((linkage* (if (eq? linkage 'next) after-label linkage)))
-      (append-output
-       (embed-output
+      (generate-sequence
+       (generate-unconnected
         (end-with linkage*
-                  (output '(env) (list target)
-                          `((assign ,target (op subroutine) (label ,label) (reg env)))))
+                  (sequence '(env) (list target)
+                            `((assign ,target (op subroutine) (label ,label) (reg env)))))
         (compile-lambda-body expr label))
-       (label-output after-label)))))
+       (generate-label after-label)))))
 
 (define (compile-lambda-body expr label)
   (let ((params (cadr expr))
         (body (cddr expr)))
-    (append-output
-     (output '(env proc args) '(env)
-             `(,label
-               (assign env (op subroutine-env) (reg proc))
-               (assign env (op subst) (const ,params) (reg args) (reg env))))
+    (generate-sequence
+     (sequence '(env proc args) '(env)
+               `(,label
+                 (assign env (op subroutine-env) (reg proc))
+                 (assign env (op subst) (const ,params) (reg args) (reg env))))
      (compile-list body 'val 'return))))
 
 (define (compile-define expr target linkage)
@@ -93,25 +93,25 @@
                 (let ((params (cdadr expr))
                       (body (cddr expr)))
                   (cons 'lambda (cons params body)))))
-         (out (compile x 'val 'next)))
+         (seq (compile x 'val 'next)))
     (end-with linkage
-              (output-preserving
+              (generate-preserving
                '(env)
-               out
-               (output
-                '(env val) (list target)
-                `((assign ,target (op define-var) (const ,var) (reg val) (reg env))))))))
+               seq
+               (sequence
+                 '(env val) (list target)
+                 `((assign ,target (op define-var) (const ,var) (reg val) (reg env))))))))
 
 (define (compile-set expr target linkage)
   (let ((var (cadr expr))
-        (out (compile (caddr expr) 'val 'next)))
+        (seq (compile (caddr expr) 'val 'next)))
     (end-with linkage
-              (output-preserving
+              (generate-preserving
                '(env)
-               out
-               (output
-                '(env val) (list target)
-                `((assign ,target (op set-var) (const ,var) (reg val) (reg env))))))))
+               seq
+               (sequence
+                 '(env val) (list target)
+                 `((assign ,target (op set-var) (const ,var) (reg val) (reg env))))))))
 
 (define (compile-if expr target linkage)
   (let ((predicate (cadr expr))
@@ -122,29 +122,29 @@
         (after-label (gensym 'after-if-)))
     (let ((consequent-linkage
            (if (eq? linkage 'next) after-label linkage)))
-      (let ((predicate-out (compile predicate 'val 'next))
-            (consequent-out (compile consequent target consequent-linkage))
-            (alternative-out (compile alternative target linkage)))
-        (output-preserving
+      (let ((predicate-seq (compile predicate 'val 'next))
+            (consequent-seq (compile consequent target consequent-linkage))
+            (alternative-seq (compile alternative target linkage)))
+        (generate-preserving
          '(env continue)
-         predicate-out
-         (append-output
-          (output '(val) '()
-                  `((test (op false?) (reg val))
-                    (branch (label ,else-label))))
-          (parallel-output
-           (append-output
-            (label-output then-label)
-            consequent-out)
-           (append-output
-            (label-output else-label)
-            alternative-out))
-          (label-output after-label)))))))
+         predicate-seq
+         (generate-sequence
+          (sequence '(val) '()
+                    `((test (op false?) (reg val))
+                      (branch (label ,else-label))))
+          (generate-alternatives
+           (generate-sequence
+            (generate-label then-label)
+            consequent-seq)
+           (generate-sequence
+            (generate-label else-label)
+            alternative-seq))
+          (generate-label after-label)))))))
 
 (define (compile-list exprs target linkage)
   (if (last? exprs)
       (compile (car exprs) target linkage)
-      (output-preserving
+      (generate-preserving
        '(env continue)
        (compile (car exprs) target 'next)
        (compile-list (cdr exprs) target linkage))))
@@ -196,46 +196,46 @@
     (cons (cons 'lambda (cons params body)) exprs)))
 
 (define (compile-application expr target linkage)
-  (let ((proc-out (compile (car expr) 'proc 'next))
+  (let ((proc-seq (compile (car expr) 'proc 'next))
         (compiled-vals (reverse (map (lambda (x) (compile x 'val 'next))
                                      (cdr expr)))))
-    (output-preserving
+    (generate-preserving
      '(env continue)
-     proc-out
-     (output-preserving
+     proc-seq
+     (generate-preserving
       '(proc continue)
       (construct-args compiled-vals)
       (compile-call target linkage)))))
 
 (define (construct-args compiled-vals)
   (if (null? compiled-vals)
-      (output '() '(args)
-              '((assign args (const ()))))
-      (let ((last-arg-out
-             (append-output
+      (sequence '() '(args)
+                '((assign args (const ()))))
+      (let ((last-arg-seq
+             (generate-sequence
               (car compiled-vals)
-              (output '(val) '(args)
-                      '((assign args (op list) (reg val)))))))
+              (sequence '(val) '(args)
+                        '((assign args (op list) (reg val)))))))
         (if (last? compiled-vals)
-            last-arg-out
-            (output-preserving
+            last-arg-seq
+            (generate-preserving
              '(env)
-             last-arg-out
+             last-arg-seq
              (construct-init-args
               (cdr compiled-vals)))))))
 
 (define (construct-init-args compiled-vals)
-  (let ((next-arg-out
-         (output-preserving
+  (let ((next-arg-seq
+         (generate-preserving
           '(args)
           (car compiled-vals)
-          (output '(val args) '(args)
-                  '((assign args (op cons) (reg val) (reg args)))))))
+          (sequence '(val args) '(args)
+                    '((assign args (op cons) (reg val) (reg args)))))))
     (if (last? compiled-vals)
-        next-arg-out
-        (output-preserving
+        next-arg-seq
+        (generate-preserving
          '(env)
-         next-arg-out
+         next-arg-seq
          (construct-init-args (cdr compiled-vals))))))
 
 (define (compile-call target linkage)
@@ -243,116 +243,116 @@
         (subroutine-label (gensym 'subroutine-))
         (after-label (gensym 'after-call-)))
     (let ((subroutine-linkage (if (eq? linkage 'next) after-label linkage)))
-      (append-output
-       (output '(proc) '()
-               `((test (op procedure?) (reg proc))
-                 (branch (label ,builtin-label))))
-       (parallel-output
-        (append-output
-         (label-output subroutine-label)
+      (generate-sequence
+       (sequence '(proc) '()
+                 `((test (op procedure?) (reg proc))
+                   (branch (label ,builtin-label))))
+       (generate-alternatives
+        (generate-sequence
+         (generate-label subroutine-label)
          (compile-subroutine-call target subroutine-linkage))
-        (append-output
-         (label-output builtin-label)
+        (generate-sequence
+         (generate-label builtin-label)
          (end-with linkage
-                   (output '(proc args) (list target)
-                           `((assign ,target (op apply) (reg proc) (reg args)))))))
-       (label-output after-label)))))
+                   (sequence '(proc args) (list target)
+                             `((assign ,target (op apply) (reg proc) (reg args)))))))
+       (generate-label after-label)))))
 
 (define (compile-subroutine-call target linkage)
   (case target
     ('val (case linkage
             ('return
-             (output '(proc continue) all-regs
-                     '((assign val (op subroutine-label) (reg proc))
-                       (goto (reg val)))))
+             (sequence '(proc continue) all-regs
+                       '((assign val (op subroutine-label) (reg proc))
+                         (goto (reg val)))))
             (else
-             (output '(proc) all-regs
-                     `((assign continue (label ,linkage))
-                       (assign val (op subroutine-label) (reg proc))
-                       (goto (reg val)))))))
+             (sequence '(proc) all-regs
+                       `((assign continue (label ,linkage))
+                         (assign val (op subroutine-label) (reg proc))
+                         (goto (reg val)))))))
     (else (case linkage
             ('return (error "compilation error"))
             (else (let ((return-label (gensym 'return-)))
-                    (output '(proc) all-regs
-                            `((assign continue (label ,return-label))
-                              (assign val (op subroutine-label) (reg proc))
-                              (goto (reg val))
-                              ,return-label
-                              (assign ,target (reg val))
-                              (goto (label ,linkage))))))))))
+                    (sequence '(proc) all-regs
+                              `((assign continue (label ,return-label))
+                                (assign val (op subroutine-label) (reg proc))
+                                (goto (reg val))
+                                ,return-label
+                                (assign ,target (reg val))
+                                (goto (label ,linkage))))))))))
 
-(define (end-with linkage out)
-  (output-preserving
+(define (end-with linkage seq)
+  (generate-preserving
    '(continue)
-   out
+   seq
    (case linkage
-     ('next (empty-output))
-     ('return (output '(continue) '()
-                      '((goto (reg continue)))))
-     (else (output '() '()
-                   `((goto (label ,linkage))))))))
+     ('next (generate-no-op))
+     ('return (sequence '(continue) '()
+                        '((goto (reg continue)))))
+     (else (sequence '() '()
+                     `((goto (label ,linkage))))))))
 
-(define (output-preserving regs out1 out2)
+(define (generate-preserving regs seq1 seq2)
   (if (null? regs)
-      (append-output out1 out2)
+      (generate-sequence seq1 seq2)
       (let ((reg (car regs)))
-        (if (and (needs? reg out2)
-                 (modifies? reg out1))
-            (output-preserving
+        (if (and (needs? reg seq2)
+                 (modifies? reg seq1))
+            (generate-preserving
              (cdr regs)
-             (output
-              (set-union (list reg)
-                         (output-needs out1))
-              (set-subtract (output-modifies out1)
-                            (list reg))
-              (append `((save ,reg))
-                      (output-text out1)
-                      `((restore ,reg))))
-             out2)
-            (output-preserving (cdr regs) out1 out2)))))
+             (sequence
+               (set-union (list reg)
+                          (sequence-needs seq1))
+               (set-subtract (sequence-modifies seq1)
+                             (list reg))
+               (append `((save ,reg))
+                       (sequence-text seq1)
+                       `((restore ,reg))))
+             seq2)
+            (generate-preserving (cdr regs) seq1 seq2)))))
 
-(define (parallel-output out1 out2)
-  (output
-   (set-union (output-needs out1)
-              (output-needs out2))
-   (set-union (output-modifies out1)
-              (output-modifies out2))
-   (append (output-text out1)
-           (output-text out2))))
+(define (generate-alternatives seq1 seq2)
+  (sequence
+    (set-union (sequence-needs seq1)
+               (sequence-needs seq2))
+    (set-union (sequence-modifies seq1)
+               (sequence-modifies seq2))
+    (append (sequence-text seq1)
+            (sequence-text seq2))))
 
-(define (embed-output out body-out)
-  (output
-   (output-needs out)
-   (output-modifies out)
-   (append (output-text out)
-           (output-text body-out))))
+(define (generate-unconnected seq body-seq)
+  (sequence
+    (sequence-needs seq)
+    (sequence-modifies seq)
+    (append (sequence-text seq)
+            (sequence-text body-seq))))
 
-(define (append-output . args)
-  (define (combine out1 out2)
-    (output (set-union (output-needs out1)
-                       (set-subtract (output-needs out2)
-                                     (output-modifies out1)))
-            (set-union (output-modifies out1)
-                       (output-modifies out2))
-            (append (output-text out1)
-                    (output-text out2))))
+(define (generate-sequence . args)
+  (define (combine seq1 seq2)
+    (sequence (set-union (sequence-needs seq1)
+                         (set-subtract (sequence-needs seq2)
+                                       (sequence-modifies seq1)))
+              (set-union (sequence-modifies seq1)
+                         (sequence-modifies seq2))
+              (append (sequence-text seq1)
+                      (sequence-text seq2))))
 
   (let loop ((l args))
     (if (null? l)
-        (empty-output)
+        (generate-no-op)
         (combine (car l) (loop (cdr l))))))
 
-(define (label-output label)
-  (output '() '() (list label)))
+(define (generate-label label)
+  (sequence '() '() (list label)))
 
-(define (empty-output)
-  (output '() '() '()))
+(define (generate-no-op)
+  (sequence '() '() '()))
 
-(define (needs? reg out)
-  (memq reg (output-needs out)))
+(define (needs? reg seq)
+  (memq reg (sequence-needs seq)))
 
-(define (modifies? reg out)
-  (memq reg (output-modifies out)))
+(define (modifies? reg seq)
+  (memq reg (sequence-modifies seq)))
 
 (define all-regs '(env proc val args continue))
 
