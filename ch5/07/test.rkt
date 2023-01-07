@@ -10,6 +10,6 @@
                     iterative-process))))
    (let ((f (make-expt code)))
      (for ((i (in-range 5)))
-       (let ((a (random 1 10))
+       (let ((b (random 1 10))
              (n (random 1 10)))
-         (check-equal? (f a n) (expt a n)))))))
+         (check-equal? (f b n) (expt b n)))))))

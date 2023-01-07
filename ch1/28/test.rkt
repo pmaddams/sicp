@@ -14,12 +14,12 @@
      (check-false (p n)))))
 
 (test-case
- "expmod"
+ "mod-expt"
  (for ((i (in-range 10)))
-   (let ((a (random 2 100))
+   (let ((b (random 2 100))
          (n (random 2 100))
          (m (random 2 100)))
-     (check-equal? (expmod a n m) (modulo (expt a n) m)))))
+     (check-equal? (mod-expt b n m) (modulo (expt b n) m)))))
 
 (test-case
  "carmichael numbers"

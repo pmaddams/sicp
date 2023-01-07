@@ -28,51 +28,51 @@
                ((d (in-range 2 (add1 (integer-sqrt n)))))
        (and acc (not (zero? (remainder n d))))))))
 
-(define ((probable-prime expmod) k)
+(define ((probable-prime mod-expt) k)
   (make-prime
    (lambda (n)
      (for/fold ((acc #t))
                ((i (in-range k)))
-       (let ((a (random 2 (sub1 n))))
-         (and acc (= 1 (expmod a (sub1 n) n))))))))
+       (let ((b (random 2 (sub1 n))))
+         (and acc (= 1 (mod-expt b (sub1 n) n))))))))
 
-(define (expmod a n m)
+(define (mod-expt b n m)
   (let loop ((n n))
     (cond ((zero? n) 1)
           ((even? n)
            (remainder (square (loop (quotient n 2))) m))
           (else
-           (remainder (* a (loop (sub1 n))) m)))))
+           (remainder (* b (loop (sub1 n))) m)))))
 
 (define-syntax-rule (neither expr ...)
   (not (or expr ...)))
 
-(define (expmod-nontrivial-sqrt a n m)
+(define (mod-expt-nontrivial-sqrt b n m)
   (let loop ((n n))
     (cond ((zero? n) 1)
           ((even? n)
-           (let* ((r (loop (quotient n 2)))
-                  (x (remainder (square r) m)))
-             (if (and (neither (= r 1) (= r (sub1 m)))
-                      (= x 1))
+           (let* ((root (loop (quotient n 2)))
+                  (rem (remainder (square root) m)))
+             (if (and (neither (= root 1) (= root (sub1 m)))
+                      (= rem 1))
                  0
-                 x)))
+                 rem)))
           (else
-           (remainder (* a (loop (sub1 n))) m)))))
+           (remainder (* b (loop (sub1 n))) m)))))
 
-(define fermat (probable-prime expmod))
+(define fermat (probable-prime mod-expt))
 
-(define miller-rabin (probable-prime expmod-nontrivial-sqrt))
+(define miller-rabin (probable-prime mod-expt-nontrivial-sqrt))
 
-(define (fools expmod)
+(define (fools mod-expt)
   (lambda (n)
-    (let loop ((a (sub1 n)))
-      (or (< a 2)
-          (and (= a (expmod a n n))
-               (loop (sub1 a)))))))
+    (let loop ((b (sub1 n)))
+      (or (< b 2)
+          (and (= b (mod-expt b n n))
+               (loop (sub1 b)))))))
 
-(define fools-fermat (fools expmod))
+(define fools-fermat (fools mod-expt))
 
-(define fools-miller-rabin (fools expmod-nontrivial-sqrt))
+(define fools-miller-rabin (fools mod-expt-nontrivial-sqrt))
 
 (define (square n) (* n n))
