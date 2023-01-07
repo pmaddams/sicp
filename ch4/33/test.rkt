@@ -4,8 +4,8 @@
          "main.rkt")
 
 (test-case
- "ramanujan"
- (check-equal? (interpret ramanujan) 1729))
+ "ramanujan-numbers"
+ (check-equal? (interpret ramanujan-numbers) 1729))
 
 (test-case
  "normal-order Y combinator" ; test lazy evaluation

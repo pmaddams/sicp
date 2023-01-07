@@ -9,7 +9,7 @@
                   (apply apply*))
          lisp/env)
 
-(define ramanujan
+(define ramanujan-numbers
   '((define (merge-weighted l1 l2 w)
       (let ((a (car l1))
             (b (car l2)))

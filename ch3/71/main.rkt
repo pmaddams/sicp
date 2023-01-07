@@ -28,7 +28,7 @@
 
 (define (cube n) (expt n 3))
 
-(define ramanujan
+(define ramanujan-numbers
   (let loop ((st (weighted-pairs (in-naturals 1) (in-naturals 1) sum-of-cubes)))
     (let* ((n (sum-of-cubes (stream-first st))))
       (if (= n (sum-of-cubes (stream-first (stream-rest st))))
