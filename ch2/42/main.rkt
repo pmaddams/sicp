@@ -6,7 +6,7 @@
 
 (require racket/function)
 
-(define (queens size)
+(define (n-queens n)
   (let ((results '()))
     (define (reject state)
       (and (not (null? state))
@@ -26,19 +26,19 @@
       (collide identity (const #f)))
 
     (define collide-up
-      (collide add1 (lambda (i) (>= i size))))
+      (collide add1 (lambda (i) (>= i n))))
 
     (define collide-down
       (collide sub1 (lambda (i) (negative? i))))
 
     (define (accept state)
-      (and (= size (length state))
+      (and (= n (length state))
            (not (reject state))))
 
     (define (children state)
-      (if (= size (length state))
+      (if (= n (length state))
           '()
-          (for/list ((i (in-range size)))
+          (for/list ((i (in-range n)))
             (cons i state))))
 
     (define (return state)
