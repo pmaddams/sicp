@@ -18,7 +18,7 @@
          #f
          (even? even? odd? (sub1 n))))))
 
-(define (Y lam)
+(define (y-combinator lam)
   ((lambda (rec)
      (lambda (x)
        ((lam (rec rec)) x)))
@@ -28,16 +28,16 @@
        ((lam (rec rec)) x)))))
 
 (define factorial
-  (Y (lambda (f)
-       (lambda (n)
-         (if (<= n 1)
-             1
-             (* n (f (sub1 n))))))))
+  (y-combinator (lambda (f)
+                  (lambda (n)
+                    (if (<= n 1)
+                        1
+                        (* n (f (sub1 n))))))))
 
 (define fibonacci
-  (Y (lambda (f)
-       (lambda (n)
-         (if (<= n 1)
-             n
-             (+ (f (- n 1))
-                (f (- n 2))))))))
+  (y-combinator (lambda (f)
+                  (lambda (n)
+                    (if (<= n 1)
+                        n
+                        (+ (f (- n 1))
+                           (f (- n 2))))))))

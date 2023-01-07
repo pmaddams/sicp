@@ -10,16 +10,16 @@
 (test-case
  "normal-order Y combinator" ; test lazy evaluation
  (for ((i (in-range 5)))
-   (check-equal? (interpret `((let ((Y (lambda (lam)
-                                         ((lambda (rec)
-                                            (lam (rec rec)))
-                                          (lambda (rec)
-                                            (lam (rec rec)))))))
-                                (let ((factorial (Y (lambda (f)
-                                                      (lambda (n)
-                                                        (if (< n 2)
-                                                            1
-                                                            (* n (f (- n 1)))))))))
+   (check-equal? (interpret `((let ((y-combinator (lambda (lam)
+                                                    ((lambda (rec)
+                                                       (lam (rec rec)))
+                                                     (lambda (rec)
+                                                       (lam (rec rec)))))))
+                                (let ((factorial (y-combinator (lambda (f)
+                                                                 (lambda (n)
+                                                                   (if (< n 2)
+                                                                       1
+                                                                       (* n (f (- n 1)))))))))
                                   (factorial ,i)))))
                  (letrec ((factorial (lambda (n)
                                        (if (< n 2)
