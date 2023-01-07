@@ -8,8 +8,8 @@
 
 (define uk-coins '(0.5 1 2 5 10 20 50 100))
 
-(define (change amount coins)
+(define (ways-to-make-change amount coins)
   (cond ((or (negative? amount) (null? coins)) 0)
         ((zero? amount) 1)
-        (else (+ (change amount (cdr coins))
-                 (change (- amount (car coins)) coins)))))
+        (else (+ (ways-to-make-change amount (cdr coins))
+                 (ways-to-make-change (- amount (car coins)) coins)))))
