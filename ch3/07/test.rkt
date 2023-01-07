@@ -23,4 +23,4 @@
      (check-equal? (send acc withdraw password 1000000)
                    "incorrect password"))
    (check-equal? (send acc withdraw "batman" 1000000)
-                 "dialing 911")))
+                 "calling 911")))

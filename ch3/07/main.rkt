@@ -42,6 +42,6 @@
                      (call-the-cops)
                      "incorrect password"))))
 
-    (define (call-the-cops) "dialing 911")
+    (define (call-the-cops) "calling 911")
 
     (send this add-user (void) password)))
