@@ -6,10 +6,10 @@
 
 (require racket/stream)
 
-(define hamming
-  (stream-cons 1 (merge (scale hamming 2)
-                        (scale hamming 3)
-                        (scale hamming 5))))
+(define hamming-numbers
+  (stream-cons 1 (merge (scale hamming-numbers 2)
+                        (scale hamming-numbers 3)
+                        (scale hamming-numbers 5))))
 
 (define (merge . args)
   (letrec ((loop (lambda (st1 st2)
