@@ -1,12 +1,25 @@
-Copyright 2017 Pavan Maddamsetti
+Copyright (c) 2017 Pavan Maddamsetti
 
-Permission to use, copy, modify, and distribute this software for any
-purpose with or without fee is hereby granted.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-THIS SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTIES OF ANY KIND.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-Structure and Interpretation of Computer Programs by Harold Abelson and
-Gerald Jay Sussman with Julie Sussman is licensed under a Creative Commons
-Attribution-ShareAlike 4.0 International License by the MIT Press:
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+Structure and Interpretation of Computer Programs by Harold Abelson and Gerald
+Jay Sussman with Julie Sussman is licensed under a Creative Commons
+Attribution-ShareAlike 4.0 International License by the MIT Press.
 
 https://creativecommons.org/licenses/by-sa/4.0/
